@@ -43,5 +43,34 @@ class Alascan:
         0
     def batchAPBS():
         0
+
     def run():
         0
+
+
+def mutatePDB(pdb, resnum, mutid, resid='ALA'):
+    # pdb is the pdb file
+    # residue is the residue number
+    # mutid is the prefix for the written mutated structure
+    # resid is the residue to mutate to
+
+    from modeller import environ, model, alignment, selection
+
+    env = environ()
+    env.libs.topology.read(file='$(LIB)/top_heav.lib')
+    env.libs.parameters.read(file='$(LIB)/par.lib')
+
+    aln = alignment(env)
+    mdl = model(env, file=pdb)
+    aln.append_model(mdl, atom_files=pdb, align_codes='parent')
+
+    sel = selection(mdl.residue_range(resnum-1, resnum-1))
+    sel.mutate(residue_type=resid)
+
+    aln.append_model(mdl, align_codes='mutant')
+    mdl.clear_topology()
+    mdl.generate_topology(aln['mutant'])
+    mdl.transfer_xyz(aln)
+
+    mdl.build(initialize_xyz=False, build_method='INTERNAL_COORDINATES')
+    mdl.write(file=mutid+'.pdb')
