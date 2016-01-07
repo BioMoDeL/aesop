@@ -4,6 +4,7 @@ import sys as sys
 import datetime as dt
 import numpy as np
 import prody as pd
+from modeller import environ, model, alignment, selection
 
 ######################################################################################################################################################
 # Container for performing an Alanine Scan with AESOP
@@ -14,8 +15,10 @@ import prody as pd
 #   sdie    -   Solvent dielectric constant
 ######################################################################################################################################################
 class Alascan:
-    def __init__(self, pdb, selstr=['Protein'], ion=0.150, pdie=20.0, sdie=78.54):
+    def __init__(self, pdb, pdb2pqr_exe, apbs_exe,selstr=['Protein'], ion=0.150, pdie=20.0, sdie=78.54):
         self.pdb = pdb
+        self.pdb2pqr = pdb2pqr_exe
+        self.apbs = apbs_exe
         self.selstr = selstr
         self.ion = ion
         self.pdie = pdie
@@ -52,11 +55,10 @@ class Alascan:
 ######################################################################################################################################################
 def mutatePDB(pdb, mutid, resnum, chain=None, resid='ALA'):
     # pdb is the pdb file
-    # residue is the residue number
-    # mutid is the prefix for the written mutated structure
+    # resnum is the residue number to be mutated
+    # chain (optional) can specify what chain the residue to be mutated is located on
+    # mutid is the prefix for the written mutated structure to be written
     # resid is the residue to mutate to
-
-    from modeller import environ, model, alignment, selection
 
     env = environ()
     env.libs.topology.read(file='$(LIB)/top_heav.lib')
@@ -84,9 +86,41 @@ def mutatePDB(pdb, mutid, resnum, chain=None, resid='ALA'):
 ######################################################################################################################################################
 # Function to run PDB2PQR.exe - should work on any supported OS
 ######################################################################################################################################################
-def execPDB2PQR(path_pdb2pqr_exe, pdbfile, optargs='--ff charmm --chain --apbs-input', outfile=None):
-    import os as os
+def execPDB2PQR(path_pdb2pqr_exe, pdbfile, optargs='--ff charmm --chain', outfile=None):
     if outfile is None:
         outfile = os.path.splitext(pdbfile)[0]+'.pqr'
     os.system('{0} {1} {2} {3}'.format(path_pdb2pqr_exe, optargs, pdbfile, outfile))
     return outfile
+
+######################################################################################################################################################
+# Function to run APBS.exe - should work on any supported OS
+######################################################################################################################################################
+def execAPBS(path_apbs_exe, pqr_chain, pqr_complex, prefix=None, grid=1.0, ion=0.150, pdie=20.0, sdie=78.54):
+    # path_apbs_exe -   full path to apbs executable ('C:\\APBS\\apbs.exe')
+    # pqr_chain     -   path to file with single chain pqr (mutant or parent)
+    # pqr_complex   -   path to file with complex pqr, contains mutant or parent chain that is used in pqr_chain
+    # prefix        -   string to pre-pend to output files (log file, dx file, energy file)
+    # grid          -   grid spacing using in APBS calculation
+    # ion           -   ionic strength for calculation
+    # pdie          -   protein dielectric constant
+    # sdie          -   solvent dielectric constant
+
+    if prefix is None:
+        prefix = os.path.splitext(pqrfile)[0]
+
+    cfac = 1.5 # hard-coded scaling factor for mesh dimension, for now
+
+    pqr = pd.parsePQR(pqrfile)
+    coords = pqr.getCoords()
+    x = coords[:,0]
+    y = coords[:,1]
+    z = coords[:,2]
+
+    # Determine mesh dimensions according to Ron's AESOP protocol in the R source file
+    fg = np.array((np.ceil(np.max(x)-np.min(x)), np.ceil(np.max(y)-np.min(y)), np.ceil(np.max(z)-np.min(z))))
+    fg = np.ceil((fg + 5) * cfac)
+    dime_list = (32*np.linspace(1,100,100))+1   # list of possible dime values
+    dime_ind = np.ceil(fg/(32*grid))    # index of dime to use from list
+
+    glen = fg
+    dime = np.array((dime_list[dime_ind[0]], dime_list[dime_ind[1]], dime_list[dime_ind[2]]))
