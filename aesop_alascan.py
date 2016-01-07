@@ -15,7 +15,30 @@ from modeller import environ, model, alignment, selection
 #   sdie    -   Solvent dielectric constant
 ######################################################################################################################################################
 class Alascan:
-    def __init__(self, pdb, pdb2pqr_exe, apbs_exe,selstr=['Protein'], ion=0.150, pdie=20.0, sdie=78.54):
+    """Summary
+    
+    Attributes
+    ----------
+    apbs : TYPE
+        Description
+    dirs : int
+        Description
+    ion : TYPE
+        Description
+    pdb : TYPE
+        Description
+    pdb2pqr : TYPE
+        Description
+    pdie : TYPE
+        Description
+    prefix : TYPE
+        Description
+    sdie : TYPE
+        Description
+    selstr : TYPE
+        Description
+    """
+    def __init__(self, pdb, pdb2pqr_exe, apbs_exe, selstr=['protein'], ion=0.150, pdie=20.0, sdie=78.54):
         self.pdb = pdb
         self.pdb2pqr = pdb2pqr_exe
         self.apbs = apbs_exe
@@ -54,6 +77,26 @@ class Alascan:
 # Function to mutate a single residue in a PDB structure
 ######################################################################################################################################################
 def mutatePDB(pdb, mutid, resnum, chain=None, resid='ALA'):
+    """Summary
+    
+    Parameters
+    ----------
+    pdb : TYPE
+        Description
+    mutid : TYPE
+        Description
+    resnum : TYPE
+        Description
+    chain : TYPE, optional
+        Description
+    resid : str, optional
+        Description
+    
+    Returns
+    -------
+    name : TYPE
+        Description
+    """
     # pdb is the pdb file
     # resnum is the residue number to be mutated
     # chain (optional) can specify what chain the residue to be mutated is located on
@@ -87,6 +130,24 @@ def mutatePDB(pdb, mutid, resnum, chain=None, resid='ALA'):
 # Function to run PDB2PQR.exe - should work on any supported OS
 ######################################################################################################################################################
 def execPDB2PQR(path_pdb2pqr_exe, pdbfile, optargs='--ff charmm --chain', outfile=None):
+    """Summary
+    
+    Parameters
+    ----------
+    path_pdb2pqr_exe : TYPE
+        Description
+    pdbfile : TYPE
+        Description
+    optargs : str, optional
+        Description
+    outfile : TYPE, optional
+        Description
+    
+    Returns
+    -------
+    name : TYPE
+        Description
+    """
     if outfile is None:
         outfile = os.path.splitext(pdbfile)[0]+'.pqr'
     os.system('{0} {1} {2} {3}'.format(path_pdb2pqr_exe, optargs, pdbfile, outfile))
@@ -96,6 +157,32 @@ def execPDB2PQR(path_pdb2pqr_exe, pdbfile, optargs='--ff charmm --chain', outfil
 # Function to run APBS.exe - should work on any supported OS
 ######################################################################################################################################################
 def execAPBS(path_apbs_exe, pqr_chain, pqr_complex, prefix=None, grid=1.0, ion=0.150, pdie=20.0, sdie=78.54):
+    """Summary
+    
+    Parameters
+    ----------
+    path_apbs_exe : TYPE
+        Description
+    pqr_chain : TYPE
+        Description
+    pqr_complex : TYPE
+        Description
+    prefix : TYPE, optional
+        Description
+    grid : float, optional
+        Description
+    ion : float, optional
+        Description
+    pdie : float, optional
+        Description
+    sdie : float, optional
+        Description
+    
+    Returns
+    -------
+    name : TYPE
+        Description
+    """
     # path_apbs_exe -   full path to apbs executable ('C:\\APBS\\apbs.exe')
     # pqr_chain     -   path to file with single chain pqr (mutant or parent)
     # pqr_complex   -   path to file with complex pqr, contains mutant or parent chain that is used in pqr_chain
