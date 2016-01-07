@@ -48,7 +48,7 @@ class Alascan:
         0
 
 
-def mutatePDB(pdb, resnum, mutid, resid='ALA'):
+def mutatePDB(pdb, mutid, resnum, chain=None, resid='ALA'):
     # pdb is the pdb file
     # residue is the residue number
     # mutid is the prefix for the written mutated structure
@@ -64,7 +64,11 @@ def mutatePDB(pdb, resnum, mutid, resid='ALA'):
     mdl = model(env, file=pdb)
     aln.append_model(mdl, atom_files=pdb, align_codes='parent')
 
-    sel = selection(mdl.residue_range(resnum-1, resnum-1))
+    if chain is None:
+        sel = selection(mdl.residue_range(resnum-1, resnum-1))
+    else:
+        sel = selection(mdl.residue_range(str(resnum)+':'+chain, str(resnum)+':'+chain))
+
     sel.mutate(residue_type=resid)
 
     aln.append_model(mdl, align_codes='mutant')
