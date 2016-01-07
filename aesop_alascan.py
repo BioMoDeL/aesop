@@ -47,7 +47,9 @@ class Alascan:
     def run():
         0
 
-
+######################################################################################################################################################
+# Function to mutate a single residue in a PDB structure
+######################################################################################################################################################
 def mutatePDB(pdb, mutid, resnum, chain=None, resid='ALA'):
     # pdb is the pdb file
     # residue is the residue number
@@ -78,3 +80,13 @@ def mutatePDB(pdb, mutid, resnum, chain=None, resid='ALA'):
 
     mdl.build(initialize_xyz=False, build_method='INTERNAL_COORDINATES')
     mdl.write(file=mutid+'.pdb')
+
+######################################################################################################################################################
+# Function to run PDB2PQR.exe - should work on any supported OS
+######################################################################################################################################################
+def execPDB2PQR(path_pdb2pqr_exe, pdbfile, optargs='--ff charmm --chain --apbs-input', outfile=None):
+    import os as os
+    if outfile is None:
+        outfile = os.path.splitext(pdbfile)[0]+'.pqr'
+    os.system('{0} {1} {2} {3}'.format(path_pdb2pqr_exe, optargs, pdbfile, outfile))
+    return outfile
