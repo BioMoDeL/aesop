@@ -211,3 +211,27 @@ def execAPBS(path_apbs_exe, pqr_chain, pqr_complex, prefix=None, grid=1.0, ion=0
 
     glen = fg
     dime = np.array((dime_list[dime_ind[0]], dime_list[dime_ind[1]], dime_list[dime_ind[2]]))
+
+    # Format APBS input file
+    cmd_read = list('   mol pqr %s\n'%(pqr_chain),
+                    '   mol pqr %s\n'%(pqr_complex))
+    cmd_solv = list('   mg-manual\n',
+                    '   dime %d %d %d\n'%(),
+                    '   glen\n'%(),
+                    '   gcent\n'%(),
+                    '   mol\n'%(),
+                    '   lpbe\n',
+                    '   bcfl %s\n'%(),
+                    '   srfm\n'%(),
+                    '   chgm\n'%(),
+                    '   ion\n'%(),
+                    '   ion\n'%(),
+                    '   pdie\n'%(),
+                    '   sdie\n'%(),
+                    '   sdens\n'%(),
+                    '   srad\n'%(),
+                    '   swin\n'%(),
+                    '   temp\n'%(),
+                    '   calcenergy total\n')
+    cmd_ref
+    cmd_write
