@@ -95,7 +95,7 @@ class Alascan:
                     resname = AA_dict[np.unique(pdb.select('chain ' + current_chain + ' and resnum ' + x).getResnames())[0]]
                 mutid = resname + x + 'A'
                 #change directory here before calling mutatePDB?
-                mutatePDB(pdb, mutid, resnum=x, chain, resid='ALA')
+                mutatePDB(pdb, mutid, resnum=x, chain=chain, resid='ALA')
     def batchAPBS():
         0
 
@@ -179,7 +179,7 @@ def execPDB2PQR(path_pdb2pqr_exe, pdbfile, optargs='--ff charmm --chain', outfil
     """
     if outfile is None:
         outfile = os.path.splitext(pdbfile)[0]+'.pqr'
-    os.system('{0} {1} {2} {3}'.format(path_pdb2pqr_exe, optargs, pdbfile, outfile))
+    os.system('"{0}" {1} {2} {3}'.format(path_pdb2pqr_exe, optargs, pdbfile, outfile))
     return outfile
 
 ######################################################################################################################################################
@@ -190,27 +190,27 @@ def execAPBS(path_apbs_exe, pqr_chain, pqr_complex, prefix=None, grid=1.0, ion=0
     
     Parameters
     ----------
-    path_apbs_exe : TYPE
-        Description
-    pqr_chain : TYPE
-        Description
-    pqr_complex : TYPE
-        Description
-    prefix : TYPE, optional
-        Description
+    path_apbs_exe : STRING
+        Full path to APBS executable, EX: 'C:\\APBS\\apbs.exe'
+    pqr_chain : STRING
+        PQR file name containing the segment that will undergo electrostatic calculations
+    pqr_complex : STRING
+        PQR file name containing the complex that AESOP is analyzing, must contain pqr_chain
+    prefix : STRING, optional
+        Phrase to prepend before any file that is generated before writing
     grid : float, optional
-        Description
+        Grid spacing for the mesh grid based electrostatic calculations. Suggested value of 1 or below
     ion : float, optional
-        Description
+        Ionic strength for APBS calculation
     pdie : float, optional
-        Description
+        Protein dielectric constant for APBS calculation
     sdie : float, optional
-        Description
+        Solvent dielectric constant for APBS calculation
     
     Returns
     -------
-    name : TYPE
-        Description
+    file_apbs_log : STRING
+        File name for the log file that APBS generates. This file contains results from calculations performed and must be parsed
     """
     # path_apbs_exe -   full path to apbs executable ('C:\\APBS\\apbs.exe')
     # pqr_chain     -   path to file with single chain pqr (mutant or parent)
@@ -300,13 +300,33 @@ def execAPBS(path_apbs_exe, pqr_chain, pqr_complex, prefix=None, grid=1.0, ion=0
             f.write(line)
 
     # Execute APBS
-    os.system('{0} {1} {2}'.format(path_apbs_exe, '--output-file=%s.log --output-format=flat'%(prefix), file_apbs_in))
+    os.system('"{0}" {1} {2}'.format(path_apbs_exe, '--output-file=%s --output-format=flat'%(file_apbs_log), file_apbs_in))
     # os.system('{0} {1}'.format(path_apbs_exe, file_apbs_in))
 
-    return prefix
+    return file_apbs_log
 
-# Test to try syncing - RH1
+######################################################################################################################################################
+# Function to parse APBS log file
+######################################################################################################################################################
+def parseAPBS(path_log):
+    """Searches for a "calc ... end" block in the APBS log file and saves it into a data structure
+    
+    Parameters
+    ----------
+    path_log : STRING
+        Full path to APBS log file, EX: 'C:\\Users\\User\\Documents\\AESOP\\apbs.log'
+    
+    Returns
+    -------
+    file_apbs_log : STRING
+        File name for the log file that APBS generates. This file contains results from calculations performed and must be parsed
+    """
 
+    return path_log
+
+######################################################################################################################################################
+# Dictionary to convert between 3 letter and 1 letter amino acid codes
+######################################################################################################################################################
 AA_dict = {'CYS': 'C', 'ASP': 'D', 'SER': 'S', 'GLN': 'Q', 'LYS': 'K',
      'ILE': 'I', 'PRO': 'P', 'THR': 'T', 'PHE': 'F', 'ASN': 'N', 
      'GLY': 'G', 'HIS': 'H', 'LEU': 'L', 'ARG': 'R', 'TRP': 'W', 
