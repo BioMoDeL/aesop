@@ -193,11 +193,11 @@ def execAPBS(path_apbs_exe, pqr_chain, pqr_complex, prefix=None, grid=1.0, ion=0
     # sdie          -   solvent dielectric constant
 
     if prefix is None:
-        prefix = os.path.splitext(pqrfile)[0]
+        prefix = os.path.splitext(pqr_chain)[0]
 
     cfac = 1.5 # hard-coded scaling factor for mesh dimension, for now
 
-    pqr = pd.parsePQR(pqrfile)
+    pqr = pd.parsePQR(pqr_complex)
     coords = pqr.getCoords()
     x = coords[:,0]
     y = coords[:,1]
@@ -213,25 +213,68 @@ def execAPBS(path_apbs_exe, pqr_chain, pqr_complex, prefix=None, grid=1.0, ion=0
     dime = np.array((dime_list[dime_ind[0]], dime_list[dime_ind[1]], dime_list[dime_ind[2]]))
 
     # Format APBS input file
-    cmd_read = list('   mol pqr %s\n'%(pqr_chain),
-                    '   mol pqr %s\n'%(pqr_complex))
-    cmd_solv = list('   mg-manual\n',
-                    '   dime %d %d %d\n'%(),
-                    '   glen\n'%(),
-                    '   gcent\n'%(),
-                    '   mol\n'%(),
-                    '   lpbe\n',
-                    '   bcfl %s\n'%(),
-                    '   srfm\n'%(),
-                    '   chgm\n'%(),
-                    '   ion\n'%(),
-                    '   ion\n'%(),
-                    '   pdie\n'%(),
-                    '   sdie\n'%(),
-                    '   sdens\n'%(),
-                    '   srad\n'%(),
-                    '   swin\n'%(),
-                    '   temp\n'%(),
-                    '   calcenergy total\n')
-    cmd_ref
-    cmd_write
+    cmd_read = ['read\n',
+                '   mol pqr %s\n'%(pqr_chain),
+                '   mol pqr %s\n'%(pqr_complex),
+                'end\n']
+    cmd_solv = ['elec name solv\n',
+                '   mg-manual\n',
+                '   dime %d %d %d\n'%(dime[0], dime[1], dime[2]),
+                '   glen %d %d %d\n'%(glen[0], glen[1], glen[2]),
+                '   gcent mol 2\n',
+                '   mol 1\n',
+                '   lpbe\n',
+                '   bcfl sdh\n',
+                '   srfm smol\n',
+                '   chgm spl2\n',
+                '   ion 1 %.2f 2.0\n'%(ion),
+                '   ion -1 %.2f 2.0\n'%(ion),
+                '   pdie %.2f\n'%(pdie),
+                '   sdie %.2f\n'%(sdie),
+                '   sdens 10.0\n',
+                '   srad 0.0\n',
+                '   swin 0.3\n',
+                '   temp 298.15\n',
+                '   calcenergy total\n',
+                '   write pot dx %s\n'%(prefix),
+                'end\n']
+    cmd_ref = ['elec name ref\n',
+                '   mg-manual\n',
+                '   dime %d %d %d\n'%(dime[0], dime[1], dime[2]),
+                '   glen %d %d %d\n'%(glen[0], glen[1], glen[2]),
+                '   gcent mol 2\n',
+                '   mol 1\n',
+                '   lpbe\n',
+                '   bcfl sdh\n',
+                '   srfm smol\n',
+                '   chgm spl2\n',
+                '   ion 1 %.2f 2.0\n'%(ion),
+                '   ion -1 %.2f 2.0\n'%(ion),
+                '   pdie %.2f\n'%(pdie),
+                '   sdie %.2f\n'%(pdie),
+                '   sdens 10.0\n',
+                '   srad 0.0\n',
+                '   swin 0.3\n',
+                '   temp 298.15\n',
+                '   calcenergy total\n',
+                'end\n']
+    cmd_write = ['print elecEnergy solv end\n',
+                'print elecEnergy ref end\n',
+                'quit\n']
+    apbs_in = cmd_read + cmd_solv + cmd_ref + cmd_write
+
+    # Write APBS input file
+    file_apbs_in = prefix+'.in'
+    file_apbs_log = prefix+'.log'
+    with open(file_apbs_in, 'w') as f:
+        for line in apbs_in:
+            f.write(line)
+
+    # Execute APBS
+    os.system('{0} {1} {2}'.format(path_apbs_exe, '--output-file=%s.log --output-format=flat'%(prefix), file_apbs_in))
+    # os.system('{0} {1}'.format(path_apbs_exe, file_apbs_in))
+
+    return prefix
+
+
+
