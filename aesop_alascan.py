@@ -68,7 +68,14 @@ class Alascan:
     def genPQR():
         0
     def genMut():
-        0
+        for i,j in zip(selections, region_selections):
+            combined_selection = pdb.select(''.join(['(',') and ('.join((i, j, 'charged')),')']))
+            current_chain = np.unique(combined_selection.getChids())[0]
+            list_of_resnums = map(str, np.unique(combined_selection.getResnums())) #join needs a string input, hence conversion
+            for x in list_of_resnums:
+                resname = AA_dict[np.unique(pdb.select(''.join(('chain ', current_chain, ' and resnum ', x))).getResnames())[0]]
+                mutid = ''.join((resname,x,'A'))
+                mutatePDB(pdb, mutid, resnum=x, chain=current_chain, resid='ALA')
     def batchAPBS():
         0
 
