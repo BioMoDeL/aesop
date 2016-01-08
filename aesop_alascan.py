@@ -2,6 +2,7 @@
 import os as os
 import sys as sys
 import datetime as dt
+import re as re
 import numpy as np
 import prody as pd
 from modeller import environ, model, alignment, selection
@@ -308,8 +309,8 @@ def execAPBS(path_apbs_exe, pqr_chain, pqr_complex, prefix=None, grid=1.0, ion=0
 ######################################################################################################################################################
 # Function to parse APBS log file
 ######################################################################################################################################################
-def parseAPBS(path_log):
-    """Searches for a "calc ... end" block in the APBS log file and saves it into a data structure
+def parseAPBS_totEnergy(path_log):
+    """Searches for a 'totEnergy' calculation result in the APBS log file
     
     Parameters
     ----------
@@ -318,11 +319,19 @@ def parseAPBS(path_log):
     
     Returns
     -------
-    file_apbs_log : STRING
-        File name for the log file that APBS generates. This file contains results from calculations performed and must be parsed
+    data : NDARRAY
+        Array that contains results of calculations in the log file, units should be kJ/mol
     """
-
-    return path_log
+    data = []
+    with open(path_log, 'r') as f:
+        lines = f.read()
+        # The following pattern extracts a scientific notation number only if preceded by totEnergy
+        # RegEx for scientific notation is: "[+\-]?(?:0|[1-9]\d*)(?:\.\d*)?(?:[eE][+\-]?\d+)?"
+        pattern = re.compile('(?<=totEnergy)\s+[+\-]?(?:0|[1-9]\d*)(?:\.\d*)?(?:[eE][+\-]?\d+)?')
+        matches = re.findall(pattern, lines)
+        data = np.asarray([x.split() for x in matches]).astype(np.float)
+        data = data.reshape((1,data.size))
+    return data
 
 ######################################################################################################################################################
 # Dictionary to convert between 3 letter and 1 letter amino acid codes
