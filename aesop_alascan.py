@@ -68,8 +68,34 @@ class Alascan:
     def genPQR():
         0
     def genMut():
-        0
+        for i,j in zip(selections, region_selections):
+            combined_selection = pdb.select(''.join(['(',') and ('.join((i, j, 'charged')),')']))
+            current_chain = np.unique(combined_selection.getChids())[0]
+            if current_chain.isspace() is True:
+                complex_dir=prefix + '_pdb'
+                if not os.path.exists(complex_dir):
+                    os.makedirs(complex_dir)
+            else:
+                complex_dir = ''.join(('chain', '_chain'.join(np.unique(pdb.select(''.join(['(',') or ('.join(selections),')'])).getChids())),'_pdb'))
+                if not os.path.exists(complex_dir):
+                        os.makedirs(complex_dir)
+                indiv_chains = np.unique(pdb.select(''.join(['(',') or ('.join(selections),')'])).getChids())
+                for k in indiv_chains:
+                    indiv_chains_dir = ''.join(('./chain', k, '_pdb'))
+                    if not os.path.exists(indiv_chains_dir):
+                        os.makedirs(indiv_chains_dir)
 
+            list_of_resnums = map(str, np.unique(combined_selection.getResnums())) #concatenation needs a string input, hence conversion
+            for x in list_of_resnums:
+                if current_chain.isspace() is True:
+                    chain = None
+                    resname = AA_dict[np.unique(pdb.select('resnum ' + x).getResnames())[0]]
+                else:
+                    chain = current_chain
+                    resname = AA_dict[np.unique(pdb.select('chain ' + current_chain + ' and resnum ' + x).getResnames())[0]]
+                mutid = resname + x + 'A'
+                #change directory here before calling mutatePDB?
+                mutatePDB(pdb, mutid, resnum=x, chain, resid='ALA')
     def batchAPBS():
         0
 
@@ -281,3 +307,7 @@ def execAPBS(path_apbs_exe, pqr_chain, pqr_complex, prefix=None, grid=1.0, ion=0
 
 # Test to try syncing - RH1
 
+AA_dict = {'CYS': 'C', 'ASP': 'D', 'SER': 'S', 'GLN': 'Q', 'LYS': 'K',
+     'ILE': 'I', 'PRO': 'P', 'THR': 'T', 'PHE': 'F', 'ASN': 'N', 
+     'GLY': 'G', 'HIS': 'H', 'LEU': 'L', 'ARG': 'R', 'TRP': 'W', 
+     'ALA': 'A', 'VAL':'V', 'GLU': 'E', 'TYR': 'Y', 'MET': 'M'}
