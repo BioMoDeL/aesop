@@ -71,11 +71,31 @@ class Alascan:
         for i,j in zip(selections, region_selections):
             combined_selection = pdb.select(''.join(['(',') and ('.join((i, j, 'charged')),')']))
             current_chain = np.unique(combined_selection.getChids())[0]
-            list_of_resnums = map(str, np.unique(combined_selection.getResnums())) #join needs a string input, hence conversion
+            if current_chain.isspace() is True:
+                complex_dir=prefix + '_pdb'
+                if not os.path.exists(complex_dir):
+                    os.makedirs(complex_dir)
+            else:
+                complex_dir = ''.join(('chain', '_chain'.join(np.unique(pdb.select(''.join(['(',') or ('.join(selections),')'])).getChids())),'_pdb'))
+                if not os.path.exists(complex_dir):
+                        os.makedirs(complex_dir)
+                indiv_chains = np.unique(pdb.select(''.join(['(',') or ('.join(selections),')'])).getChids())
+                for k in indiv_chains:
+                    indiv_chains_dir = ''.join(('./chain', k, '_pdb'))
+                    if not os.path.exists(indiv_chains_dir):
+                        os.makedirs(indiv_chains_dir)
+
+            list_of_resnums = map(str, np.unique(combined_selection.getResnums())) #concatenation needs a string input, hence conversion
             for x in list_of_resnums:
-                resname = AA_dict[np.unique(pdb.select(''.join(('chain ', current_chain, ' and resnum ', x))).getResnames())[0]]
-                mutid = ''.join((resname,x,'A'))
-                mutatePDB(pdb, mutid, resnum=x, chain=current_chain, resid='ALA')
+                if current_chain.isspace() is True:
+                    chain = None
+                    resname = AA_dict[np.unique(pdb.select('resnum ' + x).getResnames())[0]]
+                else:
+                    chain = current_chain
+                    resname = AA_dict[np.unique(pdb.select('chain ' + current_chain + ' and resnum ' + x).getResnames())[0]]
+                mutid = resname + x + 'A'
+                #change directory here before calling mutatePDB?
+                mutatePDB(pdb, mutid, resnum=x, chain, resid='ALA')
     def batchAPBS():
         0
 
