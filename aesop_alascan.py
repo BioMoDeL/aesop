@@ -38,11 +38,13 @@ class Alascan:
     selstr : TYPE
         Description
     """
-    def __init__(self, pdb, pdb2pqr_exe, apbs_exe, selstr=['protein'], ion=0.150, pdie=20.0, sdie=78.54):
+    def __init__(self, pdb, pdb2pqr_exe, apbs_exe, selstr=['protein'], region=None, ion=0.150, pdie=20.0, sdie=78.54):
         self.pdb = pdb
         self.pdb2pqr = pdb2pqr_exe
         self.apbs = apbs_exe
         self.selstr = selstr
+        if region is None:
+            region = selstr
         self.ion = ion
         self.pdie = pdie
         self.sdie = sdie
