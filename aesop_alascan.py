@@ -44,7 +44,7 @@ class Alascan:
         self.apbs = apbs_exe
         self.selstr = selstr
         if region is None:
-            region = selstr
+            self.region = ''.join(['(',') or ('.join(selstr),')'])
         self.ion = ion
         self.pdie = pdie
         self.sdie = sdie
@@ -69,6 +69,7 @@ class Alascan:
         0
     def genMut():
         0
+
     def batchAPBS():
         0
 
