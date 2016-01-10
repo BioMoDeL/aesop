@@ -80,7 +80,7 @@ class Alascan:
                 os.makedirs(os.path.join(jobdir, complex_pdb_dir))
             list_of_pdb_dirs.append(os.path.join(jobdir, complex_pdb_dir))
             complex_parent_pdb_file = os.path.join(jobdir, complex_pdb_dir, jobname+'.pdb')
-            pd.writePDB(complex_parent_pdb_file, pdb.select(''.join(['(',') or ('.join(selections),')'])))
+            pd.writePDB(complex_parent_pdb_file, pdb.select(''.join(['(',') or ('.join(selstr),')'])))
         else:
             complex_pdb_dir = ''.join(('chain', '_chain'.join(np.unique(pdb.select(''.join(['(',') or ('.join(selstr),')'])).getChids())),'_complex_pdb'))
             if not os.path.exists(os.path.join(jobdir, complex_pdb_dir)):
@@ -96,21 +96,26 @@ class Alascan:
                 indiv_pdb_file = os.path.join(jobdir, indiv_pdb_dir, indiv_pdb_dir.replace('_pdb','.pdb'))
                 pd.writePDB(indiv_pdb_file, pdb.select(i))
 
-        for i,j in zip(selections, region_selections):
-            combined_selection = pdb.select(''.join(['(',') and ('.join((i, j, 'charged')),')']))
-            
 
-            list_of_resnums = map(str, np.unique(combined_selection.getResnums())) #concatenation needs a string input, hence conversion
-            for x in list_of_resnums:
-                if current_chain.isspace() is True:
-                    chain = None
-                    resname = AA_dict[np.unique(pdb.select('resnum ' + x).getResnames())[0]]
-                else:
-                    chain = current_chain
-                    resname = AA_dict[np.unique(pdb.select('chain ' + current_chain + ' and resnum ' + x).getResnames())[0]]
-                mutid = resname + x + 'A' #append path
-                #change directory here before calling mutatePDB?
-                mutatePDB(pdb, mutid, resnum=x, chain=chain, resid='ALA')
+        for i,j in zip(selstr, region):
+            combined_selection = pdb.select(''.join(['(',') and ('.join((i, j, 'charged', 'calpha')),')']))
+            list_of_res_chainids = combined_selection.getChids().tolist()
+            list_of_res_nums = map(str, combined_selection.getResnums().tolist())
+            list_of_res_names = combined_selection.getResnames().tolist()
+            if chainid_check is True:
+                for res_no, res_id in zip(list_of_res_nums, list_of_res_names):
+                    mut_file_prefix = complex_parent_pdb_file.replace('.pdb','')+'_'+AA_dict[res_id]+res_no+'A'
+                    mutatePDB(pdb=complex_parent_pdb_file, mutid=mut_file_prefix, resnum=res_no, chain=None, resid='ALA')
+            else:
+                for ch_id, res_no, res_id in zip(list_of_res_chainids, list_of_res_nums, list_of_res_names):
+                    mut_file_prefix = complex_parent_pdb_file.replace('.pdb','')+'_mutchain'+ch_id+'_'+AA_dict[res_id]+res_no+'A'
+                    print mut_file_prefix
+                    mutatePDB(pdb=complex_parent_pdb_file, mutid=mut_file_prefix, resnum=res_no, chain=ch_id, resid='ALA')
+                    mut_indiv_file_dir = ''.join(('chain', '_chain'.join(np.unique(pdb.select(i).getChids())), '_pdb'))
+                    mut_file_parent_pdb = os.path.join(jobdir, mut_indiv_file_dir, mut_indiv_file_dir.replace('_pdb','.pdb'))
+                    mut_file_prefix = os.path.join(jobdir, mut_indiv_file_dir, mut_indiv_file_dir.replace('_pdb',''))+'_mutchain'+ch_id+'_'+AA_dict[res_id]+res_no+'A'
+                    mutatePDB(pdb=mut_file_parent_pdb, mutid=mut_file_prefix, resnum=res_no, chain=ch_id, resid='ALA')
+
     def batchAPBS():
         0
 
