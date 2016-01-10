@@ -74,6 +74,8 @@ class Alascan:
         #Need to enforce that users either include a pdb with no chain IDs or all chain IDs, cannot have a comparison with a region that has no chain ID and one that does
         list_of_pdb_dirs = []
         chainid_check = np.unique(pdb.select(''.join(['(',') or ('.join(selstr),')'])).getChids())[0].isspace()
+        list_of_pdb_dirs = []
+        list_of_indiv_pdb_dirs = []
         if chainid_check is True:
             complex_pdb_dir = jobname+'_pdb'
             if not os.path.exists(os.path.join(jobdir, complex_pdb_dir)):
@@ -92,9 +94,10 @@ class Alascan:
                 indiv_pdb_dir = ''.join(('chain', '_chain'.join(np.unique(pdb.select(i).getChids())), '_pdb'))
                 if not os.path.exists(os.path.join(jobdir, indiv_pdb_dir)):
                     os.makedirs(os.path.join(jobdir, indiv_pdb_dir))
-                list_of_pdb_dirs.append(os.path.join(jobdir, indiv_pdb_dir))
+                list_of_indiv_pdb_dirs.append(os.path.join(jobdir, indiv_pdb_dir))
                 indiv_pdb_file = os.path.join(jobdir, indiv_pdb_dir, indiv_pdb_dir.replace('_pdb','.pdb'))
                 pd.writePDB(indiv_pdb_file, pdb.select(i))
+            list_of_pdb_dirs.extend(list_of_indiv_pdb_dirs)
 
         for i,j in zip(selections, region_selections):
             combined_selection = pdb.select(''.join(['(',') and ('.join((i, j, 'charged')),')']))
