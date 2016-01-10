@@ -71,23 +71,34 @@ class Alascan:
     def genPQR():
         0
     def genMut():
+        #Need to enforce that users either include a pdb with no chain IDs or all chain IDs, cannot have a comparison with a region that has no chain ID and one that does
+        list_of_pdb_dirs = []
+        chainid_check = np.unique(pdb.select(''.join(['(',') or ('.join(selstr),')'])).getChids())[0].isspace()
+        if chainid_check is True:
+            complex_pdb_dir = jobname+'_pdb'
+            if not os.path.exists(os.path.join(jobdir, complex_pdb_dir)):
+                os.makedirs(os.path.join(jobdir, complex_pdb_dir))
+            list_of_pdb_dirs.append(os.path.join(jobdir, complex_pdb_dir))
+            complex_parent_pdb_file = os.path.join(jobdir, complex_pdb_dir, jobname+'.pdb')
+            pd.writePDB(complex_parent_pdb_file, pdb.select(''.join(['(',') or ('.join(selections),')'])))
+        else:
+            complex_pdb_dir = ''.join(('chain', '_chain'.join(np.unique(pdb.select(''.join(['(',') or ('.join(selstr),')'])).getChids())),'_complex_pdb'))
+            if not os.path.exists(os.path.join(jobdir, complex_pdb_dir)):
+                os.makedirs(os.path.join(jobdir, complex_pdb_dir))
+            list_of_pdb_dirs.append(os.path.join(jobdir, complex_pdb_dir))
+            complex_parent_pdb_file = os.path.join(jobdir, complex_pdb_dir, complex_pdb_dir.replace('_pdb','.pdb'))
+            pd.writePDB(complex_parent_pdb_file, pdb.select(''.join(['(',') or ('.join(selections),')'])))  
+            for i in selstr:
+                indiv_pdb_dir = ''.join(('chain', '_chain'.join(np.unique(pdb.select(i).getChids())), '_pdb'))
+                if not os.path.exists(os.path.join(jobdir, indiv_pdb_dir)):
+                    os.makedirs(os.path.join(jobdir, indiv_pdb_dir))
+                list_of_pdb_dirs.append(os.path.join(jobdir, indiv_pdb_dir))
+                indiv_pdb_file = os.path.join(jobdir, indiv_pdb_dir, indiv_pdb_dir.replace('_pdb','.pdb'))
+                pd.writePDB(indiv_pdb_file, pdb.select(i))
+
         for i,j in zip(selections, region_selections):
             combined_selection = pdb.select(''.join(['(',') and ('.join((i, j, 'charged')),')']))
-            current_chain = np.unique(combined_selection.getChids())[0]
-            if current_chain.isspace() is True:
-                complex_dir=job_dir + '_pdb'
-                if not os.path.exists(complex_dir):
-                    os.makedirs(complex_dir)
-            else:
-                ########## Incorporate prefix here
-                complex_dir = ''.join(('chain', '_chain'.join(np.unique(pdb.select(''.join(['(',') or ('.join(selections),')'])).getChids())),'_pdb'))
-                if not os.path.exists(complex_dir):
-                        os.makedirs(complex_dir)
-                indiv_chains = np.unique(pdb.select(''.join(['(',') or ('.join(selections),')'])).getChids())
-                for k in indiv_chains:
-                    indiv_chains_dir = ''.join(('./chain', k, '_pdb'))
-                    if not os.path.exists(indiv_chains_dir):
-                        os.makedirs(indiv_chains_dir)
+            
 
             list_of_resnums = map(str, np.unique(combined_selection.getResnums())) #concatenation needs a string input, hence conversion
             for x in list_of_resnums:
