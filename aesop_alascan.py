@@ -39,7 +39,7 @@ class Alascan:
     selstr : TYPE
         Description
     """
-    def __init__(self, pdb, pdb2pqr_exe, apbs_exe, selstr=['protein'], region=None, ion=0.150, pdie=20.0, sdie=78.54):
+    def __init__(self, jobname='untitled', pdb, pdb2pqr_exe, apbs_exe, selstr=['protein'], region=None, ion=0.150, pdie=20.0, sdie=78.54):
         self.pdb = pdb
         self.pdb2pqr = pdb2pqr_exe
         self.apbs = apbs_exe
@@ -51,8 +51,10 @@ class Alascan:
         self.sdie = sdie
         # Insert code to instantiate dirs and prefix
         self.dirs = 0
-        self.prefix = '%4d%02d%02d'%(dt.date.today().year, dt.date.today().month, dt.date.today().day)
-
+        #jobname must be alphanumeric, no spaces
+        self.jobname = jobname
+        #For now jobid is just systemtime (date+time) but eventually can incorporate queing system into jobid
+        self.job_dir = jobname+'_'+'%4d%02d%02d_%02d%02d%02d'%(dt.date.today().year, dt.date.today().month, dt.date.today().day, dt.datetime.now().hour, dt.datetime.now().minute, dt.datetime.now().second)
     def getPDB(self):
         return self.pdb
     def getSel(self):
@@ -73,10 +75,11 @@ class Alascan:
             combined_selection = pdb.select(''.join(['(',') and ('.join((i, j, 'charged')),')']))
             current_chain = np.unique(combined_selection.getChids())[0]
             if current_chain.isspace() is True:
-                complex_dir=prefix + '_pdb'
+                complex_dir=job_dir + '_pdb'
                 if not os.path.exists(complex_dir):
                     os.makedirs(complex_dir)
             else:
+                ########## Incorporate prefix here
                 complex_dir = ''.join(('chain', '_chain'.join(np.unique(pdb.select(''.join(['(',') or ('.join(selections),')'])).getChids())),'_pdb'))
                 if not os.path.exists(complex_dir):
                         os.makedirs(complex_dir)
@@ -94,14 +97,16 @@ class Alascan:
                 else:
                     chain = current_chain
                     resname = AA_dict[np.unique(pdb.select('chain ' + current_chain + ' and resnum ' + x).getResnames())[0]]
-                mutid = resname + x + 'A'
+                mutid = resname + x + 'A' #append path
                 #change directory here before calling mutatePDB?
                 mutatePDB(pdb, mutid, resnum=x, chain=chain, resid='ALA')
     def batchAPBS():
         0
 
     def run():
-        0
+        if not os.path.exists(job_dir):
+            os.makedirs(job_dir)
+
 
 ######################################################################################################################################################
 # Function to mutate a single residue in a PDB structure
