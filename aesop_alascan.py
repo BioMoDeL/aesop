@@ -39,22 +39,32 @@ class Alascan:
     selstr : TYPE
         Description
     """
-    def __init__(self, jobname='untitled', pdb, pdb2pqr_exe, apbs_exe, selstr=['protein'], region=None, ion=0.150, pdie=20.0, sdie=78.54):
+    def __init__(self, pdb, pdb2pqr_exe, apbs_exe, selstr=['protein'], jobname=None, region=None, ion=0.150, pdie=20.0, sdie=78.54):
         self.pdb = pdb
         self.pdb2pqr = pdb2pqr_exe
         self.apbs = apbs_exe
         self.selstr = selstr
         if region is None:
-            self.region = ''.join(['(',') or ('.join(selstr),')'])
+            # self.region = ''.join(['(',') or ('.join(selstr),')'])
+            self.region = selstr
         self.ion = ion
         self.pdie = pdie
         self.sdie = sdie
         # Insert code to instantiate dirs and prefix
-        self.dirs = 0
+        # self.dirs = 0
         #jobname must be alphanumeric, no spaces
-        self.jobname = jobname
-        #For now jobid is just systemtime (date+time) but eventually can incorporate queing system into jobid
-        self.job_dir = jobname+'_'+'%4d%02d%02d_%02d%02d%02d'%(dt.date.today().year, dt.date.today().month, dt.date.today().day, dt.datetime.now().hour, dt.datetime.now().minute, dt.datetime.now().second)
+        if jobname is None:
+            self.jobname = '%4d%02d%02d_%02d%02d%02d'%(dt.date.today().year, dt.date.today().month, dt.date.today().day, dt.datetime.now().hour, dt.datetime.now().minute, dt.datetime.now().second)
+        else:
+            self.jobname = jobname
+        self.jobdir = jobname
+        if not os.path.exists(os.path.join(self.jobdir)):
+            os.makedirs(os.path.join(self.jobdir))
+
+        self.E_ref = np.zeros(0)
+        self.E_solv = np.zeros(0)
+        self.mutid = []
+
     def getPDB(self):
         return self.pdb
     def getSel(self):
@@ -68,10 +78,16 @@ class Alascan:
     def getMutID():
         return 0
 
-    def genPQR():
-        0
-    def genMut():
+    def genPQR(self):
+        return 0
+    def genMut(self):
         #Need to enforce that users either include a pdb with no chain IDs or all chain IDs, cannot have a comparison with a region that has no chain ID and one that does
+        pdb = pd.parsePDB(self.pdb)
+        selstr = self.selstr
+        jobdir = self.jobdir
+        jobname = self.jobname
+        region = self.region
+
         list_of_pdb_dirs = []
         chainid_check = np.unique(pdb.select(''.join(['(',') or ('.join(selstr),')'])).getChids())[0].isspace()
         if chainid_check is True:
@@ -87,7 +103,7 @@ class Alascan:
                 os.makedirs(os.path.join(jobdir, complex_pdb_dir))
             list_of_pdb_dirs.append(os.path.join(jobdir, complex_pdb_dir))
             complex_parent_pdb_file = os.path.join(jobdir, complex_pdb_dir, complex_pdb_dir.replace('_pdb','.pdb'))
-            pd.writePDB(complex_parent_pdb_file, pdb.select(''.join(['(',') or ('.join(selections),')'])))  
+            pd.writePDB(complex_parent_pdb_file, pdb.select(''.join(['(',') or ('.join(selstr),')'])))  # changed selections to selstr
             for i in selstr:
                 indiv_pdb_dir = ''.join(('chain', '_chain'.join(np.unique(pdb.select(i).getChids())), '_pdb'))
                 if not os.path.exists(os.path.join(jobdir, indiv_pdb_dir)):
@@ -96,9 +112,9 @@ class Alascan:
                 indiv_pdb_file = os.path.join(jobdir, indiv_pdb_dir, indiv_pdb_dir.replace('_pdb','.pdb'))
                 pd.writePDB(indiv_pdb_file, pdb.select(i))
 
-
         for i,j in zip(selstr, region):
             combined_selection = pdb.select(''.join(['(',') and ('.join((i, j, 'charged', 'calpha')),')']))
+            # combined_selection = pdb.select('(%s) and (%s)'%(i,j)) # Methods do not work, it can be much simpler though
             list_of_res_chainids = combined_selection.getChids().tolist()
             list_of_res_nums = map(str, combined_selection.getResnums().tolist())
             list_of_res_names = combined_selection.getResnames().tolist()
@@ -116,12 +132,75 @@ class Alascan:
                     mut_file_prefix = os.path.join(jobdir, mut_indiv_file_dir, mut_indiv_file_dir.replace('_pdb',''))+'_mutchain'+ch_id+'_'+AA_dict[res_id]+res_no+'A'
                     mutatePDB(pdb=mut_file_parent_pdb, mutid=mut_file_prefix, resnum=res_no, chain=ch_id, resid='ALA')
 
+
     def batchAPBS():
         0
 
-    def run():
-        if not os.path.exists(job_dir):
-            os.makedirs(job_dir)
+    def run(self):
+        # Create necessary directories for PDB files
+        pdb_complex_dir = 'complex_pdb'
+        if not os.path.exists(os.path.join(self.jobdir, pdb_complex_dir)):
+            os.makedirs(os.path.join(self.jobdir, pdb_complex_dir))
+        pdb_sel_dir=[]
+        for i in xrange(0,len(self.selstr)):
+            pdb_sel_dir.append('sel_%d_pdb'%(i))
+            if not os.path.exists(os.path.join(self.jobdir, 'sel_%d_pdb'%(i))):
+                os.makedirs(os.path.join(self.jobdir, 'sel_%d_pdb'%(i)))
+
+        # Create necessary directories for PQR files
+        pqr_complex_dir = 'complex_pqr'
+        if not os.path.exists(os.path.join(self.jobdir, pqr_complex_dir)):
+            os.makedirs(os.path.join(self.jobdir, pqr_complex_dir))
+        pqr_sel_dir=[]
+        for i in xrange(0,len(self.selstr)):
+            pdb_sel_dir.append('sel_%d_pqr'%(i))
+            if not os.path.exists(os.path.join(self.jobdir, 'sel_%d_pqr'%(i))):
+                os.makedirs(os.path.join(self.jobdir, 'sel_%d_pqr'%(i)))
+
+        # Create necessary directories for APBS files
+        logs_apbs_dir = 'apbs_logs'
+        if not os.path.exists(os.path.join(self.jobdir, logs_apbs_dir)):
+            os.makedirs(os.path.join(self.jobdir, logs_apbs_dir))
+
+        # Find all residues that must be mutated, generating mutids
+
+        list_mutids = [[] for x in xrange(len(selstr)+1)]
+
+        counter = 0
+        for id_by_sel in list_mutids:
+            if counter == 0: # if counter is zero, then this is the wild type
+                
+
+
+
+
+
+
+
+        for i,j, list_id in zip(selstr, region):
+
+            list_mutfiles
+
+            combined_selection = pdb.select(''.join(['(',') and ('.join((i, j, 'charged', 'calpha')),')']))
+            list_of_res_chainids = combined_selection.getChids().tolist()
+            list_of_res_nums = map(str, combined_selection.getResnums().tolist())
+            list_of_res_names = combined_selection.getResnames().tolist()
+            if chainid_check is True:
+                for res_no, res_id in zip(list_of_res_nums, list_of_res_names):
+                    mut_file_prefix = complex_parent_pdb_file.replace('.pdb','')+'_'+AA_dict[res_id]+res_no+'A'
+                    mutatePDB(pdb=complex_parent_pdb_file, mutid=mut_file_prefix, resnum=res_no, chain=None, resid='ALA')
+            else:
+                for ch_id, res_no, res_id in zip(list_of_res_chainids, list_of_res_nums, list_of_res_names):
+                    mut_file_prefix = complex_parent_pdb_file.replace('.pdb','')+'_mutchain'+ch_id+'_'+AA_dict[res_id]+res_no+'A'
+                    mutatePDB(pdb=complex_parent_pdb_file, mutid=mut_file_prefix, resnum=res_no, chain=ch_id, resid='ALA')
+                    mut_indiv_file_dir = ''.join(('chain', '_chain'.join(np.unique(pdb.select(i).getChids())), '_pdb'))
+                    mut_file_parent_pdb = os.path.join(jobdir, mut_indiv_file_dir, mut_indiv_file_dir.replace('_pdb','.pdb'))
+                    mut_file_prefix = os.path.join(jobdir, mut_indiv_file_dir, mut_indiv_file_dir.replace('_pdb',''))+'_mutchain'+ch_id+'_'+AA_dict[res_id]+res_no+'A'
+                    mutatePDB(pdb=mut_file_parent_pdb, mutid=mut_file_prefix, resnum=res_no, chain=ch_id, resid='ALA')
+
+
+        # Generate all PDB files, including mutants
+        # Run APBS on all structures, storing results
 
 
 ######################################################################################################################################################
@@ -163,7 +242,7 @@ def mutatePDB(pdb, mutid, resnum, chain=None, resid='ALA'):
     aln.append_model(mdl, atom_files=pdb, align_codes='parent')
 
     if chain is None:
-        sel = selection(mdl.residue_range(resnum-1, resnum-1))
+        sel = selection(mdl.residue_range(int(resnum)-1, int(resnum)-1))
     else:
         sel = selection(mdl.residue_range(str(resnum)+':'+chain, str(resnum)+':'+chain))
 
