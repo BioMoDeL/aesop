@@ -1,7 +1,7 @@
 
 import os as os
 import sys as sys
-# import glob as glob
+import subprocess as sp
 import datetime as dt
 import re as re
 import numpy as np
@@ -17,6 +17,229 @@ from modeller import environ, model, alignment, selection
 #   sdie    -   Solvent dielectric constant
 ######################################################################################################################################################
 class Alascan:
+    """Summary
+    
+    Attributes
+    ----------
+    apbs : TYPE
+        Description
+    dirs : int
+        Description
+    ion : TYPE
+        Description
+    pdb : TYPE
+        Description
+    pdb2pqr : TYPE
+        Description
+    pdie : TYPE
+        Description
+    prefix : TYPE
+        Description
+    sdie : TYPE
+        Description
+    selstr : TYPE
+        Description
+    """
+    def __init__(self, pdb, path_pdb2pqr, path_apbs, selstr=['protein'], jobname=None, region=None, grid=1, ion=0.150, pdie=20.0, sdie=78.54):
+        self.pdb = pdb
+        self.pdb2pqr = pdb2pqr_exe
+        self.apbs = apbs_exe
+        self.selstr = selstr
+        if region is None:
+            self.region = selstr
+        self.grid = grid
+        self.ion = ion
+        self.pdie = pdie
+        self.sdie = sdie
+        if jobname is None:
+            self.jobname = '%4d%02d%02d_%02d%02d%02d'%(dt.date.today().year, dt.date.today().month, dt.date.today().day, dt.datetime.now().hour, dt.datetime.now().minute, dt.datetime.now().second)
+        else:
+            self.jobname = jobname
+        self.jobdir = jobname
+        if not os.path.exists(os.path.join(self.jobdir)):
+            os.makedirs(os.path.join(self.jobdir))
+        self.E_ref = np.zeros(0)
+        self.E_solv = np.zeros(0)
+        self.mutid = []
+
+    def getPDB(self):
+        return self.pdb
+    def getSel(self):
+        return self.selstr
+    def getDirs(self):
+        return self.dirs
+    def getPrefix(self):
+        return self.prefix
+    # def getEnergies(self):
+    #     return 0
+    def getMutids(self):
+        return self.mutids
+
+    def genDirs(self):
+        # Create necessary directories for PDB files
+        pdb_complex_dir = 'complex_pdb'
+        if not os.path.exists(os.path.join(self.jobdir, pdb_complex_dir)):
+            os.makedirs(os.path.join(self.jobdir, pdb_complex_dir))
+
+        # Create necessary directories for PQR files
+        pqr_complex_dir = 'complex_pqr'
+        if not os.path.exists(os.path.join(self.jobdir, pqr_complex_dir)):
+            os.makedirs(os.path.join(self.jobdir, pqr_complex_dir))
+        pqr_sel_dir=[]
+        for i in xrange(0,len(self.selstr)):
+            pqr_sel_dir.append('sel_%d_pqr'%(i))
+            if not os.path.exists(os.path.join(self.jobdir, 'sel_%d_pqr'%(i))):
+                os.makedirs(os.path.join(self.jobdir, 'sel_%d_pqr'%(i)))
+        self.pqr_complex_dir = pqr_complex_dir
+        self.pqr_sel_dir = pqr_sel_dir
+
+        # Create necessary directories for APBS files
+        logs_apbs_dir = 'apbs_logs'
+        if not os.path.exists(os.path.join(self.jobdir, logs_apbs_dir)):
+            os.makedirs(os.path.join(self.jobdir, logs_apbs_dir))
+        self.logs_apbs_dir = 'apbs_logs'
+
+
+    def genMutid(self):
+
+    def genPDB(self):
+        parent_pdb = pd.parsePDB(self.pdb)
+
+        # Create necessary directories for PDB files
+        pdb_complex_dir = 'complex_pdb'
+        if not os.path.exists(os.path.join(self.jobdir, pdb_complex_dir)):
+            os.makedirs(os.path.join(self.jobdir, pdb_complex_dir))
+        pdb_sel_dir=[]
+        for i in xrange(0,len(self.selstr)):
+            pdb_sel_dir.append('sel_%d_pdb'%(i))
+            if not os.path.exists(os.path.join(self.jobdir, 'sel_%d_pdb'%(i))):
+                os.makedirs(os.path.join(self.jobdir, 'sel_%d_pdb'%(i)))
+        self.pdb_complex_dir = pdb_complex_dir
+        self.pdb_sel_dir = pdb_sel_dir
+
+        # Create necessary directories for PQR files
+        pqr_complex_dir = 'complex_pqr'
+        if not os.path.exists(os.path.join(self.jobdir, pqr_complex_dir)):
+            os.makedirs(os.path.join(self.jobdir, pqr_complex_dir))
+        pqr_sel_dir=[]
+        for i in xrange(0,len(self.selstr)):
+            pqr_sel_dir.append('sel_%d_pqr'%(i))
+            if not os.path.exists(os.path.join(self.jobdir, 'sel_%d_pqr'%(i))):
+                os.makedirs(os.path.join(self.jobdir, 'sel_%d_pqr'%(i)))
+        self.pqr_complex_dir = pqr_complex_dir
+        self.pqr_sel_dir = pqr_sel_dir
+
+        # Create necessary directories for APBS files
+        logs_apbs_dir = 'apbs_logs'
+        if not os.path.exists(os.path.join(self.jobdir, logs_apbs_dir)):
+            os.makedirs(os.path.join(self.jobdir, logs_apbs_dir))
+        self.logs_apbs_dir = 'apbs_logs'
+
+        # Set reference parent structure file names
+        parent_file_prefix = 'wt'
+        complex_parent_pdb_file = os.path.join(self.jobdir, pdb_complex_dir, parent_file_prefix+'.pdb')
+
+        # Find all residues that must be mutated, generating mutids
+        chainid_check = np.unique(pd.parsePDB(self.pdb).select(''.join(['(',') or ('.join(self.selstr),')'])).getChids())[0].isspace() # Check to see if there are no Chids
+        list_mutids = [[] for x in xrange(len(self.selstr)+1)]
+        counter = 0
+        for id_by_sel in list_mutids:
+            if counter == 0: # if counter is zero, then this is the wild type
+                pdb = parent_pdb.select(' or '.join(self.selstr))
+                pd.writePDB(complex_parent_pdb_file, pdb)
+                id_by_sel.append(parent_file_prefix)
+                for sel, sel_dir in zip(self.selstr, pdb_sel_dir):
+                    pdb = parent_pdb.select(sel)
+                    pd.writePDB(os.path.join(self.jobdir, sel_dir, parent_file_prefix+'_'+sel_dir.replace('_pdb','.pdb')), pdb)
+                    id_by_sel.append(sel_dir.replace('_pdb','')+'_'+parent_file_prefix)
+
+            else:
+            # for sel, reg, sel_dir in zip(self.selstr, self.region, pdb_sel_dir):
+                sel = self.selstr[counter-1]
+                reg = self.region[counter-1]
+                sel_dir = pdb_sel_dir[counter-1]
+                combined_selection = parent_pdb.select(''.join(['(', ') and ('.join((sel, reg, 'charged', 'calpha')), ')']))
+                list_of_res_chainids = combined_selection.getChids().tolist()
+                list_of_res_nums = map(str, combined_selection.getResnums().tolist())
+                list_of_res_names = combined_selection.getResnames().tolist()
+                if chainid_check is True:
+                    for res_no, res_id in zip(list_of_res_nums, list_of_res_names):
+                        mut_file_prefix = sel_dir.replace('_pdb','')+'_'+AA_dict[res_id]+res_no+'A'
+                        id_by_sel.append(mut_file_prefix)
+                        path_mut_complex = os.path.join(self.jobdir, pdb_complex_dir, mut_file_prefix)
+                        path_mut_chain = os.path.join(self.jobdir, sel_dir, mut_file_prefix)
+                        mutatePDB(pdb=complex_parent_pdb_file, mutid=path_mut_complex, resnum=res_no, chain=None, resid='ALA')
+                        pd.writePDB(path_mut_chain+'.pdb', pd.parsePDB(path_mut_complex+'.pdb').select(sel))
+                else:
+                    for ch_id, res_no, res_id in zip(list_of_res_chainids, list_of_res_nums, list_of_res_names):
+                        mut_file_prefix = sel_dir.replace('_pdb','')+'_'+AA_dict[res_id]+res_no+'A'
+                        id_by_sel.append(mut_file_prefix)
+                        path_mut_complex = os.path.join(self.jobdir, pdb_complex_dir, mut_file_prefix)
+                        path_mut_chain = os.path.join(self.jobdir, sel_dir, mut_file_prefix)
+                        mutatePDB(pdb=complex_parent_pdb_file, mutid=path_mut_complex, resnum=res_no, chain=ch_id, resid='ALA')
+                        pd.writePDB(path_mut_chain+'.pdb', pd.parsePDB(path_mut_complex+'.pdb').select(sel))
+            counter += 1
+        self.mutids = list_mutids
+
+    def genPQR(self):
+        # Convert all PDB files to PQR files
+        path_in = os.path.join(self.jobdir, self.pdb_complex_dir)
+        path_out = os.path.join(self.jobdir, self.pqr_complex_dir)
+        for name in os.listdir(path_in):
+            name = os.path.basename(name)
+            execPDB2PQR(self.pdb2pqr, os.path.join(path_in, name), outfile=os.path.join(path_out, name.replace('.pdb', '.pqr')))
+
+        # Write individual chains for mutants
+        mutids = self.mutids
+        for i in xrange(len(mutids)): # Loop for each selection: wt, sel0, sel1, etc.
+            if i == 0:
+                j = 1
+                for sel in self.selstr:
+                    path_pqr_complex = os.path.join(self.jobdir, self.pqr_complex_dir, mutids[i][0]+'.pqr')
+                    path_pqr_sel = os.path.join(self.jobdir, self.pqr_sel_dir[j-1], mutids[i][j]+'.pqr')
+                    pqr = pd.parsePQR(path_pqr_complex)
+                    pd.writePQR(path_pqr_sel, pqr.select(sel))
+                    j += 1
+            else:
+                for name in mutids[i]:
+                    path_pqr_complex = os.path.join(self.jobdir, self.pqr_complex_dir, name+'.pqr')
+                    path_pqr_sel = os.path.join(self.jobdir, self.pqr_sel_dir[i-1], name+'.pqr')
+                    pqr = pd.parsePQR(path_pqr_complex)
+                    pd.writePQR(path_pqr_sel, pqr.select(self.selstr[i-1]))
+
+    def calcAPBS(self):
+        mutids = self.mutids
+        for i in xrange(len(mutids)): # Loop for each selection: wt, sel0, sel1, etc.
+            if i == 0:
+                j = 1
+                for sel in self.selstr:
+                    path_pqr_complex = os.path.join(self.jobdir, self.pqr_complex_dir, mutids[i][0]+'.pqr')
+                    path_pqr_sel = os.path.join(self.jobdir, self.pqr_sel_dir[j-1], mutids[i][j]+'.pqr')
+                    path_prefix = os.path.join(self.jobdir, self.logs_apbs_dir, mutids[i][j])
+                    path_log = os.path.join(self.jobdir, self.logs_apbs_dir, mutids[i][j]+'.log')
+                    execAPBS(self.apbs, path_pqr_sel, path_pqr_complex, prefix=path_prefix, grid=self.grid, ion=self.ion, pdie=self.pdie, sdie=self.sdie)
+                    data = parseAPBS_totEnergy(path_log)
+                    self.E_solv = np.append(self.E_solv, data[0][0])
+                    self.E_ref = np.append(self.E_ref, data[0][1])
+                    j += 1
+            else:
+                for name in mutids[i]:
+                    path_pqr_complex = os.path.join(self.jobdir, self.pqr_complex_dir, name+'.pqr')
+                    path_pqr_sel = os.path.join(self.jobdir, self.pqr_sel_dir[i-1], name+'.pqr')
+                    path_prefix = os.path.join(self.jobdir, self.logs_apbs_dir, name)
+                    path_log = os.path.join(self.jobdir, self.logs_apbs_dir, name+'.log')
+                    execAPBS(self.apbs, path_pqr_sel, path_pqr_complex, prefix=path_prefix, grid=self.grid, ion=self.ion, pdie=self.pdie, sdie=self.sdie)
+                    data = parseAPBS_totEnergy(path_log)
+                    self.E_solv = np.append(self.E_solv, data[0][0])
+                    self.E_ref = np.append(self.E_ref, data[0][1])
+
+    def run(self):
+        self.genPDB()
+        self.genPQR()
+        self.calcAPBS()
+
+
+class Alascan_old:
     """Summary
     
     Attributes
@@ -330,8 +553,10 @@ class Alascan:
 
         # Generate all PDB files, including mutants
         # Run APBS on all structures, storing results
-
-
+######################################################################################################################################################
+# Function to run commands, recording output
+######################################################################################################################################################
+# def runProcess
 ######################################################################################################################################################
 # Function to mutate a single residue in a PDB structure
 ######################################################################################################################################################
