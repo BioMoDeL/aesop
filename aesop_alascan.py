@@ -250,8 +250,8 @@ class Alascan:
                     path_log = os.path.join(self.jobdir, self.logs_apbs_dir, mutids[i][j]+'.log')
                     execAPBS(self.apbs, path_pqr_sel, path_pqr_complex, prefix=path_prefix, grid=self.grid, ion=self.ion, pdie=self.pdie, sdie=self.sdie)
                     data = parseAPBS_totEnergy(path_log)
-                    self.E_solv = np.append(self.E_solv, data[0])
-                    self.E_ref = np.append(self.E_ref, data[1])
+                    self.E_solv = np.append(self.E_solv, data[0][0])
+                    self.E_ref = np.append(self.E_ref, data[0][1])
                     j += 1
             else:
                 for name in mutids[i]:
@@ -261,7 +261,7 @@ class Alascan:
                     path_log = os.path.join(self.jobdir, self.logs_apbs_dir, name+'.log')
                     execAPBS(self.apbs, path_pqr_sel, path_pqr_complex, prefix=path_prefix, grid=self.grid, ion=self.ion, pdie=self.pdie, sdie=self.sdie)
                     data = parseAPBS_totEnergy(path_log)
-                    self.E_solv = np.append(self.E_solv, data[0][1])
+                    self.E_solv = np.append(self.E_solv, data[0][0])
                     self.E_ref = np.append(self.E_ref, data[0][1])
 
         # for ids, i in zip(mutids, xrange(len(mutids))):
