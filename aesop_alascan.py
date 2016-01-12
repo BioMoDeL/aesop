@@ -225,8 +225,8 @@ class Alascan:
             if i == 0:
                 j = 1
                 for sel in self.selstr:
-                    path_pqr_complex = os.path.join(self.jobdir, self.pqr_complex_dir, mutids[i][j]+'.pqr')
-                    path_pqr_sel = os.path.join(self.jobdir, self.pqr_sel_dir[j], mutids[i][j]+'.pqr')
+                    path_pqr_complex = os.path.join(self.jobdir, self.pqr_complex_dir, mutids[i][0]+'.pqr')
+                    path_pqr_sel = os.path.join(self.jobdir, self.pqr_sel_dir[j-1], mutids[i][j]+'.pqr')
                     pqr = pd.parsePQR(path_pqr_complex)
                     pd.writePQR(path_pqr_sel, pqr.select(sel))
                     j += 1
@@ -234,7 +234,7 @@ class Alascan:
             else:
                 for name in mutids[i]:
                     path_pqr_complex = os.path.join(self.jobdir, self.pqr_complex_dir, name+'.pqr')
-                    path_pqr_sel = os.path.join(self.jobdir, self.pqr_sel_dir, name+'.pqr')
+                    path_pqr_sel = os.path.join(self.jobdir, self.pqr_sel_dir[i-1], name+'.pqr')
                     pqr = pd.parsePQR(path_pqr_complex)
                     pd.writePQR(path_pqr_sel, pqr.select(self.selstr[i-1]))
 
