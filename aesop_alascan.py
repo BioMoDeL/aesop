@@ -40,7 +40,7 @@ class Alascan:
     selstr : TYPE
         Description
     """
-    def __init__(self, pdb, pdb2pqr_exe, apbs_exe, selstr=['protein'], jobname=None, region=None, ion=0.150, pdie=20.0, sdie=78.54):
+    def __init__(self, pdb, pdb2pqr_exe, apbs_exe, selstr=['protein'], jobname=None, region=None, grid=1, ion=0.150, pdie=20.0, sdie=78.54):
         self.pdb = pdb
         self.pdb2pqr = pdb2pqr_exe
         self.apbs = apbs_exe
@@ -48,6 +48,7 @@ class Alascan:
         if region is None:
             # self.region = ''.join(['(',') or ('.join(selstr),')'])
             self.region = selstr
+        self.grid = grid
         self.ion = ion
         self.pdie = pdie
         self.sdie = sdie
@@ -230,7 +231,6 @@ class Alascan:
                     pqr = pd.parsePQR(path_pqr_complex)
                     pd.writePQR(path_pqr_sel, pqr.select(sel))
                     j += 1
-
             else:
                 for name in mutids[i]:
                     path_pqr_complex = os.path.join(self.jobdir, self.pqr_complex_dir, name+'.pqr')
@@ -238,11 +238,47 @@ class Alascan:
                     pqr = pd.parsePQR(path_pqr_complex)
                     pd.writePQR(path_pqr_sel, pqr.select(self.selstr[i-1]))
 
-
     def calcAPBS(self):
-        0
+        mutids = self.mutids
+        for i in xrange(len(mutids)): # Loop for each selection: wt, sel0, sel1, etc.
+            if i == 0:
+                j = 1
+                for sel in self.selstr:
+                    path_pqr_complex = os.path.join(self.jobdir, self.pqr_complex_dir, mutids[i][0]+'.pqr')
+                    path_pqr_sel = os.path.join(self.jobdir, self.pqr_sel_dir[j-1], mutids[i][j]+'.pqr')
+                    path_prefix = os.path.join(self.jobdir, self.logs_apbs_dir, mutids[i][j])
+                    path_log = os.path.join(self.jobdir, self.logs_apbs_dir, mutids[i][j]+'.log')
+                    execAPBS(self.apbs, path_pqr_sel, path_pqr_complex, prefix=path_prefix, grid=self.grid, ion=self.ion, pdie=self.pdie, sdie=self.sdie)
+                    data = parseAPBS_totEnergy(path_log)
+                    self.E_solv = np.append(self.E_solv, data[0])
+                    self.E_ref = np.append(self.E_ref, data[1])
+                    j += 1
+            else:
+                for name in mutids[i]:
+                    path_pqr_complex = os.path.join(self.jobdir, self.pqr_complex_dir, name+'.pqr')
+                    path_pqr_sel = os.path.join(self.jobdir, self.pqr_sel_dir[i-1], name+'.pqr')
+                    path_prefix = os.path.join(self.jobdir, self.logs_apbs_dir, name)
+                    path_log = os.path.join(self.jobdir, self.logs_apbs_dir, name+'.log')
+                    execAPBS(self.apbs, path_pqr_sel, path_pqr_complex, prefix=path_prefix, grid=self.grid, ion=self.ion, pdie=self.pdie, sdie=self.sdie)
+                    data = parseAPBS_totEnergy(path_log)
+                    self.E_solv = np.append(self.E_solv, data[0][1])
+                    self.E_ref = np.append(self.E_ref, data[0][1])
+
+        # for ids, i in zip(mutids, xrange(len(mutids))):
+        #     for name, j in zip(ids, xrange(len(mutids))):
+        #         if i == 0:
+        #             path_pqr_chain = os.path.join(self.jobdir, self.pqr_sel_dir, mutids[i][i])
+
+        #         else:
+        #             path_pqr_chain = os.path.join(self.jobdir, self.pqr_sel_dir[i])
+        #             path_pqr_complex =
+        #             path_prefix =
+        #             execAPBS(path_apbs_exe, pqr_chain, pqr_complex, prefix=name, grid=self.grid, ion=self.ion, pdie=self.pdie, sdie=self.sdie)
+
     def run(self):
-        0
+        self.genPDB()
+        self.genPQR()
+        self.calcAPBS()
 
 
 
