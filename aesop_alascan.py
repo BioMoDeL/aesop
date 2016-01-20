@@ -417,7 +417,7 @@ def execAPBS(path_apbs_exe, pqr_chain, pqr_complex, prefix=None, grid=1.0, ion=0
                 '   swin 0.3\n',
                 '   temp 298.15\n',
                 '   calcenergy total\n',
-                '   write pot dx %s\n'%(prefix),
+                # '   write pot dx %s\n'%(prefix),
                 'end\n']
     cmd_ref = ['elec name ref\n',
                 '   mg-manual\n',
@@ -455,36 +455,39 @@ def execAPBS(path_apbs_exe, pqr_chain, pqr_complex, prefix=None, grid=1.0, ion=0
     # os.system('"{0}" {1} {2}'.format(path_apbs_exe, '--output-file=%s --output-format=flat'%(file_apbs_log), file_apbs_in))
     # os.system('{0} {1}'.format(path_apbs_exe, file_apbs_in))
     log = runProcess([path_apbs_exe, file_apbs_in])
+    pattern = re.compile('(?<=Global net ELEC energy =)\s+[+\-]?(?:0|[1-9]\d*)(?:\.\d*)?(?:[eE][+\-]?\d+)?')
+    elec = np.asarray([x.split() for x in re.findall(pattern, log)]).astype(np.float)
+    elec = elec.reshape((1,elec.size))
 
     # return file_apbs_log
-    return log
+    return elec
 
 ######################################################################################################################################################
-# Function to parse APBS log file
+# Function to parse APBS log file - REMOVED as it is not required!
 ######################################################################################################################################################
-def parseAPBS_totEnergy(path_log):
-    """Searches for a 'totEnergy' calculation result in the APBS log file
+# def parseAPBS_totEnergy(path_log):
+#     """Searches for a 'totEnergy' calculation result in the APBS log file
     
-    Parameters
-    ----------
-    path_log : STRING
-        Full path to APBS log file, EX: 'C:\\Users\\User\\Documents\\AESOP\\apbs.log'
+#     Parameters
+#     ----------
+#     path_log : STRING
+#         Full path to APBS log file, EX: 'C:\\Users\\User\\Documents\\AESOP\\apbs.log'
     
-    Returns
-    -------
-    data : NDARRAY
-        Array that contains results of calculations in the log file, units should be kJ/mol
-    """
-    data = []
-    with open(path_log, 'r') as f:
-        lines = f.read()
-        # The following pattern extracts a scientific notation number only if preceded by totEnergy
-        # RegEx for scientific notation is: "[+\-]?(?:0|[1-9]\d*)(?:\.\d*)?(?:[eE][+\-]?\d+)?"
-        pattern = re.compile('(?<=totEnergy)\s+[+\-]?(?:0|[1-9]\d*)(?:\.\d*)?(?:[eE][+\-]?\d+)?')
-        matches = re.findall(pattern, lines)
-        data = np.asarray([x.split() for x in matches]).astype(np.float)
-        data = data.reshape((1,data.size))
-    return data
+#     Returns
+#     -------
+#     data : NDARRAY
+#         Array that contains results of calculations in the log file, units should be kJ/mol
+#     """
+#     data = []
+#     with open(path_log, 'r') as f:
+#         lines = f.read()
+#         # The following pattern extracts a scientific notation number only if preceded by totEnergy
+#         # RegEx for scientific notation is: "[+\-]?(?:0|[1-9]\d*)(?:\.\d*)?(?:[eE][+\-]?\d+)?"
+#         pattern = re.compile('(?<=totEnergy)\s+[+\-]?(?:0|[1-9]\d*)(?:\.\d*)?(?:[eE][+\-]?\d+)?')
+#         matches = re.findall(pattern, lines)
+#         data = np.asarray([x.split() for x in matches]).astype(np.float)
+#         data = data.reshape((1,data.size))
+#     return data
 
 ######################################################################################################################################################
 # Dictionary to convert between 3 letter and 1 letter amino acid codes
