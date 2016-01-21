@@ -12,4 +12,4 @@ alascan = Alascan(pdbfile, path_pdb2pqr, path_apbs, coulomb_exe=path_coul, selst
 
 alascan.run()
 
-p.dump(ala, open('bn_bs_alascan.p', 'wb'))
+p.dump(alascan, open('bn_bs_alascan.p', 'wb'))
