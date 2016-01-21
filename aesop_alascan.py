@@ -231,7 +231,7 @@ class Alascan:
         Gcoul = np.zeros((dim_mutid, dim_sel))
 
         for i, mutid in zip(xrange(dim_mutid), list_mutids):
-            print '\nCalculating solvation and reference energies for mutant: %s'%(mutid)
+            print '\nCalculating coulombic energies for mutant: %s'%(mutid)
             for j, seldir in zip(xrange(dim_sel), [pqr_complex_dir]+pqr_sel_dir):
             	subunit_pqr = os.path.join(jobdir, seldir, mutid+'.pqr')
             	energies = execCoulomb(path_coulomb, subunit_pqr)
