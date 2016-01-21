@@ -222,6 +222,7 @@ class Alascan:
         pqr_complex_dir = self.pqr_complex_dir
         pqr_sel_dir = self.pqr_sel_dir
         path_coulomb = self.coulomb
+        pdie = self.pdie
 
         list_mutids = self.getMutids()
 
@@ -235,9 +236,22 @@ class Alascan:
             for j, seldir in zip(xrange(dim_sel), [pqr_complex_dir]+pqr_sel_dir):
             	subunit_pqr = os.path.join(jobdir, seldir, mutid+'.pqr')
             	energies = execCoulomb(path_coulomb, subunit_pqr)
-            	Gcoul[i,j] = energies
+            	Gcoul[i,j] = energies/pdie
 
     	self.Gcoul = Gcoul
+
+    def ddGbind_rel(self):
+        Gsolv = self.Gsolv
+        Gref = self.Gref
+        Gcoul = self.Gcoul
+
+        dGsolv = Gsolv-Gref
+        dGsolu = Gsolv[:,0]-Gsolv[:,1:].sum(axis=1)
+        dGcoul = Gcoul[:,0]-Gcoul[:,1:].sum(axis=1)
+        ddGsolv = dGsolv[:,0]-dGsolv[:,1:].sum(axis=1)
+
+        dGbind = ddGsolv + dGcoul
+        dGbind_rel = dGbind - dGbind[0]
 
     def run(self):
         self.genDirs()
