@@ -252,6 +252,7 @@ class Alascan:
 
         dGbind = ddGsolv + dGcoul
         dGbind_rel = dGbind - dGbind[0]
+        return dGbind_rel
 
     def run(self):
         self.genDirs()
