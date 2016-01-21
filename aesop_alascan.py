@@ -134,10 +134,20 @@ class Alascan:
             code = ['seg%d'%(i)+'_'+AA_dict[res_id]+res_no+'A' for ch_id, res_no, res_id in zip(list_chids[i], map(str, list_resnums[i]), list_resnames[i])]
             list_mutids[i] = code
 
+        dim_sel = len(list_mutids)
+        dim_mut = np.sum([len(x) for x in list_mutids])
+        mask_by_sel = np.zeros((dim_mut, dim_sel)).astype(bool)
+        counter = 0
+        for i in xrange(dim_sel):
+            for j in xrange(counter, counter+len(list_mutids[i]), 1):
+                mask_by_sel[j, i] = True
+            counter += len(list_mutids[i])
+
         self.mutid = list_mutids
         self.list_chids = list_chids
         self.list_resnums = list_resnums
         self.list_resnames = list_resnames
+        self.mask_by_sel = mask_by_sel
 
     def genPDB(self):
         selstr = self.selstr
