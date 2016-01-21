@@ -189,6 +189,7 @@ class Alascan:
         jobdir = self.jobdir
         pqr_complex_dir = self.pqr_complex_dir
         pqr_sel_dir = self.pqr_sel_dir
+        logs_apbs_dir = self.logs_apbs_dir
         path_apbs = self.apbs
 
         list_mutids = self.getMutids()
@@ -204,7 +205,8 @@ class Alascan:
             complex_pqr = os.path.join(jobdir, pqr_complex_dir, mutid+'.pqr')
             for j, seldir in zip(xrange(dim_sel), [pqr_complex_dir]+pqr_sel_dir):
                 subunit_pqr = os.path.join(jobdir, seldir, mutid+'.pqr')
-                energies = execAPBS(path_apbs, subunit_pqr, complex_pqr, prefix=mutid, grid=1.0, ion=0.150, pdie=20.0, sdie=78.54)
+                path_prefix_log = os.path.join(jobdir, logs_apbs_dir, mutid)
+                energies = execAPBS(path_apbs, subunit_pqr, complex_pqr, prefix=path_prefix_log, grid=1.0, ion=0.150, pdie=20.0, sdie=78.54)
                 print energies[0][0]
                 print energies[0][1]
                 Gsolv[i,j] = energies[0][0]
@@ -419,7 +421,7 @@ def execAPBS(path_apbs_exe, pqr_chain, pqr_complex, prefix=None, grid=1.0, ion=0
                 '   swin 0.3\n',
                 '   temp 298.15\n',
                 '   calcenergy total\n',
-                # '   write pot dx %s\n'%(prefix),
+                '   write pot dx %s\n'%(prefix),
                 'end\n']
     cmd_ref = ['elec name ref\n',
                 '   mg-manual\n',
@@ -456,8 +458,8 @@ def execAPBS(path_apbs_exe, pqr_chain, pqr_complex, prefix=None, grid=1.0, ion=0
     # Execute APBS
     # os.system('"{0}" {1} {2}'.format(path_apbs_exe, '--output-file=%s --output-format=flat'%(file_apbs_log), file_apbs_in))
     # os.system('{0} {1}'.format(path_apbs_exe, file_apbs_in))
-    (log, err) = runProcess([path_apbs_exe, file_apbs_in])
-    # log = runProcess([path_apbs_exe, '--output-file=%s'%(file_apbs_log), '--output-format=flat', file_apbs_in])
+    # (log, err) = runProcess([path_apbs_exe, file_apbs_in])
+    (log, err) = runProcess([path_apbs_exe, '--output-file=%s'%(file_apbs_log), '--output-format=flat', file_apbs_in])
     pattern = re.compile('(?<=Global net ELEC energy =)\s+[+\-]?(?:0|[1-9]\d*)(?:\.\d*)?(?:[eE][+\-]?\d+)?')
     elec = np.asarray([x.split() for x in re.findall(pattern, log)]).astype(np.float)
     elec = elec.reshape((1,elec.size))
@@ -470,7 +472,7 @@ def execAPBS(path_apbs_exe, pqr_chain, pqr_complex, prefix=None, grid=1.0, ion=0
 ######################################################################################################################################################
 def execCoulomb(path_coulomb_exe, pqr):
 	(log, err) = runProcess([path_coulomb_exe, pqr])
-	pattern = re.compile('(?<Total energy =)\s+[+\-]?(?:0|[1-9]\d*)(?:\.\d*)?(?:[eE][+\-]?\d+)?') #May need to update regex
+	pattern = re.compile('(?<=Total energy =)\s+[+\-]?(?:0|[1-9]\d*)(?:\.\d*)?(?:[eE][+\-]?\d+)?') #May need to update regex
 	coul = np.asarray(re.findall(pattern, log)).astype(np.float)
 	return coul
 
