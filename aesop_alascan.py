@@ -194,7 +194,7 @@ class Alascan:
         list_mutids = self.getMutids()
 
         dim_mutid = len(list_mutids)
-        dim_sel = len(selstr)
+        dim_sel = len(selstr)+1
 
         Gsolv = np.zeros((dim_mutid, dim_sel))
         Gref = np.zeros((dim_mutid, dim_sel))
@@ -202,7 +202,7 @@ class Alascan:
         for i, mutid in zip(xrange(dim_mutid), list_mutids):
             print '\nCalculating solvation and reference energies for mutant: %s'%(mutid)
             complex_pqr = os.path.join(jobdir, pqr_complex_dir, mutid+'.pqr')
-            for j, seldir in zip(xrange(dim_sel), pqr_sel_dir):
+            for j, seldir in zip(xrange(dim_sel), [pqr_complex_dir]+pqr_sel_dir):
                 subunit_pqr = os.path.join(jobdir, seldir, mutid+'.pqr')
                 energies = execAPBS(path_apbs, subunit_pqr, complex_pqr, prefix=mutid, grid=1.0, ion=0.150, pdie=20.0, sdie=78.54)
                 print energies[0][0]
@@ -214,7 +214,28 @@ class Alascan:
         self.Gref = Gref
 
     def calcCoulomb(self):
-        0
+        selstr = self.selstr
+        region = self.region
+        jobdir = self.jobdir
+        pqr_complex_dir = self.pqr_complex_dir
+        pqr_sel_dir = self.pqr_sel_dir
+        path_coulomb = self.coulomb
+
+        list_mutids = self.getMutids()
+
+        dim_mutid = len(list_mutids)
+        dim_sel = len(selstr)+1
+
+        Gcoul = np.zeros((dim_mutid, dim_sel))
+
+        for i, mutid in zip(xrange(dim_mutid), list_mutids):
+            print '\nCalculating solvation and reference energies for mutant: %s'%(mutid)
+            for j, seldir in zip(xrange(dim_sel), [pqr_complex_dir]+pqr_sel_dir):
+            	subunit_pqr = os.path.join(jobdir, seldir, mutid+'.pqr')
+            	energies = execCoulomb(path_coulomb, subunit_pqr)
+            	Gcoul[i,j] = energies
+
+    	self.Gcoul = Gcoul
 
     def run(self):
         self.genDirs()
@@ -447,7 +468,11 @@ def execAPBS(path_apbs_exe, pqr_chain, pqr_complex, prefix=None, grid=1.0, ion=0
 ######################################################################################################################################################
 # Function to run coulomb.exe - should work on any supported OS
 ######################################################################################################################################################
-
+def execCoulomb(path_coulomb_exe, pqr):
+	(log, err) = runProcess([path_coulomb_exe, pqr])
+	pattern = re.compile('(?<Total energy =)\s+[+\-]?(?:0|[1-9]\d*)(?:\.\d*)?(?:[eE][+\-]?\d+)?') #May need to update regex
+	coul = np.asarray(re.findall(pattern, log)).astype(np.float)
+	return coul
 
 ######################################################################################################################################################
 # Function to parse APBS log file - REMOVED as it is not required!
