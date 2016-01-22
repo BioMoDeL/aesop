@@ -275,6 +275,9 @@ class Alascan:
         self.genPQR()
         self.calcAPBS()
         self.calcCoulomb()
+
+    def summary(self):
+        plotResults(self)
  
 
 ######################################################################################################################################################
@@ -514,8 +517,10 @@ def execCoulomb(path_coulomb_exe, pqr):
 	coul = np.asarray(re.findall(pattern, log)).astype(np.float)
 	return coul
 
-
-def plotResults(Alascan):
+######################################################################################################################################################
+# Function to plot results of Alascan
+######################################################################################################################################################
+def plotResults(Alascan, filename=None):
     plt.style.use('seaborn-talk') 
     figure, axarr = plt.subplots(len(Alascan.mutid) - 1, sharey=True)
     for i in xrange(1,len(Alascan.mutid)):
@@ -528,8 +533,8 @@ def plotResults(Alascan):
         axarr[i-1].xaxis.set_ticks_position('bottom')
         axarr[i-1].yaxis.set_ticks_position('left')
     plt.tight_layout()
-    figure.savefig('results.png')
-
+    if filename is not None:
+        figure.savefig(filename)
 
 ######################################################################################################################################################
 # Function to parse APBS log file - REMOVED as it is not required!
