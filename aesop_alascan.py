@@ -165,6 +165,7 @@ class Alascan:
 
         infile = os.path.join(jobdir, pdb_complex_dir, parent_file_prefix+'.pdb')
         system = parent_pdb.select('(('+') or ('.join(selstr)+'))')
+        print '(('+') or ('.join(selstr)+'))'
         pd.writePDB(infile, system)
 
         for mutid, chain, resnum in zip(list_mutids[1:], list_chids[1:], list_resnums[1:]):
