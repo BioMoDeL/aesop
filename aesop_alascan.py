@@ -40,7 +40,7 @@ class Alascan:
     selstr : TYPE
         Description
     """
-    def __init__(self, pdb, pdb2pqr_exe, apbs_exe, coulomb_exe=None, selstr=['protein'], jobname=None, region=None, grid=1, ion=0.150, pdie=20.0, sdie=78.54):
+    def __init__(self, pdb, pdb2pqr_exe, apbs_exe, coulomb_exe=None, selstr=['protein'], jobname=None, region=None, grid=1, ion=0.150, pdie=20.0, sdie=78.54, ff='parse'):
         self.pdb = pdb
         self.pdb2pqr = pdb2pqr_exe
         self.apbs = apbs_exe
@@ -67,6 +67,7 @@ class Alascan:
         self.E_ref = np.zeros(0)
         self.E_solv = np.zeros(0)
         self.mutid = []
+        self.ff = ff
 
     def getPDB(self):
         return self.pdb
@@ -179,6 +180,7 @@ class Alascan:
         pqr_complex_dir = self.pqr_complex_dir
         pqr_sel_dir = self.pqr_sel_dir
         path_pdb2pqr = self.pdb2pqr
+        ff = self.ff
 
         list_mutids = [item for sublist in self.mutid for item in sublist]
 
@@ -186,7 +188,7 @@ class Alascan:
             print '\nGenerating PQR for mutant: %s'%(mutid)
             infile = os.path.join(jobdir, pdb_complex_dir, mutid+'.pdb')
             outfile = os.path.join(jobdir, pqr_complex_dir, mutid+'.pqr')
-            execPDB2PQR(path_pdb2pqr, infile, outfile=outfile)
+            execPDB2PQR(path_pdb2pqr, infile, outfile=outfile, ff=ff)
             complex_pqr = pd.parsePQR(outfile)
             for sel, seldir in zip(selstr, pqr_sel_dir):
                 selfile = os.path.join(jobdir, seldir, mutid+'.pqr')
@@ -335,10 +337,18 @@ def mutatePDB(pdb, mutid, resnum, chain=None, resid='ALA'):
     mdl.build(initialize_xyz=False, build_method='INTERNAL_COORDINATES')
     mdl.write(file=mutid+'.pdb')
 
+    h = model(env, file=mutid+'.pdb') # Without this section, chainids and resnums from parent won't be retained!
+    m = model(env, file=pdb)
+    aln = alignment(env)
+    aln.append_model(m, atom_files=pdb, align_codes='parent')
+    aln.append_model(h, atom_files=mutid+'.pdb', align_codes='mutant')
+    h.res_num_from(m, aln)  # Restore old residue numbering and chain indexing
+    h.write(file=mutid+'.pdb')
+
 ######################################################################################################################################################
 # Function to run PDB2PQR.exe - should work on any supported OS
 ######################################################################################################################################################
-def execPDB2PQR(path_pdb2pqr_exe, pdbfile, outfile=None):
+def execPDB2PQR(path_pdb2pqr_exe, pdbfile, outfile=None, ff='parse'):
     """Summary
     
     Parameters
@@ -360,7 +370,7 @@ def execPDB2PQR(path_pdb2pqr_exe, pdbfile, outfile=None):
     if outfile is None:
         outfile = os.path.splitext(pdbfile)[0]+'.pqr'
     # os.system('"{0}" {1} {2} {3}'.format(path_pdb2pqr_exe, optargs, pdbfile, outfile))
-    (log, err) = runProcess([path_pdb2pqr_exe, '--ff=charmm', '--chain', pdbfile, outfile])
+    (log, err) = runProcess([path_pdb2pqr_exe, '--ff=%s'%(ff), '--chain', pdbfile, outfile])
     return (log, err)
 
 ######################################################################################################################################################
