@@ -6,6 +6,7 @@ import datetime as dt
 import re as re
 import numpy as np
 import prody as pd
+import matplotlib.pyplot as plt
 from modeller import environ, model, alignment, selection
 
 ######################################################################################################################################################
@@ -512,6 +513,23 @@ def execCoulomb(path_coulomb_exe, pqr):
 	pattern = re.compile('(?<=Total energy =)\s+[+\-]?(?:0|[1-9]\d*)(?:\.\d*)?(?:[eE][+\-]?\d+)?') #May need to update regex
 	coul = np.asarray(re.findall(pattern, log)).astype(np.float)
 	return coul
+
+
+def plotResults(Alascan):
+    plt.style.use('seaborn-talk') 
+    figure, axarr = plt.subplots(len(Alascan.mutid) - 1, sharey=True)
+    for i in xrange(1,len(Alascan.mutid)):
+        axarr[i-1].set_title(np.unique(np.array([w.split('_') for w in Alascan.mutid[i]])[:,0])[0]+' ddGbind relative to WT')
+        axarr[i-1].set_ylabel('kJ/mol')
+        axarr[i-1].set_xticks(np.arange(len(Alascan.ddGbind_rel()[Alascan.mask_by_sel[:,i]])))
+        axarr[i-1].set_xticklabels(np.array([w.split('_') for w in Alascan.mutid[i]])[:,1], rotation='vertical', ha='left')
+        axarr[i-1].bar(np.arange(len(Alascan.ddGbind_rel()[Alascan.mask_by_sel[:,i]]))[Alascan.ddGbind_rel()[Alascan.mask_by_sel[:,i]] > 0], Alascan.ddGbind_rel()[Alascan.mask_by_sel[:,i]][Alascan.ddGbind_rel()[Alascan.mask_by_sel[:,i]]  > 0], color = 'red' )
+        axarr[i-1].bar(np.arange(len(Alascan.ddGbind_rel()[Alascan.mask_by_sel[:,i]]))[Alascan.ddGbind_rel()[Alascan.mask_by_sel[:,i]] < 0], Alascan.ddGbind_rel()[Alascan.mask_by_sel[:,i]][Alascan.ddGbind_rel()[Alascan.mask_by_sel[:,i]]  < 0], color = 'blue' )
+        axarr[i-1].xaxis.set_ticks_position('bottom')
+        axarr[i-1].yaxis.set_ticks_position('left')
+    plt.tight_layout()
+    figure.savefig('results.png')
+
 
 ######################################################################################################################################################
 # Function to parse APBS log file - REMOVED as it is not required!
