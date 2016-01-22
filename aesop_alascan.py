@@ -279,7 +279,8 @@ class Alascan:
 # Function to run commands, recording output
 ######################################################################################################################################################
 def runProcess(command):
-    proc = sp.Popen(command, stdout=sp.PIPE, shell=True)
+    proc = sp.Popen(command, stdout=sp.PIPE, stderr=sp.PIPE)
+    # proc = sp.Popen(command, stdout=sp.PIPE, shell=True)
     (out, err) = proc.communicate()
     # print "program output:", out
     return (out, err)
