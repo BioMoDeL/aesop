@@ -151,6 +151,24 @@ class Alascan:
         self.list_resnames = list_resnames
         self.mask_by_sel = mask_by_sel
 
+    def genParent(self):
+        selstr = self.selstr
+        region = self.region
+        jobdir = self.jobdir
+        pdb_complex_dir = self.pdb_complex_dir
+
+        parent_file_prefix = 'wt'
+        parent_pdb = pd.parsePDB(self.pdb)
+
+        # list_mutids = [item for sublist in self.mutid for item in sublist]
+        # list_chids = [item for sublist in self.list_chids for item in sublist]
+        # list_resnums = [item for sublist in self.list_resnums for item in sublist]
+
+        infile = os.path.join(jobdir, pdb_complex_dir, parent_file_prefix+'.pdb')
+        system = parent_pdb.select('(('+') or ('.join(selstr)+'))')
+        print '(('+') or ('.join(selstr)+'))'
+        pd.writePDB(infile, system)
+
     def genPDB(self):
         selstr = self.selstr
         region = self.region
@@ -173,6 +191,44 @@ class Alascan:
             outpath = os.path.join(jobdir, pdb_complex_dir, mutid)
             print '\nGenerating PDB for mutant: %s'%(mutid)
             mutatePDB(pdb=infile, mutid=outpath, resnum=resnum, chain=chain, resid='ALA')
+
+    def genTruncatedPQR(self):
+        selstr = self.selstr
+        region = self.region
+        jobdir = self.jobdir
+        pdb_complex_dir = self.pdb_complex_dir
+        pqr_complex_dir = self.pqr_complex_dir
+        pqr_sel_dir = self.pqr_sel_dir
+        path_pdb2pqr = self.pdb2pqr
+        ff = self.ff
+
+        list_mutids = [item for sublist in self.mutid for item in sublist]
+        list_chids = [item for sublist in self.list_chids for item in sublist]
+        list_resnums = [item for sublist in self.list_resnums for item in sublist]
+
+        # Calculate PQR for parent
+        infile = os.path.join(jobdir, pdb_complex_dir, list_mutids[0]+'.pdb')
+        outfile = os.path.join(jobdir, pqr_complex_dir, list_mutids[0]+'.pqr')
+        print '\nGenerating PQR for mutant: %s'%(list_mutids[0])
+        execPDB2PQR(path_pdb2pqr, infile, outfile=outfile, ff=ff)
+        complex_pqr = pd.parsePQR(outfile)
+        for sel, seldir in zip(selstr, pqr_sel_dir):
+                selfile = os.path.join(jobdir, seldir, list_mutids[0]+'.pqr')
+                pqr = complex_pqr.select(sel)
+                pd.writePQR(selfile, pqr)
+
+        for mutid, chain, resnum in zip(list_mutids[1:], list_chids[1:], list_resnums[1:]):
+            outpath = os.path.join(jobdir, pqr_complex_dir, mutid)
+            print '\nGenerating PQR for mutant: %s'%(mutid)
+            # print 'mutid %s, chain %s, resnum %d'%(mutid, chain, resnum)
+            # print outpath+'.pqr'
+            mutatePQR(outfile, mutid=outpath, resnum=resnum, chain=chain)
+            complex_pqr = pd.parsePQR(outpath+'.pqr')
+            for sel, seldir in zip(selstr, pqr_sel_dir):
+                selfile = os.path.join(jobdir, seldir, mutid+'.pqr')
+                # print selfile
+                pqr = complex_pqr.select(sel)
+                pd.writePQR(selfile, pqr)
 
     def genPQR(self):
         selstr = self.selstr
@@ -276,6 +332,14 @@ class Alascan:
         self.calcAPBS()
         self.calcCoulomb()
 
+    def run_truncated(self):
+        self.genDirs()
+        self.genMutid()
+        self.genParent()
+        self.genTruncatedPQR()
+        self.calcAPBS()
+        self.calcCoulomb()
+
     def summary(self):
         plotResults(self)
  
@@ -291,7 +355,70 @@ def runProcess(command):
     return (out, err)
 
 ######################################################################################################################################################
-# Function to mutate a single residue in a PDB structure
+# Function to mutate a single residue in a PDB structure, mutates with side-chain truncation
+######################################################################################################################################################
+def mutatePQR(pqrfile, mutid, resnum, chain=None): # Only use this function with PARSE for now ...
+    parent = pd.parsePQR(pqrfile)
+    if chain is None:
+        residue = parent.select('resnum %d'%(int(resnum)))
+        preceed = parent.select('resnum < %d'%(int(resnum)))
+        follow = parent.select('resnum > %d'%(int(resnum)))
+    elif chain is not None:
+        residue = parent.select('chain %s and resnum %d'%(str(chain), int(resnum)))
+        preceed = parent.select('chain %s and resnum < %d'%(str(chain), int(resnum)))
+        follow = parent.select('chain %s and resnum > %d'%(str(chain), int(resnum)))
+        otherchains = parent.select('not chain %s'%(str(chain)))
+    bb = residue.select('not sidechain')
+    sc = residue.sidechain
+    cg = residue.select('name CG')
+    cb = residue.select('name CB')
+
+    # Set charge and radii of side chain to 0, change CG atom to HB1
+    residue.setResnames('ALA')
+    sc.setCharges(0)
+    sc.setRadii(0)
+    cg.setNames('HB1')
+
+    # Shorten the HB1-CB bond
+    pos_hb1 = (0.7105*(cg.getCoords() - cb.getCoords())) + cb.getCoords()
+    cg.setCoords(pos_hb1)
+
+    # Compile mutated pdb
+    ala_atoms = ['N','H','H2','H3','CA','HA','CB','HB1','HB2','HB3','C','O','OXT']
+    if chain is None:
+        if preceed is None:
+            mutant = residue.select('name '+' '.join(ala_atoms))+follow
+        if follow is None:
+            mutant = preceed+residue.select('name '+' '.join(ala_atoms))
+        if (preceed is None) and (follow is None):
+            mutant = residue.select('name '+' '.join(ala_atoms))
+        if (preceed is not None) and (follow is not None):
+            mutant = preceed+residue.select('name '+' '.join(ala_atoms))+follow
+    else:
+        if otherchains is None:
+            if preceed is None:
+                mutant = residue.select('name '+' '.join(ala_atoms))+follow
+            if follow is None:
+                mutant = preceed+residue.select('name '+' '.join(ala_atoms))
+            if (preceed is None) and (follow is None):
+                mutant = residue.select('name '+' '.join(ala_atoms))
+            if (preceed is not None) and (follow is not None):
+                mutant = preceed+residue.select('name '+' '.join(ala_atoms))+follow
+        if otherchains is not None:
+            if preceed is None:
+                mutant = residue.select('name '+' '.join(ala_atoms))+follow+otherchains
+            if follow is None:
+                mutant = preceed+residue.select('name '+' '.join(ala_atoms))+otherchains
+            if (preceed is None) and (follow is None):
+                mutant = residue.select('name '+' '.join(ala_atoms))+otherchains
+            if (preceed is not None) and (follow is not None):
+                mutant = preceed+residue.select('name '+' '.join(ala_atoms))+follow+otherchains
+
+    # Write mutant pqr
+    pd.writePQR(mutid+'.pqr', mutant)
+
+######################################################################################################################################################
+# Function to mutate a single residue in a PDB structure, mutates with modeller by building internal coordinates of residue
 ######################################################################################################################################################
 def mutatePDB(pdb, mutid, resnum, chain=None, resid='ALA'):
     """Summary
