@@ -377,6 +377,7 @@ def mutatePQR(pqrfile, mutid, resnum, chain=None): # Only use this function with
     residue.setResnames('ALA')
     sc.setCharges(0)
     sc.setRadii(0)
+    cb.setRadii(2)
     cg.setNames('HB1')
 
     # Shorten the HB1-CB bond
