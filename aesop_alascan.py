@@ -8,6 +8,7 @@ import numpy as np
 import prody as pd
 import matplotlib.pyplot as plt
 from modeller import environ, model, alignment, selection
+from multiprocessing import Pool
 
 ######################################################################################################################################################
 # Container for performing an Alanine Scan with AESOP
@@ -634,6 +635,18 @@ def execAPBS(path_apbs_exe, pqr_chain, pqr_complex, prefix=None, grid=1.0, ion=0
 
     # return file_apbs_log
     return elec
+
+######################################################################################################################################################
+# Function to run multiple APBS processes at once
+######################################################################################################################################################
+
+def batchAPBS(files):
+    def f(x):
+        return x*x
+
+    if __name__ == '__main__':
+        p = Pool(5)
+        print(p.map(f, [1, 2, 3]))
 
 ######################################################################################################################################################
 # Function to run coulomb.exe - should work on any supported OS
