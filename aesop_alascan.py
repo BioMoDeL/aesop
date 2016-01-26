@@ -560,7 +560,7 @@ def execAPBS(path_apbs_exe, pqr_chain, pqr_complex, prefix=None, grid=1.0, ion=0
     fg = np.array((np.ceil(np.max(x)-np.min(x)), np.ceil(np.max(y)-np.min(y)), np.ceil(np.max(z)-np.min(z))))
     fg = np.ceil((fg + 5) * cfac)
     dime_list = (32*np.linspace(1,100,100))+1   # list of possible dime values
-    dime_ind = np.ceil(fg/(32*grid))    # index of dime to use from list
+    dime_ind = np.ceil(fg/(32*grid))-1    # index of dime to use from list, subtract one to be consistent with python indexing!
 
     glen = fg
     dime = np.array((dime_list[dime_ind[0]], dime_list[dime_ind[1]], dime_list[dime_ind[2]]))
