@@ -8,7 +8,7 @@ import numpy as np
 import prody as pd
 import matplotlib.pyplot as plt
 from modeller import environ, model, alignment, selection
-from multiprocessing import Pool
+from multiprocessing import Pool, freeze_support
 
 ######################################################################################################################################################
 # Container for performing an Alanine Scan with AESOP
@@ -42,7 +42,7 @@ class Alascan:
     selstr : TYPE
         Description
     """
-    def __init__(self, pdb, pdb2pqr_exe, apbs_exe, coulomb_exe=None, selstr=['protein'], jobname=None, region=None, grid=1, ion=0.150, pdie=20.0, sdie=78.54, ff='parse'):
+    def __init__(self, pdb, pdb2pqr_exe, apbs_exe, coulomb_exe=None, selstr=['protein'], jobname=None, region=None, grid=1, ion=0.150, pdie=20.0, sdie=78.54, ff='parse', cfac=1.5):
         self.pdb = pdb
         self.pdb2pqr = pdb2pqr_exe
         self.apbs = apbs_exe
@@ -70,6 +70,7 @@ class Alascan:
         self.E_solv = np.zeros(0)
         self.mutid = []
         self.ff = ff
+        self.cfac = cfac
 
     def getPDB(self):
         return self.pdb
@@ -268,6 +269,10 @@ class Alascan:
         dim_mutid = len(list_mutids)
         dim_sel = len(selstr)+1
 
+        mask_by_sel = self.mask_by_sel # Mask parts that are true will be run with APBS
+        mask_by_sel[0,:] = np.ones(dim_sel).astype(bool)
+        mask_by_sel[:,0] = np.ones(dim_mutid).astype(bool)
+
         Gsolv = np.zeros((dim_mutid, dim_sel))
         Gref = np.zeros((dim_mutid, dim_sel))
 
@@ -277,11 +282,91 @@ class Alascan:
             for j, seldir in zip(xrange(dim_sel), [pqr_complex_dir]+pqr_sel_dir):
                 subunit_pqr = os.path.join(jobdir, seldir, mutid+'.pqr')
                 path_prefix_log = os.path.join(jobdir, logs_apbs_dir, mutid)
-                energies = execAPBS(path_apbs, subunit_pqr, complex_pqr, prefix=path_prefix_log, grid=1.0, ion=0.150, pdie=20.0, sdie=78.54)
-                print energies[0][0]
-                print energies[0][1]
-                Gsolv[i,j] = energies[0][0]
-                Gref[i,j] = energies[0][1]
+                if mask_by_sel[i,j]:
+                    energies = execAPBS(path_apbs, subunit_pqr, complex_pqr, prefix=path_prefix_log, grid=self.grid, ion=self.ion, pdie=self.pdie, sdie=self.sdie, cfac=self.cfac)
+                    print energies[0][0]
+                    print energies[0][1]
+                    Gsolv[i,j] = energies[0][0]
+                    Gref[i,j] = energies[0][1]
+                if not mask_by_sel[i,j]:
+                    Gsolv[i,j] = Gsolv[0,j]
+                    Gref[i,j] = Gref[0,j]
+        self.Gsolv = Gsolv
+        self.Gref = Gref
+
+    def calcAPBS_parallel(self):
+        selstr = self.selstr
+        region = self.region
+        jobdir = self.jobdir
+        pqr_complex_dir = self.pqr_complex_dir
+        pqr_sel_dir = self.pqr_sel_dir
+        logs_apbs_dir = self.logs_apbs_dir
+        path_apbs = self.apbs
+
+        list_mutids = self.getMutids()
+
+        dim_mutid = len(list_mutids)
+        dim_sel = len(selstr)+1
+
+        mask_by_sel = self.mask_by_sel # Mask parts that are true will be run with APBS
+        mask_by_sel[0,:] = np.ones(dim_sel).astype(bool)
+        mask_by_sel[:,0] = np.ones(dim_mutid).astype(bool)
+
+        Gsolv = np.zeros((dim_mutid, dim_sel))
+        Gref = np.zeros((dim_mutid, dim_sel))
+
+        path_list = []
+        pqr_chain_list = []
+        pqr_complex_list = []
+        prefix_list = []
+        grid_list = []
+        ion_list = []
+        pdie_list = []
+        sdie_list = []
+        cfac_list = []
+        i_list = []
+        j_list = []
+
+        # Find all calculations to be done
+        for i, mutid in zip(xrange(dim_mutid), list_mutids):
+            # print '\nCalculating solvation and reference energies for mutant: %s'%(mutid)
+            complex_pqr = os.path.join(jobdir, pqr_complex_dir, mutid+'.pqr')
+            for j, seldir in zip(xrange(dim_sel), [pqr_complex_dir]+pqr_sel_dir):
+                subunit_pqr = os.path.join(jobdir, seldir, mutid+'.pqr')
+                path_prefix_log = os.path.join(jobdir, logs_apbs_dir, mutid)
+                if mask_by_sel[i,j]:
+                    # energies = execAPBS(path_apbs, subunit_pqr, complex_pqr, prefix=path_prefix_log, grid=self.grid, ion=self.ion, pdie=self.pdie, sdie=self.sdie, cfac=self.cfac)
+                    path_list.append(path_apbs)
+                    pqr_chain_list.append(subunit_pqr)
+                    pqr_complex_list.append(complex_pqr)
+                    prefix_list.append(path_prefix_log)
+                    grid_list.append(self.grid)
+                    ion_list.append(self.ion)
+                    pdie_list.append(self.pdie)
+                    sdie_list.append(self.sdie)
+                    cfac_list.append(self.cfac)
+                    i_list.append(i)
+                    j_list.append(j)
+
+        # Organize kernel and run batch process
+        kernel = zip(path_list, pqr_chain_list, pqr_complex_list, prefix_list, grid_list, ion_list, pdie_list, sdie_list, cfac_list, i_list, j_list)
+        if __name__ == '__main__':
+            freeze_support()
+            p = Pool()
+            # result = p.map(batchAPBS, kernel)
+            # for i, j, solv, ref in result:
+            #     Gsolv[i,j] = solv
+            #     Gref[i,j] = ref
+            for i, j, solv, ref in p.imap(batchAPBS, kernel):
+                Gsolv[i,j] = solv
+                Gref[i,j] = ref
+
+        # Fill in results that are duplicates
+        for i in xrange(dim_mutid):
+            for j in xrange(dim_sel):
+                if not mask_by_sel[i,j]:
+                    Gsolv[i,j] = Gsolv[0,j]
+                    Gref[i,j] = Gref[0,j]
 
         self.Gsolv = Gsolv
         self.Gref = Gref
@@ -340,6 +425,15 @@ class Alascan:
         self.genTruncatedPQR()
         self.calcAPBS()
         self.calcCoulomb()
+
+    def run_parallel(self):
+        self.genDirs()
+        self.genMutid()
+        self.genParent()
+        self.genTruncatedPQR()
+        self.calcAPBS_parallel()
+        self.calcCoulomb()
+        self.summary()
 
     def summary(self):
         plotResults(self)
@@ -511,7 +605,7 @@ def execPDB2PQR(path_pdb2pqr_exe, pdbfile, outfile=None, ff='parse'):
 ######################################################################################################################################################
 # Function to run APBS.exe - should work on any supported OS
 ######################################################################################################################################################
-def execAPBS(path_apbs_exe, pqr_chain, pqr_complex, prefix=None, grid=1.0, ion=0.150, pdie=20.0, sdie=78.54):
+def execAPBS(path_apbs_exe, pqr_chain, pqr_complex, prefix=None, grid=1.0, ion=0.150, pdie=20.0, sdie=78.54, cfac=1.5):
     """Summary
     
     Parameters
@@ -550,7 +644,7 @@ def execAPBS(path_apbs_exe, pqr_chain, pqr_complex, prefix=None, grid=1.0, ion=0
     if prefix is None:
         prefix = os.path.splitext(pqr_chain)[0]
 
-    cfac = 1.5 # hard-coded scaling factor for mesh dimension, for now
+    # cfac = 1.5 # hard-coded scaling factor for mesh dimension, for now
 
     pqr = pd.parsePQR(pqr_complex)
     coords = pqr.getCoords()
@@ -641,13 +735,18 @@ def execAPBS(path_apbs_exe, pqr_chain, pqr_complex, prefix=None, grid=1.0, ion=0
 # Function to run multiple APBS processes at once
 ######################################################################################################################################################
 
-def batchAPBS(files):
-    def f(x):
-        return x*x
+def batchAPBS(kernel):
+    path, pqr_chain, pqr_complex, prefix, grid, ion, pdie, sdie, cfac, i, j = kernel
+    energies = execAPBS(path, pqr_chain, pqr_complex, prefix=prefix, grid=grid, ion=ion, pdie=pdie, sdie=sdie, cfac=cfac)
+    return zip(i, j, energies[0][0], energies[0][1])
 
-    if __name__ == '__main__':
-        p = Pool(5)
-        print(p.map(f, [1, 2, 3]))
+    # def f(x):
+    #     return x*x
+
+    # if __name__ == '__main__':
+    #     p = Pool(5)
+    #     print(p.map(f, [1, 2, 3]))
+
 
 ######################################################################################################################################################
 # Function to run coulomb.exe - should work on any supported OS
