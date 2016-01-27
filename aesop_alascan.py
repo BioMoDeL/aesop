@@ -3,6 +3,7 @@ import os as os
 import sys as sys
 import subprocess as sp
 import datetime as dt
+import timeit as ti
 import re as re
 import numpy as np
 import prody as pd
@@ -350,16 +351,26 @@ class Alascan:
 
         # Organize kernel and run batch process
         kernel = zip(path_list, pqr_chain_list, pqr_complex_list, prefix_list, grid_list, ion_list, pdie_list, sdie_list, cfac_list, i_list, j_list)
-        if __name__ == '__main__':
-            freeze_support()
-            p = Pool()
-            # result = p.map(batchAPBS, kernel)
-            # for i, j, solv, ref in result:
-            #     Gsolv[i,j] = solv
-            #     Gref[i,j] = ref
-            for i, j, solv, ref in p.imap(batchAPBS, kernel):
-                Gsolv[i,j] = solv
-                Gref[i,j] = ref
+        p = Pool()
+        print 'Running batchAPBS'
+        for result in p.imap_unordered(batchAPBS, kernel):
+            i = result[0]
+            j = result[1]
+            solv = result[2]
+            ref = result[3]
+            print '%d, %d, %f, %f'%(i, j, solv, ref)
+            Gsolv[i,j] = solv
+            Gref[i,j] = ref
+        # print Gsolv
+        # result = [p.map_async(batchAPBS, x) for x in kernel]
+        # p.close()
+        # p.join()
+        # for i, j, solv, ref in result:
+        #     Gsolv[i,j] = solv
+        #     Gref[i,j] = ref
+        # for i, j, solv, ref in p.imap(batchAPBS, kernel):
+        #     Gsolv[i,j] = solv
+        #     Gref[i,j] = ref
 
         # Fill in results that are duplicates
         for i in xrange(dim_mutid):
@@ -427,13 +438,16 @@ class Alascan:
         self.calcCoulomb()
 
     def run_parallel(self):
+        start = ti.default_timer()
         self.genDirs()
         self.genMutid()
         self.genParent()
         self.genTruncatedPQR()
         self.calcAPBS_parallel()
         self.calcCoulomb()
-        self.summary()
+        # self.summary()
+        stop = ti.default_timer()
+        print 'AESOP alanine scan completed in %.2f seconds'%(stop-start)
 
     def summary(self):
         plotResults(self)
@@ -737,8 +751,9 @@ def execAPBS(path_apbs_exe, pqr_chain, pqr_complex, prefix=None, grid=1.0, ion=0
 
 def batchAPBS(kernel):
     path, pqr_chain, pqr_complex, prefix, grid, ion, pdie, sdie, cfac, i, j = kernel
+    print 'Calculating solvation and reference energies for: %s'%(os.path.basename(pqr_chain).split('.')[0])
     energies = execAPBS(path, pqr_chain, pqr_complex, prefix=prefix, grid=grid, ion=ion, pdie=pdie, sdie=sdie, cfac=cfac)
-    return zip(i, j, energies[0][0], energies[0][1])
+    return np.array([i, j, energies[0][0], energies[0][1]])
 
     # def f(x):
     #     return x*x
