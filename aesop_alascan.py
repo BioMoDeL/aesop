@@ -340,7 +340,7 @@ class Alascan:
                     path_list.append(path_apbs)
                     pqr_chain_list.append(subunit_pqr)
                     pqr_complex_list.append(complex_pqr)
-                    prefix_list.append(path_prefix_log)
+                    prefix_list.append(path_prefix_log+'_%d_%d'%(i,j)) # added to make sure apbs.in file is unique!
                     grid_list.append(self.grid)
                     ion_list.append(self.ion)
                     pdie_list.append(self.pdie)
@@ -351,6 +351,7 @@ class Alascan:
 
         # Organize kernel and run batch process
         kernel = zip(path_list, pqr_chain_list, pqr_complex_list, prefix_list, grid_list, ion_list, pdie_list, sdie_list, cfac_list, i_list, j_list)
+        apbs_results = []
         p = Pool()
         print 'Running batchAPBS'
         for result in p.imap_unordered(batchAPBS, kernel):
@@ -359,8 +360,11 @@ class Alascan:
             solv = result[2]
             ref = result[3]
             print '%d, %d, %f, %f'%(i, j, solv, ref)
+            apbs_results.append([i, j, solv, ref])
             Gsolv[i,j] = solv
             Gref[i,j] = ref
+        apbs_results = np.asarray(apbs_results)
+        self.apbs_results = apbs_results
         # print Gsolv
         # result = [p.map_async(batchAPBS, x) for x in kernel]
         # p.close()
