@@ -282,9 +282,10 @@ class Alascan:
         Gsolv = np.zeros((dim_mutid, dim_sel))
         Gref = np.zeros((dim_mutid, dim_sel))
 
+        complex_pqr = os.path.join(jobdir, pqr_complex_dir, list_mutids[0]+'.pqr')
         for i, mutid in zip(xrange(dim_mutid), list_mutids):
             print '\nCalculating solvation and reference energies for mutant: %s'%(mutid)
-            complex_pqr = os.path.join(jobdir, pqr_complex_dir, mutid+'.pqr')
+            # complex_pqr = os.path.join(jobdir, pqr_complex_dir, mutid+'.pqr')
             for j, seldir in zip(xrange(dim_sel), [pqr_complex_dir]+pqr_sel_dir):
                 subunit_pqr = os.path.join(jobdir, seldir, mutid+'.pqr')
                 path_prefix_log = os.path.join(jobdir, logs_apbs_dir, mutid)
@@ -334,9 +335,10 @@ class Alascan:
         j_list = []
 
         # Find all calculations to be done
+        complex_pqr = os.path.join(jobdir, pqr_complex_dir, list_mutids[0]+'.pqr')
         for i, mutid in zip(xrange(dim_mutid), list_mutids):
             # print '\nCalculating solvation and reference energies for mutant: %s'%(mutid)
-            complex_pqr = os.path.join(jobdir, pqr_complex_dir, mutid+'.pqr')
+            # complex_pqr = os.path.join(jobdir, pqr_complex_dir, mutid+'.pqr')
             for j, seldir in zip(xrange(dim_sel), [pqr_complex_dir]+pqr_sel_dir):
                 subunit_pqr = os.path.join(jobdir, seldir, mutid+'.pqr')
                 path_prefix_log = os.path.join(jobdir, logs_apbs_dir, mutid)
