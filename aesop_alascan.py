@@ -81,8 +81,7 @@ class Alascan:
         return self.dirs
     def getPrefix(self):
         return self.prefix
-    # def getEnergies(self):
-    #     return 0
+
     def getMutids(self):
         l = self.mutid
         return [item for sublist in l for item in sublist]
@@ -464,8 +463,8 @@ class Alascan:
         stop = ti.default_timer()
         print 'AESOP alanine scan completed in %.2f seconds'%(stop-start)
 
-    def summary(self):
-        plotResults(self)
+    def summary(self, filename=None):
+        plotResults(self, filename=None)
  
 
 ######################################################################################################################################################
@@ -697,8 +696,8 @@ def execAPBS(path_apbs_exe, pqr_chain, pqr_complex, prefix=None, grid=1.0, ion=0
                 'end\n']
     cmd_solv = ['elec name solv\n',
                 '   mg-manual\n',
-                '   dime %d %d %d\n'%(dime[0], dime[1], dime[2]),
-                '   glen %d %d %d\n'%(glen[0], glen[1], glen[2]),
+                '   dime %d %d %d\n'%(dime[0], dime[1], dime[2]),#(161,97,129),
+                '   glen %d %d %d\n'%(glen[0], glen[1], glen[2]),#(138,96,120),
                 '   gcent mol 2\n',
                 '   mol 1\n',
                 '   lpbe\n',
