@@ -1,4 +1,3 @@
-
 import os as os
 import sys as sys
 import subprocess as sp
@@ -10,6 +9,7 @@ import prody as pd
 import matplotlib.pyplot as plt
 from modeller import environ, model, alignment, selection
 from multiprocessing import Pool, freeze_support
+
 
 ######################################################################################################################################################
 # Container for performing an Alanine Scan with AESOP
@@ -43,7 +43,9 @@ class Alascan:
     selstr : TYPE
         Description
     """
-    def __init__(self, pdb, pdb2pqr_exe, apbs_exe, coulomb_exe=None, selstr=['protein'], jobname=None, region=None, grid=1, ion=0.150, pdie=20.0, sdie=78.54, ff='parse', cfac=1.5):
+
+    def __init__(self, pdb, pdb2pqr_exe, apbs_exe, coulomb_exe=None, selstr=['protein'], jobname=None, region=None,
+                 grid=1, ion=0.150, pdie=20.0, sdie=78.54, ff='parse', cfac=1.5):
         self.pdb = pdb
         self.pdb2pqr = pdb2pqr_exe
         self.apbs = apbs_exe
@@ -61,7 +63,9 @@ class Alascan:
         self.pdie = pdie
         self.sdie = sdie
         if jobname is None:
-            self.jobname = '%4d%02d%02d_%02d%02d%02d'%(dt.date.today().year, dt.date.today().month, dt.date.today().day, dt.datetime.now().hour, dt.datetime.now().minute, dt.datetime.now().second)
+            self.jobname = '%4d%02d%02d_%02d%02d%02d' % (
+            dt.date.today().year, dt.date.today().month, dt.date.today().day, dt.datetime.now().hour,
+            dt.datetime.now().minute, dt.datetime.now().second)
         else:
             self.jobname = jobname
         self.jobdir = jobname
@@ -75,10 +79,13 @@ class Alascan:
 
     def getPDB(self):
         return self.pdb
+
     def getSel(self):
         return self.selstr
+
     def getDirs(self):
         return self.dirs
+
     def getPrefix(self):
         return self.prefix
 
@@ -97,11 +104,11 @@ class Alascan:
         pqr_complex_dir = 'complex_pqr'
         if not os.path.exists(os.path.join(self.jobdir, pqr_complex_dir)):
             os.makedirs(os.path.join(self.jobdir, pqr_complex_dir))
-        pqr_sel_dir=[]
-        for i in xrange(0,len(self.selstr)):
-            pqr_sel_dir.append('seg%d_pqr'%(i+1))
-            if not os.path.exists(os.path.join(self.jobdir, 'seg%d_pqr'%(i+1))):
-                os.makedirs(os.path.join(self.jobdir, 'seg%d_pqr'%(i+1)))
+        pqr_sel_dir = []
+        for i in xrange(0, len(self.selstr)):
+            pqr_sel_dir.append('seg%d_pqr' % (i + 1))
+            if not os.path.exists(os.path.join(self.jobdir, 'seg%d_pqr' % (i + 1))):
+                os.makedirs(os.path.join(self.jobdir, 'seg%d_pqr' % (i + 1)))
         self.pqr_complex_dir = pqr_complex_dir
         self.pqr_sel_dir = pqr_sel_dir
 
@@ -111,7 +118,6 @@ class Alascan:
             os.makedirs(os.path.join(self.jobdir, logs_apbs_dir))
         self.logs_apbs_dir = 'apbs_logs'
 
-
     def genMutid(self):
         selstr = self.selstr
         region = self.region
@@ -119,17 +125,17 @@ class Alascan:
         parent_file_prefix = 'wt'
         parent_pdb = pd.parsePDB(self.pdb)
 
-        list_mutids = [[] for x in xrange(len(selstr)+1)]
-        list_chids = [[] for x in xrange(len(selstr)+1)]
-        list_resnums = [[] for x in xrange(len(selstr)+1)]
-        list_resnames = [[] for x in xrange(len(selstr)+1)]
-        
+        list_mutids = [[] for x in xrange(len(selstr) + 1)]
+        list_chids = [[] for x in xrange(len(selstr) + 1)]
+        list_resnums = [[] for x in xrange(len(selstr) + 1)]
+        list_resnames = [[] for x in xrange(len(selstr) + 1)]
+
         list_mutids[0] = [parent_file_prefix]
         list_chids[0] = ['']
         list_resnums[0] = [np.zeros(0)]
         list_resnames[0] = ['']
 
-        index = np.linspace(1,len(selstr),len(selstr)).astype(int)
+        index = np.linspace(1, len(selstr), len(selstr)).astype(int)
         for i, sel, reg in zip(index, selstr, region):
             # print ' and '.join([sel, reg, 'charged', 'calpha'])
             combined_selection = parent_pdb.select(' and '.join([sel, reg, 'charged', 'calpha']))
@@ -140,7 +146,8 @@ class Alascan:
             list_chids[i] = combined_selection.getChids().tolist()
             list_resnums[i] = combined_selection.getResnums().tolist()
             list_resnames[i] = combined_selection.getResnames().tolist()
-            code = ['seg%d'%(i)+'_'+AA_dict[res_id]+res_no+'A' for ch_id, res_no, res_id in zip(list_chids[i], map(str, list_resnums[i]), list_resnames[i])]
+            code = ['seg%d' % (i) + '_' + AA_dict[res_id] + res_no + 'A' for ch_id, res_no, res_id in
+                    zip(list_chids[i], map(str, list_resnums[i]), list_resnames[i])]
             list_mutids[i] = code
 
         dim_sel = len(list_mutids)
@@ -148,7 +155,7 @@ class Alascan:
         mask_by_sel = np.zeros((dim_mut, dim_sel)).astype(bool)
         counter = 0
         for i in xrange(dim_sel):
-            for j in xrange(counter, counter+len(list_mutids[i]), 1):
+            for j in xrange(counter, counter + len(list_mutids[i]), 1):
                 mask_by_sel[j, i] = True
             counter += len(list_mutids[i])
 
@@ -171,8 +178,8 @@ class Alascan:
         # list_chids = [item for sublist in self.list_chids for item in sublist]
         # list_resnums = [item for sublist in self.list_resnums for item in sublist]
 
-        infile = os.path.join(jobdir, pdb_complex_dir, parent_file_prefix+'.pdb')
-        system = parent_pdb.select('(('+') or ('.join(selstr)+'))')
+        infile = os.path.join(jobdir, pdb_complex_dir, parent_file_prefix + '.pdb')
+        system = parent_pdb.select('((' + ') or ('.join(selstr) + '))')
         # print '(('+') or ('.join(selstr)+'))'
         pd.writePDB(infile, system)
 
@@ -189,14 +196,14 @@ class Alascan:
         list_chids = [item for sublist in self.list_chids for item in sublist]
         list_resnums = [item for sublist in self.list_resnums for item in sublist]
 
-        infile = os.path.join(jobdir, pdb_complex_dir, parent_file_prefix+'.pdb')
-        system = parent_pdb.select('(('+') or ('.join(selstr)+'))')
+        infile = os.path.join(jobdir, pdb_complex_dir, parent_file_prefix + '.pdb')
+        system = parent_pdb.select('((' + ') or ('.join(selstr) + '))')
         # print '(('+') or ('.join(selstr)+'))'
         pd.writePDB(infile, system)
 
         for mutid, chain, resnum in zip(list_mutids[1:], list_chids[1:], list_resnums[1:]):
             outpath = os.path.join(jobdir, pdb_complex_dir, mutid)
-            print '\nGenerating PDB for mutant: %s'%(mutid)
+            print '\nGenerating PDB for mutant: %s' % (mutid)
             mutatePDB(pdb=infile, mutid=outpath, resnum=resnum, chain=chain, resid='ALA')
 
     def genTruncatedPQR(self):
@@ -214,25 +221,25 @@ class Alascan:
         list_resnums = [item for sublist in self.list_resnums for item in sublist]
 
         # Calculate PQR for parent
-        infile = os.path.join(jobdir, pdb_complex_dir, list_mutids[0]+'.pdb')
-        outfile = os.path.join(jobdir, pqr_complex_dir, list_mutids[0]+'.pqr')
-        print '\nGenerating PQR for mutant: %s'%(list_mutids[0])
+        infile = os.path.join(jobdir, pdb_complex_dir, list_mutids[0] + '.pdb')
+        outfile = os.path.join(jobdir, pqr_complex_dir, list_mutids[0] + '.pqr')
+        print '\nGenerating PQR for mutant: %s' % (list_mutids[0])
         execPDB2PQR(path_pdb2pqr, infile, outfile=outfile, ff=ff)
         complex_pqr = pd.parsePQR(outfile)
         for sel, seldir in zip(selstr, pqr_sel_dir):
-                selfile = os.path.join(jobdir, seldir, list_mutids[0]+'.pqr')
-                pqr = complex_pqr.select(sel)
-                pd.writePQR(selfile, pqr)
+            selfile = os.path.join(jobdir, seldir, list_mutids[0] + '.pqr')
+            pqr = complex_pqr.select(sel)
+            pd.writePQR(selfile, pqr)
 
         for mutid, chain, resnum in zip(list_mutids[1:], list_chids[1:], list_resnums[1:]):
             outpath = os.path.join(jobdir, pqr_complex_dir, mutid)
-            print '\nGenerating PQR for mutant: %s'%(mutid)
+            print '\nGenerating PQR for mutant: %s' % (mutid)
             # print 'mutid %s, chain %s, resnum %d'%(mutid, chain, resnum)
             # print outpath+'.pqr'
             mutatePQR(outfile, mutid=outpath, resnum=resnum, chain=chain)
-            complex_pqr = pd.parsePQR(outpath+'.pqr')
+            complex_pqr = pd.parsePQR(outpath + '.pqr')
             for sel, seldir in zip(selstr, pqr_sel_dir):
-                selfile = os.path.join(jobdir, seldir, mutid+'.pqr')
+                selfile = os.path.join(jobdir, seldir, mutid + '.pqr')
                 # print selfile
                 pqr = complex_pqr.select(sel)
                 pd.writePQR(selfile, pqr)
@@ -250,13 +257,13 @@ class Alascan:
         list_mutids = [item for sublist in self.mutid for item in sublist]
 
         for mutid in list_mutids:
-            print '\nGenerating PQR for mutant: %s'%(mutid)
-            infile = os.path.join(jobdir, pdb_complex_dir, mutid+'.pdb')
-            outfile = os.path.join(jobdir, pqr_complex_dir, mutid+'.pqr')
+            print '\nGenerating PQR for mutant: %s' % (mutid)
+            infile = os.path.join(jobdir, pdb_complex_dir, mutid + '.pdb')
+            outfile = os.path.join(jobdir, pqr_complex_dir, mutid + '.pqr')
             execPDB2PQR(path_pdb2pqr, infile, outfile=outfile, ff=ff)
             complex_pqr = pd.parsePQR(outfile)
             for sel, seldir in zip(selstr, pqr_sel_dir):
-                selfile = os.path.join(jobdir, seldir, mutid+'.pqr')
+                selfile = os.path.join(jobdir, seldir, mutid + '.pqr')
                 pqr = complex_pqr.select(sel)
                 pd.writePQR(selfile, pqr)
 
@@ -272,31 +279,32 @@ class Alascan:
         list_mutids = self.getMutids()
 
         dim_mutid = len(list_mutids)
-        dim_sel = len(selstr)+1
+        dim_sel = len(selstr) + 1
 
-        mask_by_sel = self.mask_by_sel # Mask parts that are true will be run with APBS
-        mask_by_sel[0,:] = np.ones(dim_sel).astype(bool)
-        mask_by_sel[:,0] = np.ones(dim_mutid).astype(bool)
+        mask_by_sel = self.mask_by_sel  # Mask parts that are true will be run with APBS
+        mask_by_sel[0, :] = np.ones(dim_sel).astype(bool)
+        mask_by_sel[:, 0] = np.ones(dim_mutid).astype(bool)
 
         Gsolv = np.zeros((dim_mutid, dim_sel))
         Gref = np.zeros((dim_mutid, dim_sel))
 
-        complex_pqr = os.path.join(jobdir, pqr_complex_dir, list_mutids[0]+'.pqr')
+        complex_pqr = os.path.join(jobdir, pqr_complex_dir, list_mutids[0] + '.pqr')
         for i, mutid in zip(xrange(dim_mutid), list_mutids):
-            print '\nCalculating solvation and reference energies for mutant: %s'%(mutid)
+            print '\nCalculating solvation and reference energies for mutant: %s' % (mutid)
             # complex_pqr = os.path.join(jobdir, pqr_complex_dir, mutid+'.pqr')
-            for j, seldir in zip(xrange(dim_sel), [pqr_complex_dir]+pqr_sel_dir):
-                subunit_pqr = os.path.join(jobdir, seldir, mutid+'.pqr')
+            for j, seldir in zip(xrange(dim_sel), [pqr_complex_dir] + pqr_sel_dir):
+                subunit_pqr = os.path.join(jobdir, seldir, mutid + '.pqr')
                 path_prefix_log = os.path.join(jobdir, logs_apbs_dir, mutid)
-                if mask_by_sel[i,j]:
-                    energies = execAPBS(path_apbs, subunit_pqr, complex_pqr, prefix=path_prefix_log, grid=self.grid, ion=self.ion, pdie=self.pdie, sdie=self.sdie, cfac=self.cfac)
+                if mask_by_sel[i, j]:
+                    energies = execAPBS(path_apbs, subunit_pqr, complex_pqr, prefix=path_prefix_log, grid=self.grid,
+                                        ion=self.ion, pdie=self.pdie, sdie=self.sdie, cfac=self.cfac)
                     # print energies[0][0]
                     # print energies[0][1]
-                    Gsolv[i,j] = energies[0][0]
-                    Gref[i,j] = energies[0][1]
-                if not mask_by_sel[i,j]:
-                    Gsolv[i,j] = Gsolv[0,j]
-                    Gref[i,j] = Gref[0,j]
+                    Gsolv[i, j] = energies[0][0]
+                    Gref[i, j] = energies[0][1]
+                if not mask_by_sel[i, j]:
+                    Gsolv[i, j] = Gsolv[0, j]
+                    Gref[i, j] = Gref[0, j]
         self.Gsolv = Gsolv
         self.Gref = Gref
 
@@ -312,11 +320,11 @@ class Alascan:
         list_mutids = self.getMutids()
 
         dim_mutid = len(list_mutids)
-        dim_sel = len(selstr)+1
+        dim_sel = len(selstr) + 1
 
-        mask_by_sel = self.mask_by_sel # Mask parts that are true will be run with APBS
-        mask_by_sel[0,:] = np.ones(dim_sel).astype(bool)
-        mask_by_sel[:,0] = np.ones(dim_mutid).astype(bool)
+        mask_by_sel = np.copy(self.mask_by_sel)  # Mask parts that are true will be run with APBS
+        mask_by_sel[0, :] = np.ones(dim_sel).astype(bool)
+        mask_by_sel[:, 0] = np.ones(dim_mutid).astype(bool)
 
         Gsolv = np.zeros((dim_mutid, dim_sel))
         Gref = np.zeros((dim_mutid, dim_sel))
@@ -334,19 +342,20 @@ class Alascan:
         j_list = []
 
         # Find all calculations to be done
-        complex_pqr = os.path.join(jobdir, pqr_complex_dir, list_mutids[0]+'.pqr')
+        complex_pqr = os.path.join(jobdir, pqr_complex_dir, list_mutids[0] + '.pqr')
         for i, mutid in zip(xrange(dim_mutid), list_mutids):
             # print '\nCalculating solvation and reference energies for mutant: %s'%(mutid)
             # complex_pqr = os.path.join(jobdir, pqr_complex_dir, mutid+'.pqr')
-            for j, seldir in zip(xrange(dim_sel), [pqr_complex_dir]+pqr_sel_dir):
-                subunit_pqr = os.path.join(jobdir, seldir, mutid+'.pqr')
+            for j, seldir in zip(xrange(dim_sel), [pqr_complex_dir] + pqr_sel_dir):
+                subunit_pqr = os.path.join(jobdir, seldir, mutid + '.pqr')
                 path_prefix_log = os.path.join(jobdir, logs_apbs_dir, mutid)
-                if mask_by_sel[i,j]:
+                if mask_by_sel[i, j]:
                     # energies = execAPBS(path_apbs, subunit_pqr, complex_pqr, prefix=path_prefix_log, grid=self.grid, ion=self.ion, pdie=self.pdie, sdie=self.sdie, cfac=self.cfac)
                     path_list.append(path_apbs)
                     pqr_chain_list.append(subunit_pqr)
                     pqr_complex_list.append(complex_pqr)
-                    prefix_list.append(path_prefix_log+'_%d_%d'%(i,j)) # added to make sure apbs.in file is unique!
+                    prefix_list.append(
+                        path_prefix_log + '_%d_%d' % (i, j))  # added to make sure apbs.in file is unique!
                     grid_list.append(self.grid)
                     ion_list.append(self.ion)
                     pdie_list.append(self.pdie)
@@ -356,7 +365,8 @@ class Alascan:
                     j_list.append(j)
 
         # Organize kernel and run batch process
-        kernel = zip(path_list, pqr_chain_list, pqr_complex_list, prefix_list, grid_list, ion_list, pdie_list, sdie_list, cfac_list, i_list, j_list)
+        kernel = zip(path_list, pqr_chain_list, pqr_complex_list, prefix_list, grid_list, ion_list, pdie_list,
+                     sdie_list, cfac_list, i_list, j_list)
         apbs_results = []
         p = Pool()
         print 'Running batchAPBS ....'
@@ -364,15 +374,15 @@ class Alascan:
         max_count = len(kernel)
         for result in p.imap_unordered(batchAPBS, kernel):
             counter += 1
-            print '.... %.2f percent complete ....'%(counter*100/max_count)
+            print '.... %d percent complete ....' % (int(counter * 100 / max_count))
             i = result[0]
             j = result[1]
             solv = result[2]
             ref = result[3]
             # print '%d, %d, %f, %f'%(i, j, solv, ref)
             apbs_results.append([i, j, solv, ref])
-            Gsolv[i,j] = solv
-            Gref[i,j] = ref
+            Gsolv[i, j] = solv
+            Gref[i, j] = ref
         apbs_results = np.asarray(apbs_results)
         self.apbs_results = apbs_results
         # print Gsolv
@@ -389,9 +399,9 @@ class Alascan:
         # Fill in results that are duplicates
         for i in xrange(dim_mutid):
             for j in xrange(dim_sel):
-                if not mask_by_sel[i,j]:
-                    Gsolv[i,j] = Gsolv[0,j]
-                    Gref[i,j] = Gref[0,j]
+                if not mask_by_sel[i, j]:
+                    Gsolv[i, j] = Gsolv[0, j]
+                    Gref[i, j] = Gref[0, j]
 
         self.Gsolv = Gsolv
         self.Gref = Gref
@@ -408,28 +418,28 @@ class Alascan:
         list_mutids = self.getMutids()
 
         dim_mutid = len(list_mutids)
-        dim_sel = len(selstr)+1
+        dim_sel = len(selstr) + 1
 
         Gcoul = np.zeros((dim_mutid, dim_sel))
 
         for i, mutid in zip(xrange(dim_mutid), list_mutids):
-            print '\nCalculating coulombic energies for mutant: %s'%(mutid)
-            for j, seldir in zip(xrange(dim_sel), [pqr_complex_dir]+pqr_sel_dir):
-            	subunit_pqr = os.path.join(jobdir, seldir, mutid+'.pqr')
-            	energies = execCoulomb(path_coulomb, subunit_pqr)
-            	Gcoul[i,j] = energies/pdie
+            print '\nCalculating coulombic energies for mutant: %s' % (mutid)
+            for j, seldir in zip(xrange(dim_sel), [pqr_complex_dir] + pqr_sel_dir):
+                subunit_pqr = os.path.join(jobdir, seldir, mutid + '.pqr')
+                energies = execCoulomb(path_coulomb, subunit_pqr)
+                Gcoul[i, j] = energies / pdie
 
-    	self.Gcoul = Gcoul
+        self.Gcoul = Gcoul
 
     def ddGbind_rel(self):
         Gsolv = self.Gsolv
         Gref = self.Gref
         Gcoul = self.Gcoul
 
-        dGsolv = Gsolv-Gref
-        dGsolu = Gsolv[:,0]-Gsolv[:,1:].sum(axis=1)
-        dGcoul = Gcoul[:,0]-Gcoul[:,1:].sum(axis=1)
-        ddGsolv = dGsolv[:,0]-dGsolv[:,1:].sum(axis=1)
+        dGsolv = Gsolv - Gref
+        dGsolu = Gsolv[:, 0] - Gsolv[:, 1:].sum(axis=1)
+        dGcoul = Gcoul[:, 0] - Gcoul[:, 1:].sum(axis=1)
+        ddGsolv = dGsolv[:, 0] - dGsolv[:, 1:].sum(axis=1)
 
         dGbind = ddGsolv + dGcoul
         dGbind_rel = dGbind - dGbind[0]
@@ -454,18 +464,18 @@ class Alascan:
     def run_parallel(self):
         start = ti.default_timer()
         self.genDirs()
-        self.genMutid() # contains warning: FutureWarning: elementwise comparison failed; returning scalar instead, but in the future will perform elementwise comparison if tokens[0] == 'and' or tokens[-1] == 'and':
+        self.genMutid()  # contains warning: FutureWarning: elementwise comparison failed; returning scalar instead, but in the future will perform elementwise comparison if tokens[0] == 'and' or tokens[-1] == 'and':
         self.genParent()
         self.genTruncatedPQR()
         self.calcAPBS_parallel()
         self.calcCoulomb()
         # self.summary()
         stop = ti.default_timer()
-        print 'AESOP alanine scan completed in %.2f seconds'%(stop-start)
+        print 'AESOP alanine scan completed in %.2f seconds' % (stop - start)
 
     def summary(self, filename=None):
         plotResults(self, filename=None)
- 
+
 
 ######################################################################################################################################################
 # Function to run commands, recording output
@@ -477,20 +487,21 @@ def runProcess(command):
     # print "program output:", out
     return (out, err)
 
+
 ######################################################################################################################################################
 # Function to mutate a single residue in a PDB structure, mutates with side-chain truncation
 ######################################################################################################################################################
-def mutatePQR(pqrfile, mutid, resnum, chain=None): # Only use this function with PARSE for now ...
+def mutatePQR(pqrfile, mutid, resnum, chain=None):  # Only use this function with PARSE for now ...
     parent = pd.parsePQR(pqrfile)
     if chain is None:
-        residue = parent.select('resnum %d'%(int(resnum)))
-        preceed = parent.select('resnum < %d'%(int(resnum)))
-        follow = parent.select('resnum > %d'%(int(resnum)))
+        residue = parent.select('resnum %d' % (int(resnum)))
+        preceed = parent.select('resnum < %d' % (int(resnum)))
+        follow = parent.select('resnum > %d' % (int(resnum)))
     elif chain is not None:
-        residue = parent.select('chain %s and resnum %d'%(str(chain), int(resnum)))
-        preceed = parent.select('chain %s and resnum < %d'%(str(chain), int(resnum)))
-        follow = parent.select('chain %s and resnum > %d'%(str(chain), int(resnum)))
-        otherchains = parent.select('not chain %s'%(str(chain)))
+        residue = parent.select('chain %s and resnum %d' % (str(chain), int(resnum)))
+        preceed = parent.select('chain %s and resnum < %d' % (str(chain), int(resnum)))
+        follow = parent.select('chain %s and resnum > %d' % (str(chain), int(resnum)))
+        otherchains = parent.select('not chain %s' % (str(chain)))
     bb = residue.select('not sidechain')
     sc = residue.sidechain
     cg = residue.select('name CG')
@@ -504,42 +515,43 @@ def mutatePQR(pqrfile, mutid, resnum, chain=None): # Only use this function with
     cg.setNames('HB1')
 
     # Shorten the HB1-CB bond
-    pos_hb1 = (0.7105*(cg.getCoords() - cb.getCoords())) + cb.getCoords()
+    pos_hb1 = (0.7105 * (cg.getCoords() - cb.getCoords())) + cb.getCoords()
     cg.setCoords(pos_hb1)
 
     # Compile mutated pdb
-    ala_atoms = ['N','H','H2','H3','CA','HA','CB','HB1','HB2','HB3','C','O','OXT']
+    ala_atoms = ['N', 'H', 'H2', 'H3', 'CA', 'HA', 'CB', 'HB1', 'HB2', 'HB3', 'C', 'O', 'OXT']
     if chain is None:
         if preceed is None:
-            mutant = residue.select('name '+' '.join(ala_atoms))+follow
+            mutant = residue.select('name ' + ' '.join(ala_atoms)) + follow
         if follow is None:
-            mutant = preceed+residue.select('name '+' '.join(ala_atoms))
+            mutant = preceed + residue.select('name ' + ' '.join(ala_atoms))
         if (preceed is None) and (follow is None):
-            mutant = residue.select('name '+' '.join(ala_atoms))
+            mutant = residue.select('name ' + ' '.join(ala_atoms))
         if (preceed is not None) and (follow is not None):
-            mutant = preceed+residue.select('name '+' '.join(ala_atoms))+follow
+            mutant = preceed + residue.select('name ' + ' '.join(ala_atoms)) + follow
     else:
         if otherchains is None:
             if preceed is None:
-                mutant = residue.select('name '+' '.join(ala_atoms))+follow
+                mutant = residue.select('name ' + ' '.join(ala_atoms)) + follow
             if follow is None:
-                mutant = preceed+residue.select('name '+' '.join(ala_atoms))
+                mutant = preceed + residue.select('name ' + ' '.join(ala_atoms))
             if (preceed is None) and (follow is None):
-                mutant = residue.select('name '+' '.join(ala_atoms))
+                mutant = residue.select('name ' + ' '.join(ala_atoms))
             if (preceed is not None) and (follow is not None):
-                mutant = preceed+residue.select('name '+' '.join(ala_atoms))+follow
+                mutant = preceed + residue.select('name ' + ' '.join(ala_atoms)) + follow
         if otherchains is not None:
             if preceed is None:
-                mutant = residue.select('name '+' '.join(ala_atoms))+follow+otherchains
+                mutant = residue.select('name ' + ' '.join(ala_atoms)) + follow + otherchains
             if follow is None:
-                mutant = preceed+residue.select('name '+' '.join(ala_atoms))+otherchains
+                mutant = preceed + residue.select('name ' + ' '.join(ala_atoms)) + otherchains
             if (preceed is None) and (follow is None):
-                mutant = residue.select('name '+' '.join(ala_atoms))+otherchains
+                mutant = residue.select('name ' + ' '.join(ala_atoms)) + otherchains
             if (preceed is not None) and (follow is not None):
-                mutant = preceed+residue.select('name '+' '.join(ala_atoms))+follow+otherchains
+                mutant = preceed + residue.select('name ' + ' '.join(ala_atoms)) + follow + otherchains
 
     # Write mutant pqr
-    pd.writePQR(mutid+'.pqr', mutant)
+    pd.writePQR(mutid + '.pqr', mutant)
+
 
 ######################################################################################################################################################
 # Function to mutate a single residue in a PDB structure, mutates with modeller by building internal coordinates of residue
@@ -579,10 +591,10 @@ def mutatePDB(pdb, mutid, resnum, chain=None, resid='ALA'):
     mdl = model(env, file=pdb)
     aln.append_model(mdl, atom_files=pdb, align_codes='parent')
 
-    if((chain is None) or (chain.isspace())):
-        sel = selection(mdl.residue_range(int(resnum)-1, int(resnum)-1))
+    if ((chain is None) or (chain.isspace())):
+        sel = selection(mdl.residue_range(int(resnum) - 1, int(resnum) - 1))
     else:
-        sel = selection(mdl.residue_range(str(resnum)+':'+chain, str(resnum)+':'+chain))
+        sel = selection(mdl.residue_range(str(resnum) + ':' + chain, str(resnum) + ':' + chain))
 
     sel.mutate(residue_type=resid)
 
@@ -592,15 +604,16 @@ def mutatePDB(pdb, mutid, resnum, chain=None, resid='ALA'):
     mdl.transfer_xyz(aln)
 
     mdl.build(initialize_xyz=False, build_method='INTERNAL_COORDINATES')
-    mdl.write(file=mutid+'.pdb')
+    mdl.write(file=mutid + '.pdb')
 
-    h = model(env, file=mutid+'.pdb') # Without this section, chainids and resnums from parent won't be retained!
+    h = model(env, file=mutid + '.pdb')  # Without this section, chainids and resnums from parent won't be retained!
     m = model(env, file=pdb)
     aln = alignment(env)
     aln.append_model(m, atom_files=pdb, align_codes='parent')
-    aln.append_model(h, atom_files=mutid+'.pdb', align_codes='mutant')
+    aln.append_model(h, atom_files=mutid + '.pdb', align_codes='mutant')
     h.res_num_from(m, aln)  # Restore old residue numbering and chain indexing
-    h.write(file=mutid+'.pdb')
+    h.write(file=mutid + '.pdb')
+
 
 ######################################################################################################################################################
 # Function to run PDB2PQR.exe - should work on any supported OS
@@ -625,10 +638,11 @@ def execPDB2PQR(path_pdb2pqr_exe, pdbfile, outfile=None, ff='parse'):
         Description
     """
     if outfile is None:
-        outfile = os.path.splitext(pdbfile)[0]+'.pqr'
+        outfile = os.path.splitext(pdbfile)[0] + '.pqr'
     # os.system('"{0}" {1} {2} {3}'.format(path_pdb2pqr_exe, optargs, pdbfile, outfile))
-    (log, err) = runProcess([path_pdb2pqr_exe, '--ff=%s'%(ff), '--chain', pdbfile, outfile])
+    (log, err) = runProcess([path_pdb2pqr_exe, '--ff=%s' % (ff), '--chain', pdbfile, outfile])
     return (log, err)
+
 
 ######################################################################################################################################################
 # Function to run APBS.exe - should work on any supported OS
@@ -676,73 +690,74 @@ def execAPBS(path_apbs_exe, pqr_chain, pqr_complex, prefix=None, grid=1.0, ion=0
 
     pqr = pd.parsePQR(pqr_complex)
     coords = pqr.getCoords()
-    x = coords[:,0]
-    y = coords[:,1]
-    z = coords[:,2]
+    x = coords[:, 0]
+    y = coords[:, 1]
+    z = coords[:, 2]
 
     # Determine mesh dimensions according to Ron's AESOP protocol in the R source file
-    fg = np.array((np.ceil(np.max(x)-np.min(x)), np.ceil(np.max(y)-np.min(y)), np.ceil(np.max(z)-np.min(z))))
+    fg = np.array((np.ceil(np.max(x) - np.min(x)), np.ceil(np.max(y) - np.min(y)), np.ceil(np.max(z) - np.min(z))))
     fg = np.ceil((fg + 5) * cfac)
-    dime_list = (32*np.linspace(1,100,100))+1   # list of possible dime values
-    dime_ind = np.ceil(fg/(32*grid))-1    # index of dime to use from list, subtract one to be consistent with python indexing!
+    dime_list = (32 * np.linspace(1, 100, 100)) + 1  # list of possible dime values
+    dime_ind = np.ceil(
+        fg / (32 * grid)) - 1  # index of dime to use from list, subtract one to be consistent with python indexing!
 
     glen = fg
     dime = np.array((dime_list[dime_ind[0]], dime_list[dime_ind[1]], dime_list[dime_ind[2]]))
 
     # Format APBS input file
     cmd_read = ['read\n',
-                '   mol pqr %s\n'%(pqr_chain),
-                '   mol pqr %s\n'%(pqr_complex),
+                '   mol pqr %s\n' % (pqr_chain),
+                '   mol pqr %s\n' % (pqr_complex),
                 'end\n']
     cmd_solv = ['elec name solv\n',
                 '   mg-manual\n',
-                '   dime %d %d %d\n'%(dime[0], dime[1], dime[2]),#(161,97,129),
-                '   glen %d %d %d\n'%(glen[0], glen[1], glen[2]),#(138,96,120),
+                '   dime %d %d %d\n' % (dime[0], dime[1], dime[2]),  # (161,129,129),
+                '   glen %d %d %d\n' % (glen[0], glen[1], glen[2]),  # (140,98,122),
                 '   gcent mol 2\n',
                 '   mol 1\n',
                 '   lpbe\n',
                 '   bcfl sdh\n',
                 '   srfm smol\n',
                 '   chgm spl2\n',
-                '   ion 1 %.2f 2.0\n'%(ion),
-                '   ion -1 %.2f 2.0\n'%(ion),
-                '   pdie %.2f\n'%(pdie),
-                '   sdie %.2f\n'%(sdie),
+                '   ion 1 %.2f 2.0\n' % (ion),
+                '   ion -1 %.2f 2.0\n' % (ion),
+                '   pdie %.2f\n' % (pdie),
+                '   sdie %.2f\n' % (sdie),
                 '   sdens 10.0\n',
                 '   srad 0.0\n',
                 '   swin 0.3\n',
                 '   temp 298.15\n',
                 '   calcenergy total\n',
-                '   write pot dx %s\n'%(prefix),
+                '   write pot dx %s\n' % (prefix),
                 'end\n']
     cmd_ref = ['elec name ref\n',
-                '   mg-manual\n',
-                '   dime %d %d %d\n'%(dime[0], dime[1], dime[2]),
-                '   glen %d %d %d\n'%(glen[0], glen[1], glen[2]),
-                '   gcent mol 2\n',
-                '   mol 1\n',
-                '   lpbe\n',
-                '   bcfl sdh\n',
-                '   srfm smol\n',
-                '   chgm spl2\n',
-                '   ion 1 %.2f 2.0\n'%(ion),
-                '   ion -1 %.2f 2.0\n'%(ion),
-                '   pdie %.2f\n'%(pdie),
-                '   sdie %.2f\n'%(pdie),
-                '   sdens 10.0\n',
-                '   srad 0.0\n',
-                '   swin 0.3\n',
-                '   temp 298.15\n',
-                '   calcenergy total\n',
-                'end\n']
+               '   mg-manual\n',
+               '   dime %d %d %d\n' % (dime[0], dime[1], dime[2]),  # (161,129,129),
+               '   glen %d %d %d\n' % (glen[0], glen[1], glen[2]),  # (140,98,122),
+               '   gcent mol 2\n',
+               '   mol 1\n',
+               '   lpbe\n',
+               '   bcfl sdh\n',
+               '   srfm smol\n',
+               '   chgm spl2\n',
+               # '   ion 1 %.2f 2.0\n'%(ion), # These should not be included in reference state!
+               # '   ion -1 %.2f 2.0\n'%(ion),
+               '   pdie %.2f\n' % (pdie),
+               '   sdie %.2f\n' % (pdie),
+               '   sdens 10.0\n',
+               '   srad 0.0\n',
+               '   swin 0.3\n',
+               '   temp 298.15\n',
+               '   calcenergy total\n',
+               'end\n']
     cmd_write = ['print elecEnergy solv end\n',
-                'print elecEnergy ref end\n',
-                'quit\n']
+                 'print elecEnergy ref end\n',
+                 'quit\n']
     apbs_in = cmd_read + cmd_solv + cmd_ref + cmd_write
 
     # Write APBS input file
-    file_apbs_in = prefix+'.in'
-    file_apbs_log = prefix+'.log'
+    file_apbs_in = prefix + '.in'
+    file_apbs_log = prefix + '.log'
     with open(file_apbs_in, 'w') as f:
         for line in apbs_in:
             f.write(line)
@@ -751,13 +766,14 @@ def execAPBS(path_apbs_exe, pqr_chain, pqr_complex, prefix=None, grid=1.0, ion=0
     # os.system('"{0}" {1} {2}'.format(path_apbs_exe, '--output-file=%s --output-format=flat'%(file_apbs_log), file_apbs_in))
     # os.system('{0} {1}'.format(path_apbs_exe, file_apbs_in))
     # (log, err) = runProcess([path_apbs_exe, file_apbs_in])
-    (log, err) = runProcess([path_apbs_exe, '--output-file=%s'%(file_apbs_log), '--output-format=flat', file_apbs_in])
+    (log, err) = runProcess([path_apbs_exe, '--output-file=%s' % (file_apbs_log), '--output-format=flat', file_apbs_in])
     pattern = re.compile('(?<=Global net ELEC energy =)\s+[+\-]?(?:0|[1-9]\d*)(?:\.\d*)?(?:[eE][+\-]?\d+)?')
     elec = np.asarray([x.split() for x in re.findall(pattern, log)]).astype(np.float)
-    elec = elec.reshape((1,elec.size))
+    elec = elec.reshape((1, elec.size))
 
     # return file_apbs_log
     return elec
+
 
 ######################################################################################################################################################
 # Function to run multiple APBS processes at once
@@ -765,8 +781,9 @@ def execAPBS(path_apbs_exe, pqr_chain, pqr_complex, prefix=None, grid=1.0, ion=0
 
 def batchAPBS(kernel):
     path, pqr_chain, pqr_complex, prefix, grid, ion, pdie, sdie, cfac, i, j = kernel
-    print 'Calculating solvation and reference energies for: %s'%(os.path.basename(pqr_chain).split('.')[0])
-    energies = execAPBS(path, pqr_chain, pqr_complex, prefix=prefix, grid=grid, ion=ion, pdie=pdie, sdie=sdie, cfac=cfac)
+    print 'Calculating solvation and reference energies for: %s' % (os.path.basename(pqr_chain).split('.')[0])
+    energies = execAPBS(path, pqr_chain, pqr_complex, prefix=prefix, grid=grid, ion=ion, pdie=pdie, sdie=sdie,
+                        cfac=cfac)
     return np.array([i, j, energies[0][0], energies[0][1]])
 
     # def f(x):
@@ -781,41 +798,44 @@ def batchAPBS(kernel):
 # Function to run coulomb.exe - should work on any supported OS
 ######################################################################################################################################################
 def execCoulomb(path_coulomb_exe, pqr):
-	(log, err) = runProcess([path_coulomb_exe, pqr])
-	pattern = re.compile('(?<=Total energy =)\s+[+\-]?(?:0|[1-9]\d*)(?:\.\d*)?(?:[eE][+\-]?\d+)?') #May need to update regex
-	coul = np.asarray(re.findall(pattern, log)).astype(np.float)
-	return coul
+    (log, err) = runProcess([path_coulomb_exe, pqr])
+    pattern = re.compile(
+        '(?<=Total energy =)\s+[+\-]?(?:0|[1-9]\d*)(?:\.\d*)?(?:[eE][+\-]?\d+)?')  # May need to update regex
+    coul = np.asarray(re.findall(pattern, log)).astype(np.float)
+    return coul
+
 
 ######################################################################################################################################################
 # Function to plot results of Alascan
 ######################################################################################################################################################
 def plotResults(Alascan, filename=None):
-    plt.style.use('seaborn-talk') 
+    plt.style.use('seaborn-talk')
     figure, axarr = plt.subplots(len(Alascan.mutid) - 1, sharey=True)
-    for i in xrange(1,len(Alascan.mutid)):
-        axarr[i-1].set_title(np.unique(np.array([w.split('_') for w in Alascan.mutid[i]])[:,0])[0]+' ddGbind relative to WT')
-        axarr[i-1].set_ylabel('kJ/mol')
-        axarr[i-1].set_xticks(np.arange(len(Alascan.ddGbind_rel()[Alascan.mask_by_sel[:,i]])))
-        axarr[i-1].set_xticklabels(np.array([w.split('_') for w in Alascan.mutid[i]])[:,1], rotation='vertical', ha='left')
-        axarr[i-1].bar(np.arange(len(Alascan.ddGbind_rel()[Alascan.mask_by_sel[:,i]]))[Alascan.ddGbind_rel()[Alascan.mask_by_sel[:,i]] > 0], Alascan.ddGbind_rel()[Alascan.mask_by_sel[:,i]][Alascan.ddGbind_rel()[Alascan.mask_by_sel[:,i]]  > 0], color = 'red' )
-        axarr[i-1].bar(np.arange(len(Alascan.ddGbind_rel()[Alascan.mask_by_sel[:,i]]))[Alascan.ddGbind_rel()[Alascan.mask_by_sel[:,i]] < 0], Alascan.ddGbind_rel()[Alascan.mask_by_sel[:,i]][Alascan.ddGbind_rel()[Alascan.mask_by_sel[:,i]]  < 0], color = 'blue' )
-        axarr[i-1].xaxis.set_ticks_position('bottom')
-        axarr[i-1].yaxis.set_ticks_position('left')
+    for i in xrange(1, len(Alascan.mutid)):
+        axarr[i - 1].set_title(np.unique(np.array([w.split('_') for w in Alascan.mutid[i]])[:, 0])[0] + ' ddGbind relative to WT')
+        axarr[i - 1].set_ylabel('kJ/mol')
+        axarr[i - 1].set_xticks(np.arange(len(Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, i]])))
+        axarr[i - 1].set_xticklabels(np.array([w.split('_') for w in Alascan.mutid[i]])[:, 1], rotation='vertical',ha='left')
+        axarr[i - 1].bar(np.arange(len(Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, i]]))[Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, i]] > 0],Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, i]][Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, i]] > 0], color='red')
+        axarr[i - 1].bar(np.arange(len(Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, i]]))[Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, i]] < 0],Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, i]][Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, i]] < 0], color='blue')
+        axarr[i - 1].xaxis.set_ticks_position('bottom')
+        axarr[i - 1].yaxis.set_ticks_position('left')
     plt.tight_layout()
     if filename is not None:
         figure.savefig(filename)
+
 
 ######################################################################################################################################################
 # Function to parse APBS log file - REMOVED as it is not required!
 ######################################################################################################################################################
 # def parseAPBS_totEnergy(path_log):
 #     """Searches for a 'totEnergy' calculation result in the APBS log file
-    
+
 #     Parameters
 #     ----------
 #     path_log : STRING
 #         Full path to APBS log file, EX: 'C:\\Users\\User\\Documents\\AESOP\\apbs.log'
-    
+
 #     Returns
 #     -------
 #     data : NDARRAY
@@ -836,7 +856,6 @@ def plotResults(Alascan, filename=None):
 # Dictionary to convert between 3 letter and 1 letter amino acid codes
 ######################################################################################################################################################
 AA_dict = {'CYS': 'C', 'ASP': 'D', 'SER': 'S', 'GLN': 'Q', 'LYS': 'K',
-     'ILE': 'I', 'PRO': 'P', 'THR': 'T', 'PHE': 'F', 'ASN': 'N', 
-     'GLY': 'G', 'HIS': 'H', 'LEU': 'L', 'ARG': 'R', 'TRP': 'W', 
-     'ALA': 'A', 'VAL':'V', 'GLU': 'E', 'TYR': 'Y', 'MET': 'M'}
-
+           'ILE': 'I', 'PRO': 'P', 'THR': 'T', 'PHE': 'F', 'ASN': 'N',
+           'GLY': 'G', 'HIS': 'H', 'LEU': 'L', 'ARG': 'R', 'TRP': 'W',
+           'ALA': 'A', 'VAL': 'V', 'GLU': 'E', 'TYR': 'Y', 'MET': 'M'}
