@@ -132,7 +132,12 @@ class Alascan:
 
         index = np.linspace(1,len(selstr),len(selstr)).astype(int)
         for i, sel, reg in zip(index, selstr, region):
-            combined_selection = parent_pdb.select(''.join(['(', ') and ('.join((sel, reg, 'charged', 'calpha')), ')']))
+            # print ' and '.join([sel, reg, 'charged', 'calpha'])
+            combined_selection = parent_pdb.select(' and '.join([sel, reg, 'charged', 'calpha']))
+            # if sel is not reg:
+            #     combined_selection = parent_pdb.select(''.join(['(', ') and ('.join((sel, reg, 'charged', 'calpha')), ')']))
+            # elif sel is reg:
+            #     combined_selection = parent_pdb.select(''.join(['(', ') and ('.join((sel, 'charged', 'calpha')), ')']))
             list_chids[i] = combined_selection.getChids().tolist()
             list_resnums[i] = combined_selection.getResnums().tolist()
             list_resnames[i] = combined_selection.getResnames().tolist()
@@ -169,7 +174,7 @@ class Alascan:
 
         infile = os.path.join(jobdir, pdb_complex_dir, parent_file_prefix+'.pdb')
         system = parent_pdb.select('(('+') or ('.join(selstr)+'))')
-        print '(('+') or ('.join(selstr)+'))'
+        # print '(('+') or ('.join(selstr)+'))'
         pd.writePDB(infile, system)
 
     def genPDB(self):
@@ -187,7 +192,7 @@ class Alascan:
 
         infile = os.path.join(jobdir, pdb_complex_dir, parent_file_prefix+'.pdb')
         system = parent_pdb.select('(('+') or ('.join(selstr)+'))')
-        print '(('+') or ('.join(selstr)+'))'
+        # print '(('+') or ('.join(selstr)+'))'
         pd.writePDB(infile, system)
 
         for mutid, chain, resnum in zip(list_mutids[1:], list_chids[1:], list_resnums[1:]):
@@ -285,8 +290,8 @@ class Alascan:
                 path_prefix_log = os.path.join(jobdir, logs_apbs_dir, mutid)
                 if mask_by_sel[i,j]:
                     energies = execAPBS(path_apbs, subunit_pqr, complex_pqr, prefix=path_prefix_log, grid=self.grid, ion=self.ion, pdie=self.pdie, sdie=self.sdie, cfac=self.cfac)
-                    print energies[0][0]
-                    print energies[0][1]
+                    # print energies[0][0]
+                    # print energies[0][1]
                     Gsolv[i,j] = energies[0][0]
                     Gref[i,j] = energies[0][1]
                 if not mask_by_sel[i,j]:
@@ -353,13 +358,17 @@ class Alascan:
         kernel = zip(path_list, pqr_chain_list, pqr_complex_list, prefix_list, grid_list, ion_list, pdie_list, sdie_list, cfac_list, i_list, j_list)
         apbs_results = []
         p = Pool()
-        print 'Running batchAPBS'
+        print 'Running batchAPBS ....'
+        counter = 0
+        max_count = len(kernel)
         for result in p.imap_unordered(batchAPBS, kernel):
+            counter += 1
+            print '.... %.2f percent complete ....'%(counter*100/max_count)
             i = result[0]
             j = result[1]
             solv = result[2]
             ref = result[3]
-            print '%d, %d, %f, %f'%(i, j, solv, ref)
+            # print '%d, %d, %f, %f'%(i, j, solv, ref)
             apbs_results.append([i, j, solv, ref])
             Gsolv[i,j] = solv
             Gref[i,j] = ref
@@ -444,7 +453,7 @@ class Alascan:
     def run_parallel(self):
         start = ti.default_timer()
         self.genDirs()
-        self.genMutid()
+        self.genMutid() # contains warning: FutureWarning: elementwise comparison failed; returning scalar instead, but in the future will perform elementwise comparison if tokens[0] == 'and' or tokens[-1] == 'and':
         self.genParent()
         self.genTruncatedPQR()
         self.calcAPBS_parallel()
