@@ -203,7 +203,7 @@ class Alascan:
 
         for mutid, chain, resnum in zip(list_mutids[1:], list_chids[1:], list_resnums[1:]):
             outpath = os.path.join(jobdir, pdb_complex_dir, mutid)
-            print '\nGenerating PDB for mutant: %s' % (mutid)
+            print '\n%s:\tgenerating PDB for mutant: %s' % (self.jobname, mutid)
             mutatePDB(pdb=infile, mutid=outpath, resnum=resnum, chain=chain, resid='ALA')
 
     def genTruncatedPQR(self):
@@ -223,7 +223,7 @@ class Alascan:
         # Calculate PQR for parent
         infile = os.path.join(jobdir, pdb_complex_dir, list_mutids[0] + '.pdb')
         outfile = os.path.join(jobdir, pqr_complex_dir, list_mutids[0] + '.pqr')
-        print '\nGenerating PQR for mutant: %s' % (list_mutids[0])
+        print '\n%s:\tgenerating PQR for parent: %s' % (self.jobname, list_mutids[0])
         execPDB2PQR(path_pdb2pqr, infile, outfile=outfile, ff=ff)
         complex_pqr = pd.parsePQR(outfile)
         for sel, seldir in zip(selstr, pqr_sel_dir):
@@ -233,7 +233,7 @@ class Alascan:
 
         for mutid, chain, resnum in zip(list_mutids[1:], list_chids[1:], list_resnums[1:]):
             outpath = os.path.join(jobdir, pqr_complex_dir, mutid)
-            print '\nGenerating PQR for mutant: %s' % (mutid)
+            print '\n%s:\tgenerating PQR for mutant: %s' % (self.jobname, mutid)
             # print 'mutid %s, chain %s, resnum %d'%(mutid, chain, resnum)
             # print outpath+'.pqr'
             mutatePQR(outfile, mutid=outpath, resnum=resnum, chain=chain)
@@ -257,7 +257,7 @@ class Alascan:
         list_mutids = [item for sublist in self.mutid for item in sublist]
 
         for mutid in list_mutids:
-            print '\nGenerating PQR for mutant: %s' % (mutid)
+            print '\n%s:\tgenerating PQR for mutant: %s' % (self.jobname, mutid)
             infile = os.path.join(jobdir, pdb_complex_dir, mutid + '.pdb')
             outfile = os.path.join(jobdir, pqr_complex_dir, mutid + '.pqr')
             execPDB2PQR(path_pdb2pqr, infile, outfile=outfile, ff=ff)
@@ -290,7 +290,7 @@ class Alascan:
 
         complex_pqr = os.path.join(jobdir, pqr_complex_dir, list_mutids[0] + '.pqr')
         for i, mutid in zip(xrange(dim_mutid), list_mutids):
-            print '\nCalculating solvation and reference energies for mutant: %s' % (mutid)
+            print '\n%s:\tcalculating solvation and reference energies for mutant: %s' % (self.jobname, mutid)
             # complex_pqr = os.path.join(jobdir, pqr_complex_dir, mutid+'.pqr')
             for j, seldir in zip(xrange(dim_sel), [pqr_complex_dir] + pqr_sel_dir):
                 subunit_pqr = os.path.join(jobdir, seldir, mutid + '.pqr')
@@ -369,12 +369,12 @@ class Alascan:
                      sdie_list, cfac_list, i_list, j_list)
         apbs_results = []
         p = Pool()
-        print 'Running batchAPBS ....'
+        print '%s:\trunning batchAPBS ....' % (self.jobname)
         counter = 0
         max_count = len(kernel)
         for result in p.imap_unordered(batchAPBS, kernel):
             counter += 1
-            print '.... %d percent complete ....' % (int(counter * 100 / max_count))
+            print '.... %s:\tbatch APBS %d percent complete ....' % (self.jobname, int(counter * 100 / max_count))
             i = result[0]
             j = result[1]
             solv = result[2]
@@ -385,16 +385,6 @@ class Alascan:
             Gref[i, j] = ref
         apbs_results = np.asarray(apbs_results)
         self.apbs_results = apbs_results
-        # print Gsolv
-        # result = [p.map_async(batchAPBS, x) for x in kernel]
-        # p.close()
-        # p.join()
-        # for i, j, solv, ref in result:
-        #     Gsolv[i,j] = solv
-        #     Gref[i,j] = ref
-        # for i, j, solv, ref in p.imap(batchAPBS, kernel):
-        #     Gsolv[i,j] = solv
-        #     Gref[i,j] = ref
 
         # Fill in results that are duplicates
         for i in xrange(dim_mutid):
@@ -423,12 +413,73 @@ class Alascan:
         Gcoul = np.zeros((dim_mutid, dim_sel))
 
         for i, mutid in zip(xrange(dim_mutid), list_mutids):
-            print '\nCalculating coulombic energies for mutant: %s' % (mutid)
+            print '\n%s:\tcalculating coulombic energies for mutant: %s' % (self.jobname, mutid)
             for j, seldir in zip(xrange(dim_sel), [pqr_complex_dir] + pqr_sel_dir):
                 subunit_pqr = os.path.join(jobdir, seldir, mutid + '.pqr')
                 energies = execCoulomb(path_coulomb, subunit_pqr)
                 Gcoul[i, j] = energies / pdie
 
+        self.Gcoul = Gcoul
+
+    def calcCoulomb_parallel(self):
+        selstr = self.selstr
+        region = self.region
+        jobdir = self.jobdir
+        pqr_complex_dir = self.pqr_complex_dir
+        pqr_sel_dir = self.pqr_sel_dir
+        path_coulomb = self.coulomb
+
+        list_mutids = self.getMutids()
+
+        dim_mutid = len(list_mutids)
+        dim_sel = len(selstr) + 1
+
+        mask_by_sel = np.copy(self.mask_by_sel)  # Mask parts that are true will be run with APBS
+        mask_by_sel[0, :] = np.ones(dim_sel).astype(bool)
+        mask_by_sel[:, 0] = np.ones(dim_mutid).astype(bool)
+
+        Gcoul = np.zeros((dim_mutid, dim_sel))
+
+        path_list = []
+        pqr_chain_list = []
+        pdie_list = []
+        i_list = []
+        j_list = []
+
+        # Find all calculations to be done
+        for i, mutid in zip(xrange(dim_mutid), list_mutids):
+            for j, seldir in zip(xrange(dim_sel), [pqr_complex_dir] + pqr_sel_dir):
+                subunit_pqr = os.path.join(jobdir, seldir, mutid + '.pqr')
+                if mask_by_sel[i, j]:
+                    path_list.append(path_coulomb)
+                    pqr_chain_list.append(subunit_pqr)
+                    pdie_list.append(self.pdie)
+                    i_list.append(i)
+                    j_list.append(j)
+
+        # Organize kernel and run batch process
+        kernel = zip(path_list, pqr_chain_list, pdie_list, i_list, j_list)
+        coulomb_results = []
+        p = Pool()
+        print '%s:\trunning batchCoulomb ....' % (self.jobname)
+        counter = 0
+        max_count = len(kernel)
+        for result in p.imap_unordered(batchCoulomb, kernel):
+            counter += 1
+            print '.... %s:\tbatch coulomb %d percent complete ....' % (self.jobname, int(counter * 100 / max_count))
+            i = result[0]
+            j = result[1]
+            coul = result[2]
+            coulomb_results.append([i, j, coul])
+            Gcoul[i, j] = coul
+        coulomb_results = np.asarray(coulomb_results)
+        self.coulomb_results = coulomb_results
+
+        # Fill in results that are duplicates
+        for i in xrange(dim_mutid):
+            for j in xrange(dim_sel):
+                if not mask_by_sel[i, j]:
+                    Gcoul[i, j] = Gcoul[0, j]
         self.Gcoul = Gcoul
 
     def ddGbind_rel(self):
@@ -468,10 +519,9 @@ class Alascan:
         self.genParent()
         self.genTruncatedPQR()
         self.calcAPBS_parallel()
-        self.calcCoulomb()
-        # self.summary()
+        self.calcCoulomb_parallel()
         stop = ti.default_timer()
-        print 'AESOP alanine scan completed in %.2f seconds' % (stop - start)
+        print '%s:\tAESOP alanine scan completed in %.2f seconds' % (self.jobname, stop - start)
 
     def summary(self, filename=None):
         plotResults(self, filename=None)
@@ -774,25 +824,26 @@ def execAPBS(path_apbs_exe, pqr_chain, pqr_complex, prefix=None, grid=1.0, ion=0
     # return file_apbs_log
     return elec
 
-
 ######################################################################################################################################################
 # Function to run multiple APBS processes at once
 ######################################################################################################################################################
 
 def batchAPBS(kernel):
     path, pqr_chain, pqr_complex, prefix, grid, ion, pdie, sdie, cfac, i, j = kernel
-    print 'Calculating solvation and reference energies for: %s' % (os.path.basename(pqr_chain).split('.')[0])
+    # print 'Calculating solvation and reference energies for: %s' % (os.path.basename(pqr_chain).split('.')[0])
     energies = execAPBS(path, pqr_chain, pqr_complex, prefix=prefix, grid=grid, ion=ion, pdie=pdie, sdie=sdie,
                         cfac=cfac)
     return np.array([i, j, energies[0][0], energies[0][1]])
 
-    # def f(x):
-    #     return x*x
-
-    # if __name__ == '__main__':
-    #     p = Pool(5)
-    #     print(p.map(f, [1, 2, 3]))
-
+######################################################################################################################################################
+# Function to run multiple Coulomb processes at once
+######################################################################################################################################################
+def batchCoulomb(kernel):
+    path, pqr_chain, pdie, i, j = kernel
+    # print 'Calculating coulombic energies for: %s' % (os.path.basename(pqr_chain).split('.')[0])
+    energies = execCoulomb(path, pqr_chain)
+    energies = energies / pdie
+    return np.array([i, j, energies])
 
 ######################################################################################################################################################
 # Function to run coulomb.exe - should work on any supported OS
