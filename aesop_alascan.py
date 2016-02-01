@@ -1,5 +1,5 @@
 import os as os
-import sys as sys
+# import sys as sys
 import subprocess as sp
 import datetime as dt
 import timeit as ti
@@ -9,6 +9,7 @@ import prody as pd
 import matplotlib.pyplot as plt
 from modeller import environ, model, alignment, selection
 from multiprocessing import Pool, freeze_support
+# import gridData as gd
 
 
 ######################################################################################################################################################
@@ -45,7 +46,7 @@ class Alascan:
     """
 
     def __init__(self, pdb, pdb2pqr_exe, apbs_exe, coulomb_exe=None, selstr=['protein'], jobname=None, region=None,
-                 grid=1, ion=0.150, pdie=20.0, sdie=78.54, ff='parse', cfac=1.5):
+                 grid=1, ion=0.150, pdie=20.0, sdie=78.54, ff='parse', cfac=1.5, dx=False):
         self.pdb = pdb
         self.pdb2pqr = pdb2pqr_exe
         self.apbs = apbs_exe
@@ -76,6 +77,7 @@ class Alascan:
         self.mutid = []
         self.ff = ff
         self.cfac = cfac
+        self.dx = dx
 
     def getPDB(self):
         return self.pdb
@@ -338,6 +340,7 @@ class Alascan:
         pdie_list = []
         sdie_list = []
         cfac_list = []
+        dx_list = []
         i_list = []
         j_list = []
 
@@ -361,12 +364,13 @@ class Alascan:
                     pdie_list.append(self.pdie)
                     sdie_list.append(self.sdie)
                     cfac_list.append(self.cfac)
+                    dx_list.append(self.dx)
                     i_list.append(i)
                     j_list.append(j)
 
         # Organize kernel and run batch process
         kernel = zip(path_list, pqr_chain_list, pqr_complex_list, prefix_list, grid_list, ion_list, pdie_list,
-                     sdie_list, cfac_list, i_list, j_list)
+                     sdie_list, cfac_list, dx_list, i_list, j_list)
         apbs_results = []
         p = Pool()
         print '%s:\trunning batchAPBS ....' % (self.jobname)
@@ -697,7 +701,7 @@ def execPDB2PQR(path_pdb2pqr_exe, pdbfile, outfile=None, ff='parse'):
 ######################################################################################################################################################
 # Function to run APBS.exe - should work on any supported OS
 ######################################################################################################################################################
-def execAPBS(path_apbs_exe, pqr_chain, pqr_complex, prefix=None, grid=1.0, ion=0.150, pdie=20.0, sdie=78.54, cfac=1.5):
+def execAPBS(path_apbs_exe, pqr_chain, pqr_complex, prefix=None, grid=1.0, ion=0.150, pdie=20.0, sdie=78.54, cfac=1.5, dx=False):
     """Summary
     
     Parameters
@@ -761,8 +765,8 @@ def execAPBS(path_apbs_exe, pqr_chain, pqr_complex, prefix=None, grid=1.0, ion=0
                 'end\n']
     cmd_solv = ['elec name solv\n',
                 '   mg-manual\n',
-                '   dime %d %d %d\n' % (dime[0], dime[1], dime[2]),  # (161,129,129),
-                '   glen %d %d %d\n' % (glen[0], glen[1], glen[2]),  # (140,98,122),
+                '   dime %d %d %d\n' % (dime[0], dime[1], dime[2]),
+                '   glen %d %d %d\n' % (glen[0], glen[1], glen[2]),
                 '   gcent mol 2\n',
                 '   mol 1\n',
                 '   lpbe\n',
@@ -777,21 +781,20 @@ def execAPBS(path_apbs_exe, pqr_chain, pqr_complex, prefix=None, grid=1.0, ion=0
                 '   srad 0.0\n',
                 '   swin 0.3\n',
                 '   temp 298.15\n',
-                '   calcenergy total\n',
-                '   write pot dx %s\n' % (prefix),
-                'end\n']
+                '   calcenergy total\n']
+    if dx == True:
+        cmd_solv = cmd_solv + ['   write pot dx %s\n' % (prefix)]
+    cmd_solv = cmd_solv + ['end\n']
     cmd_ref = ['elec name ref\n',
                '   mg-manual\n',
-               '   dime %d %d %d\n' % (dime[0], dime[1], dime[2]),  # (161,129,129),
-               '   glen %d %d %d\n' % (glen[0], glen[1], glen[2]),  # (140,98,122),
+               '   dime %d %d %d\n' % (dime[0], dime[1], dime[2]),
+               '   glen %d %d %d\n' % (glen[0], glen[1], glen[2]),
                '   gcent mol 2\n',
                '   mol 1\n',
                '   lpbe\n',
                '   bcfl sdh\n',
                '   srfm smol\n',
                '   chgm spl2\n',
-               # '   ion 1 %.2f 2.0\n'%(ion), # These should not be included in reference state!
-               # '   ion -1 %.2f 2.0\n'%(ion),
                '   pdie %.2f\n' % (pdie),
                '   sdie %.2f\n' % (pdie),
                '   sdens 10.0\n',
@@ -827,12 +830,11 @@ def execAPBS(path_apbs_exe, pqr_chain, pqr_complex, prefix=None, grid=1.0, ion=0
 ######################################################################################################################################################
 # Function to run multiple APBS processes at once
 ######################################################################################################################################################
-
 def batchAPBS(kernel):
-    path, pqr_chain, pqr_complex, prefix, grid, ion, pdie, sdie, cfac, i, j = kernel
+    path, pqr_chain, pqr_complex, prefix, grid, ion, pdie, sdie, cfac, dx, i, j = kernel
     # print 'Calculating solvation and reference energies for: %s' % (os.path.basename(pqr_chain).split('.')[0])
     energies = execAPBS(path, pqr_chain, pqr_complex, prefix=prefix, grid=grid, ion=ion, pdie=pdie, sdie=sdie,
-                        cfac=cfac)
+                        cfac=cfac, dx=dx)
     return np.array([i, j, energies[0][0], energies[0][1]])
 
 ######################################################################################################################################################
