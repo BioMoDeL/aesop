@@ -8,8 +8,10 @@ import numpy as np
 import prody as pd
 import matplotlib.pyplot as plt
 from modeller import environ, model, alignment, selection
-from multiprocessing import Pool, freeze_support
-# import gridData as gd
+from multiprocessing import Pool#, freeze_support
+import gridData as gd
+import itertools as it
+
 
 
 ######################################################################################################################################################
@@ -94,6 +96,9 @@ class Alascan:
     def getMutids(self):
         l = self.mutid
         return [item for sublist in l for item in sublist]
+
+    def getDX(self):
+        return self.dx_files
 
     def genDirs(self):
         # Create necessary directories for PDB files
@@ -347,18 +352,13 @@ class Alascan:
         # Find all calculations to be done
         complex_pqr = os.path.join(jobdir, pqr_complex_dir, list_mutids[0] + '.pqr')
         for i, mutid in zip(xrange(dim_mutid), list_mutids):
-            # print '\nCalculating solvation and reference energies for mutant: %s'%(mutid)
-            # complex_pqr = os.path.join(jobdir, pqr_complex_dir, mutid+'.pqr')
             for j, seldir in zip(xrange(dim_sel), [pqr_complex_dir] + pqr_sel_dir):
                 subunit_pqr = os.path.join(jobdir, seldir, mutid + '.pqr')
-                path_prefix_log = os.path.join(jobdir, logs_apbs_dir, mutid)
                 if mask_by_sel[i, j]:
-                    # energies = execAPBS(path_apbs, subunit_pqr, complex_pqr, prefix=path_prefix_log, grid=self.grid, ion=self.ion, pdie=self.pdie, sdie=self.sdie, cfac=self.cfac)
                     path_list.append(path_apbs)
                     pqr_chain_list.append(subunit_pqr)
                     pqr_complex_list.append(complex_pqr)
-                    prefix_list.append(
-                        path_prefix_log + '_%d_%d' % (i, j))  # added to make sure apbs.in file is unique!
+                    prefix_list.append(os.path.join(jobdir, logs_apbs_dir, '%d_%d_' % (i, j)+mutid))  # added to make sure apbs.in file is unique!
                     grid_list.append(self.grid)
                     ion_list.append(self.ion)
                     pdie_list.append(self.pdie)
@@ -389,6 +389,8 @@ class Alascan:
             Gref[i, j] = ref
         apbs_results = np.asarray(apbs_results)
         self.apbs_results = apbs_results
+        if self.dx == True:
+            self.dx_files = [x+'.dx' for x in prefix_list]
 
         # Fill in results that are duplicates
         for i in xrange(dim_mutid):
@@ -529,6 +531,106 @@ class Alascan:
 
     def summary(self, filename=None):
         plotResults(self, filename=None)
+
+######################################################################################################################################################
+# Container for performing ESD analysis
+#   alascan     -   Alascan class with certain class functions.
+######################################################################################################################################################
+class ESD:
+    def __init__(self, alascan):
+        dx_files = alascan.getDX() # Get only files with index [0-9]+.
+        pattern_id = re.compile('\d+_0_(wt|seg\d+_[A-Z]\d+[A-Z])[.]dx')
+        pattern_file = re.compile('(.*[0-9]+_0_(wt|seg[0-9]+_[A-Z]\d+[A-Z])[.]dx)')
+        self.ids = [f.group(1) for dx_file in dx_files for f in [re.search(pattern_id, os.path.basename(dx_file))] if f]
+        self.files = [f.group(1) for dx_file in dx_files for f in [re.search(pattern_file, dx_file)] if f]
+
+        self.ion = alascan.ion
+        self.pdie = alascan.pdie
+        self.sdie = alascan.sdie
+        self.jobname = alascan.jobname
+        self.pdbfile = alascan.pdb
+
+        grid = gd.Grid(self.files[0])
+        self.midpoints = grid.midpoints
+        self.edges = grid.edges
+        self.dim_dx = grid.grid.shape
+
+        self.mask = np.ones((self.dim_dx[0]*self.dim_dx[1]*self.dim_dx[2])).astype(bool)
+        # num_files = len(self.dx_files)
+        # dim_coords = grid.grid.shape[0] * grid.grid.shape[1] * grid.grid.shape[2]
+        # self.coords = np.zeros((num_files, dim_coords)) # currently can't allocate enough memory
+        # for i in xrange(num_files):
+        #     grid = gd.Grid(self.dx_files[i])
+        #     self.coords[i,:] = grid.grid.reshape((1, dim_coords))
+
+    def setMask(self, mask):
+        if len(mask) == len(self.mask):
+            self.mask = mask
+        else:
+            print 'Error: unable to set mask, must be an array of length %d' % (len(self.mask))
+
+    def calc(self, method='LD'):
+        files = self.files
+        ids = self.ids
+        dim = self.dim_dx[0]*self.dim_dx[1]*self.dim_dx[2]/3
+        esd = np.zeros((len(ids), len(ids)))
+        for file, i in zip(files, xrange(len(ids))):
+            a = gd.Grid(file).grid
+            a = a.reshape((dim, 3))
+            for file, j in zip(files, xrange(len(ids))):
+                b = gd.Grid(file).grid
+                b = b.reshape((dim, 3))
+
+                if method is 'LD':
+                    numer = np.linalg.norm(a-b, axis=1)
+                    denom = dim * np.max(np.hstack((np.linalg.norm(a, axis=1).reshape((dim, 1)), np.linalg.norm(b, axis=1).reshape((dim, 1)))), axis=1)
+                    esd[i, j] = np.divide(numer, denom).sum()
+        self.esd = esd
+
+    def calc_batch(self, method='LD'):
+
+        def symmetrize(a):
+            return a + a.T - np.diag(a.diagonal())
+
+        def f_ld(kernel):
+            i, j, file_i, file_j = kernel
+            a = gd.Grid(file_i).grid
+            b = gd.Grid(file_j).grid
+            dim = a.shape[0] * a.shape[1] * a.shape[2] / 3
+            a = a.reshape((dim, 3))
+            b = b.reshape((dim, 3))
+            numer = np.linalg.norm(a-b, axis=1)
+            denom = dim * np.max(np.hstack((np.linalg.norm(a, axis=1).reshape((dim, 1)), np.linalg.norm(b, axis=1).reshape((dim, 1)))), axis=1)
+            esd = np.divide(numer, denom).sum()
+            return np.array([i, j, esd])
+
+        files = self.files
+        ids = self.ids
+        dim = self.dim_dx[0]*self.dim_dx[1]*self.dim_dx[2]/3
+        esd = np.zeros((len(ids), len(ids)))
+
+        indices = it.combinations_with_replacement(range(len(ids)), 2)
+        list_i = [x[0] for x in indices]
+        list_j = [x[1] for x in indices]
+        list_i_files = [files[x] for x in list_i]
+        list_j_files = [files[x] for x in list_j]
+        kernel = zip(list_i, list_j, list_i_files, list_j_files)
+        print'Starting batch ESD calculation ....'
+        p = Pool()
+        counter = 0
+        max_count = len(kernel)
+        for result in p.imap_unordered(f_ld, kernel):
+            counter += 1
+            print '.... Batch ESD %d percent complete ....' % (int(counter * 100 / max_count))
+            i = result[0]
+            j = result[1]
+            x = result[2]
+            esd[i,j] = x
+        esd = symmetrize(esd)
+        self.esd = esd
+
+
+
 
 
 ######################################################################################################################################################
@@ -876,7 +978,6 @@ def plotResults(Alascan, filename=None):
     plt.tight_layout()
     if filename is not None:
         figure.savefig(filename)
-
 
 ######################################################################################################################################################
 # Function to parse APBS log file - REMOVED as it is not required!
