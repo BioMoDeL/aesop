@@ -570,50 +570,60 @@ class ESD:
             print 'Error: unable to set mask, must be an array of length %d' % (len(self.mask))
 
     def calc(self, method='LD'):
-        files = self.files
-        ids = self.ids
-        dim = self.dim_dx[0]*self.dim_dx[1]*self.dim_dx[2]/3
-        esd = np.zeros((len(ids), len(ids)))
-        for file, i in zip(files, xrange(len(ids))):
-            a = gd.Grid(file).grid
-            a = a.reshape((dim, 3))
-            for file, j in zip(files, xrange(len(ids))):
-                b = gd.Grid(file).grid
-                b = b.reshape((dim, 3))
-
-                if method is 'LD':
-                    numer = np.linalg.norm(a-b, axis=1)
-                    denom = dim * np.max(np.hstack((np.linalg.norm(a, axis=1).reshape((dim, 1)), np.linalg.norm(b, axis=1).reshape((dim, 1)))), axis=1)
-                    esd[i, j] = np.divide(numer, denom).sum()
-        self.esd = esd
-
-    def calc_batch(self, method='LD'):
 
         def symmetrize(a):
             return a + a.T - np.diag(a.diagonal())
 
-        def f_ld(kernel):
-            i, j, file_i, file_j = kernel
-            a = gd.Grid(file_i).grid
-            b = gd.Grid(file_j).grid
-            dim = a.shape[0] * a.shape[1] * a.shape[2] / 3
-            a = a.reshape((dim, 3))
-            b = b.reshape((dim, 3))
-            numer = np.linalg.norm(a-b, axis=1)
-            denom = dim * np.max(np.hstack((np.linalg.norm(a, axis=1).reshape((dim, 1)), np.linalg.norm(b, axis=1).reshape((dim, 1)))), axis=1)
-            esd = np.divide(numer, denom).sum()
-            return np.array([i, j, esd])
-
         files = self.files
         ids = self.ids
         dim = self.dim_dx[0]*self.dim_dx[1]*self.dim_dx[2]/3
         esd = np.zeros((len(ids), len(ids)))
 
-        indices = it.combinations_with_replacement(range(len(ids)), 2)
-        list_i = [x[0] for x in indices]
-        list_j = [x[1] for x in indices]
-        list_i_files = [files[x] for x in list_i]
-        list_j_files = [files[x] for x in list_j]
+        indices = it.combinations(range(len(ids)), 2)
+        for i, j in indices:
+            a = gd.Grid(files[i]).grid.reshape((dim, 3))
+            b = gd.Grid(files[j]).grid.reshape((dim, 3))
+            if method is 'LD':
+                numer = np.linalg.norm(a-b, axis=1)
+                denom = dim * np.max(np.hstack((np.linalg.norm(a, axis=1).reshape((dim, 1)), np.linalg.norm(b, axis=1).reshape((dim, 1)))), axis=1)
+                esd[i, j] = np.divide(numer, denom).sum()
+                print esd[i,j]
+        esd = symmetrize(esd)
+        self.esd = esd
+
+        # for file, i in zip(files, xrange(len(ids))):
+        #     a = gd.Grid(file).grid
+        #     a = a.reshape((dim, 3))
+        #     for file, j in zip(files, xrange(len(ids))):
+        #         b = gd.Grid(file).grid
+        #         b = b.reshape((dim, 3))
+        #
+        #         if method is 'LD':
+        #             numer = np.linalg.norm(a-b, axis=1)
+        #             denom = dim * np.max(np.hstack((np.linalg.norm(a, axis=1).reshape((dim, 1)), np.linalg.norm(b, axis=1).reshape((dim, 1)))), axis=1)
+        #             esd[i, j] = np.divide(numer, denom).sum()
+        # self.esd = esd
+
+    def calc_batch(self, method='LD'): # NOT WORKING ... DON'T USE!
+
+        def symmetrize(a):
+            return a + a.T - np.diag(a.diagonal())
+
+        files = self.files
+        ids = self.ids
+        dim = self.dim_dx[0]*self.dim_dx[1]*self.dim_dx[2]/3
+
+        esd = np.zeros((len(ids), len(ids)))
+        indices = it.combinations(range(len(ids)), 2)
+        list_i = []
+        list_j = []
+        list_i_files = []
+        list_j_files = []
+        for i, j in indices:
+            list_i.append(i)
+            list_j.append(j)
+            list_i_files.append(files[i])
+            list_j_files.append(files[j])
         kernel = zip(list_i, list_j, list_i_files, list_j_files)
         print'Starting batch ESD calculation ....'
         p = Pool()
@@ -626,12 +636,24 @@ class ESD:
             j = result[1]
             x = result[2]
             esd[i,j] = x
+            print '%d, %d, %f' %(i,j,x)
         esd = symmetrize(esd)
         self.esd = esd
 
-
-
-
+######################################################################################################################################################
+# Function to run batch esd with LD method
+######################################################################################################################################################
+def f_ld(kernel):
+    i, j, file_i, file_j = kernel
+    a = gd.Grid(file_i).grid
+    b = gd.Grid(file_j).grid
+    dim = a.shape[0] * a.shape[1] * a.shape[2] / 3
+    a = a.reshape((dim, 3))
+    b = b.reshape((dim, 3))
+    numer = np.linalg.norm(a-b, axis=1)
+    denom = dim * np.max(np.hstack((np.linalg.norm(a, axis=1).reshape((dim, 1)), np.linalg.norm(b, axis=1).reshape((dim, 1)))), axis=1)
+    esd = np.divide(numer, denom).sum()
+    return np.array([i, j, esd])
 
 ######################################################################################################################################################
 # Function to run commands, recording output
@@ -978,6 +1000,23 @@ def plotResults(Alascan, filename=None):
     plt.tight_layout()
     if filename is not None:
         figure.savefig(filename)
+
+######################################################################################################################################################
+# Function to plot results of ESD.calc()
+######################################################################################################################################################
+def plotESD(esd, filename=None, cmap='hot'):
+    plt.style.use('seaborn-talk')
+    fig, ax = plt.subplots(sharey=True, dpi=300)
+    heatmap = ax.pcolor(esd.esd, cmap=cmap)
+    ax.set_xlim(0,esd.esd.shape[0])
+    ax.set_ylim(0,esd.esd.shape[1])
+    ax.set_xticks(np.arange(esd.esd.shape[0])+0.5, minor=False)
+    ax.set_yticks(np.arange(esd.esd.shape[1])+0.5, minor=False)
+    ax.set_xticklabels(esd.ids, rotation=90 )
+    ax.set_yticklabels(esd.ids)
+    fig.tight_layout()
+    if filename is not None:
+        fig.savefig(filename)
 
 ######################################################################################################################################################
 # Function to parse APBS log file - REMOVED as it is not required!
