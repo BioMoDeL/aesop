@@ -1001,18 +1001,25 @@ def execDSSP(pdbfile, dssp):
 def plotResults(Alascan, filename=None):
     plt.style.use('seaborn-talk')
     figure, axarr = plt.subplots(len(Alascan.mutid) - 1, sharey=True)
+    dpi_val = 300
     for i in xrange(1, len(Alascan.mutid)):
         axarr[i - 1].set_title(np.unique(np.array([w.split('_') for w in Alascan.mutid[i]])[:, 0])[0] + ' ddGbind relative to WT')
         axarr[i - 1].set_ylabel('kJ/mol')
         axarr[i - 1].set_xticks(np.arange(len(Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, i]])))
-        axarr[i - 1].set_xticklabels(np.array([w.split('_') for w in Alascan.mutid[i]])[:, 1], rotation='vertical',ha='left')
+        if 100 < len(Alascan.mutid[i]) <= 150:
+            axarr[i - 1].set_xticklabels(np.array([w.split('_') for w in Alascan.mutid[i]])[:, 1], rotation='vertical', ha='left', size=6)
+        elif len(Alascan.mutid[i]) > 150:
+            axarr[i - 1].set_xticklabels(np.array([w.split('_') for w in Alascan.mutid[i]])[:, 1], rotation='vertical', ha='left', size=2)
+            dpi_val = 600
+        else:
+            axarr[i - 1].set_xticklabels(np.array([w.split('_') for w in Alascan.mutid[i]])[:, 1], rotation='vertical', ha='left')
         axarr[i - 1].bar(np.arange(len(Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, i]]))[Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, i]] > 0],Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, i]][Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, i]] > 0], color='red')
         axarr[i - 1].bar(np.arange(len(Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, i]]))[Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, i]] < 0],Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, i]][Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, i]] < 0], color='blue')
         axarr[i - 1].xaxis.set_ticks_position('bottom')
         axarr[i - 1].yaxis.set_ticks_position('left')
     plt.tight_layout()
     if filename is not None:
-        figure.savefig(filename)
+        figure.savefig(filename, dpi=dpi_val)
 
 ######################################################################################################################################################
 # Function to plot results of ESD.calc()
