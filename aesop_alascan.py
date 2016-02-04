@@ -6,6 +6,7 @@ import timeit as ti
 import re as re
 import numpy as np
 import prody as pd
+import scipy.spatial as spatial
 import matplotlib.pyplot as plt
 from modeller import environ, model, alignment, selection
 from multiprocessing import Pool#, freeze_support
@@ -562,6 +563,13 @@ class ESD:
         # for i in xrange(num_files):
         #     grid = gd.Grid(self.dx_files[i])
         #     self.coords[i,:] = grid.grid.reshape((1, dim_coords))
+    def findConvexHull(self):
+        pdbfile = self.pdbfile
+        pdb = pd.parsePDB(pdbfile)
+        xyz = pdb.getCoords()
+        hull = spatial.ConvexHull
+
+
 
     def setMask(self, mask):
         if len(mask) == len(self.mask):
@@ -664,7 +672,6 @@ def runProcess(command):
     (out, err) = proc.communicate()
     # print "program output:", out
     return (out, err)
-
 
 ######################################################################################################################################################
 # Function to mutate a single residue in a PDB structure, mutates with side-chain truncation
@@ -981,6 +988,12 @@ def execCoulomb(path_coulomb_exe, pqr):
     coul = np.asarray(re.findall(pattern, log)).astype(np.float)
     return coul
 
+######################################################################################################################################################
+# Function to run DSSP.exe - should work on any supported OS
+######################################################################################################################################################
+def execDSSP(pdbfile, dssp):
+    (log, err) = runProcess([dssp, pdbfile])
+    return log
 
 ######################################################################################################################################################
 # Function to plot results of Alascan
@@ -1017,6 +1030,45 @@ def plotESD(esd, filename=None, cmap='hot'):
     fig.tight_layout()
     if filename is not None:
         fig.savefig(filename)
+
+######################################################################################################################################################
+# Function to calculate RSA for PDB
+######################################################################################################################################################
+def calcRSA(pdbfile, dssp):
+    # SA from: C. Chotia, The Nature of the Accessible and Buried Surfaces in Proteins, J. Mol. Biol., 105(1975)1-14.
+    SA_dict = {'C': 135, 'D': 150, 'S': 115, 'Q': 180, 'K': 200,
+               'I': 175, 'P': 145, 'T': 140, 'F': 210, 'N': 160,
+               'G': 75, 'H': 195, 'L': 170, 'R': 225, 'W': 255,
+               'A': 115, 'V': 155, 'E': 190, 'Y': 230, 'M': 185}
+    threshold = 0.2 # RSA below this value is considered completely buried
+    log = execDSSP(pdbfile, dssp)
+    ag = pd.parsePDB(pdbfile)
+    n_atoms = ag.numAtoms()
+    ACC = np.zeros(n_atoms, float)
+    lines = filter(None, log.split('\n'))
+    iterator = iter(lines)
+    for line in iterator:
+        # print line
+        if line.startswith('  #  RESIDUE'):
+            break
+    for line in iterator:
+        if line[13] == '!':
+            continue
+        res = ag[(line[11], int(line[5:10]), line[10].strip())]
+        if res is None:
+            continue
+        indices = res.getIndices()
+        ACC[indices] = int(line[35:38])
+        ag.setData('dssp_acc', ACC)
+
+    resid = np.asarray([AA_dict[x] for x in ag.getResnames()])
+    sasa = ag._getData('dssp_acc')
+    rsa =[]
+    for res, sa in zip(resid, sasa):
+        rsa.append(sa / SA_dict[res])
+        # rsa = np.asarray([SA_dict[res] for res, sasa in zip(resid, sasa])
+    rsa = np.asarray(rsa)
+    return(resid, rsa, rsa>=threshold)
 
 ######################################################################################################################################################
 # Function to parse APBS log file - REMOVED as it is not required!
