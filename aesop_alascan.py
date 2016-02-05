@@ -334,8 +334,8 @@ class Alascan:
         mask_by_sel[0, :] = np.ones(dim_sel).astype(bool)
         mask_by_sel[:, 0] = np.ones(dim_mutid).astype(bool)
 
-        Gsolv = np.zeros((dim_mutid, dim_sel))
-        Gref = np.zeros((dim_mutid, dim_sel))
+        Gsolv = np.zeros((dim_mutid, dim_sel)).astype(float)
+        Gref = np.zeros((dim_mutid, dim_sel)).astype(float)
 
         path_list = []
         pqr_chain_list = []
@@ -380,8 +380,8 @@ class Alascan:
         for result in p.imap_unordered(batchAPBS, kernel):
             counter += 1
             print '.... %s:\tbatch APBS %d percent complete ....' % (self.jobname, int(counter * 100 / max_count))
-            i = result[0]
-            j = result[1]
+            i = int(result[0])
+            j = int(result[1])
             solv = result[2]
             ref = result[3]
             # print '%d, %d, %f, %f'%(i, j, solv, ref)
@@ -445,7 +445,7 @@ class Alascan:
         mask_by_sel[0, :] = np.ones(dim_sel).astype(bool)
         mask_by_sel[:, 0] = np.ones(dim_mutid).astype(bool)
 
-        Gcoul = np.zeros((dim_mutid, dim_sel))
+        Gcoul = np.zeros((dim_mutid, dim_sel)).astype(float)
 
         path_list = []
         pqr_chain_list = []
@@ -474,8 +474,8 @@ class Alascan:
         for result in p.imap_unordered(batchCoulomb, kernel):
             counter += 1
             print '.... %s:\tbatch coulomb %d percent complete ....' % (self.jobname, int(counter * 100 / max_count))
-            i = result[0]
-            j = result[1]
+            i = int(result[0])
+            j = int(result[1])
             coul = result[2]
             coulomb_results.append([i, j, coul])
             Gcoul[i, j] = coul
@@ -640,8 +640,8 @@ class ESD:
         for result in p.imap_unordered(f_ld, kernel):
             counter += 1
             print '.... Batch ESD %d percent complete ....' % (int(counter * 100 / max_count))
-            i = result[0]
-            j = result[1]
+            i = int(result[0])
+            j = int(result[1])
             x = result[2]
             esd[i,j] = x
             print '%d, %d, %f' %(i,j,x)
@@ -887,7 +887,7 @@ def execAPBS(path_apbs_exe, pqr_chain, pqr_complex, prefix=None, grid=1.0, ion=0
         fg / (32 * grid)) - 1  # index of dime to use from list, subtract one to be consistent with python indexing!
 
     glen = fg
-    dime = np.array((dime_list[dime_ind[0]], dime_list[dime_ind[1]], dime_list[dime_ind[2]]))
+    dime = np.array((dime_list[int(dime_ind[0])], dime_list[int(dime_ind[1])], dime_list[int(dime_ind[2])]))
 
     # Format APBS input file
     cmd_read = ['read\n',
@@ -913,7 +913,7 @@ def execAPBS(path_apbs_exe, pqr_chain, pqr_complex, prefix=None, grid=1.0, ion=0
                 '   swin 0.3\n',
                 '   temp 298.15\n',
                 '   calcenergy total\n']
-    if dx == True:
+    if dx is True:
         cmd_solv = cmd_solv + ['   write pot dx %s\n' % (prefix)]
     cmd_solv = cmd_solv + ['end\n']
     cmd_ref = ['elec name ref\n',
@@ -1019,15 +1019,16 @@ def plotResults(Alascan, filename=None):
 ######################################################################################################################################################
 def plotESD(esd, filename=None, cmap='hot'):
     plt.style.use('seaborn-talk')
-    fig, ax = plt.subplots(sharey=True, dpi=300)
-    heatmap = ax.pcolor(esd.esd, cmap=cmap)
+    fig, ax = plt.subplots(sharey=True)
+    heatmap = ax.pcolor(esd.esd, cmap=cmap, vmin=0, vmax=1)
     ax.set_xlim(0,esd.esd.shape[0])
     ax.set_ylim(0,esd.esd.shape[1])
     ax.set_xticks(np.arange(esd.esd.shape[0])+0.5, minor=False)
     ax.set_yticks(np.arange(esd.esd.shape[1])+0.5, minor=False)
     ax.set_xticklabels(esd.ids, rotation=90 )
     ax.set_yticklabels(esd.ids)
-    fig.tight_layout()
+    fig.colorbar(heatmap)
+    plt.tight_layout()
     if filename is not None:
         fig.savefig(filename)
 
