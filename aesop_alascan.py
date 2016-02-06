@@ -7,6 +7,8 @@ import re as re
 import numpy as np
 import prody as pd
 import scipy.spatial as spatial
+# import scipy.interpolate as interp
+import scipy.cluster.hierarchy as cluster
 import matplotlib.pyplot as plt
 from modeller import environ, model, alignment, selection
 from multiprocessing import Pool#, freeze_support
@@ -563,11 +565,21 @@ class ESD:
         # for i in xrange(num_files):
         #     grid = gd.Grid(self.dx_files[i])
         #     self.coords[i,:] = grid.grid.reshape((1, dim_coords))
-    def findConvexHull(self):
+
+    def findSurfaceGridPts(self, path_dssp):
         pdbfile = self.pdbfile
         pdb = pd.parsePDB(pdbfile)
         xyz = pdb.getCoords()
-        hull = spatial.ConvexHull
+        hull = spatial.Delaunay(xyz)
+        # resid, rsa, exposed = calcRSA(pdbfile, path_dssp)
+        # xyz = xyz[exposed,:]
+
+        dim = (self.dim_dx[0]*self.dim_dx[1]*self.dim_dx[2]/3, 3)
+        grid = gd.Grid(self.files[0]).grid.reshape(dim)
+        # result = interp.LinearNDInterpolator(hull, grid)
+        # result = spatial.distance.cdist(xyz, grid)
+        return result
+
 
 
 
@@ -1002,21 +1014,37 @@ def plotResults(Alascan, filename=None):
     plt.style.use('seaborn-talk')
     figure, axarr = plt.subplots(len(Alascan.mutid) - 1, sharey=True)
     dpi_val = 300
-    for i in xrange(1, len(Alascan.mutid)):
-        axarr[i - 1].set_title(np.unique(np.array([w.split('_') for w in Alascan.mutid[i]])[:, 0])[0] + ' ddGbind relative to WT')
-        axarr[i - 1].set_ylabel('kJ/mol')
-        axarr[i - 1].set_xticks(np.arange(len(Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, i]])))
-        if 100 < len(Alascan.mutid[i]) <= 150:
-            axarr[i - 1].set_xticklabels(np.array([w.split('_') for w in Alascan.mutid[i]])[:, 1], rotation='vertical', ha='left', size=6)
-        elif len(Alascan.mutid[i]) > 150:
-            axarr[i - 1].set_xticklabels(np.array([w.split('_') for w in Alascan.mutid[i]])[:, 1], rotation='vertical', ha='left', size=2)
+    if len(Alascan.mutid) > 2:
+        for i in xrange(1, len(Alascan.mutid)):
+            axarr[i - 1].set_title(np.unique(np.array([w.split('_') for w in Alascan.mutid[i]])[:, 0])[0] + ' ddGbind relative to WT')
+            axarr[i - 1].set_ylabel('kJ/mol')
+            axarr[i - 1].set_xticks(np.arange(len(Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, i]])))
+            if 100 < len(Alascan.mutid[i]) <= 150:
+                axarr[i - 1].set_xticklabels(np.array([w.split('_') for w in Alascan.mutid[i]])[:, 1], rotation='vertical', ha='left', size=6)
+            elif len(Alascan.mutid[i]) > 150:
+                axarr[i - 1].set_xticklabels(np.array([w.split('_') for w in Alascan.mutid[i]])[:, 1], rotation='vertical', ha='left', size=2)
+                dpi_val = 600
+            else:
+                axarr[i - 1].set_xticklabels(np.array([w.split('_') for w in Alascan.mutid[i]])[:, 1], rotation='vertical', ha='left')
+            axarr[i - 1].bar(np.arange(len(Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, i]]))[Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, i]] > 0],Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, i]][Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, i]] > 0], color='red')
+            axarr[i - 1].bar(np.arange(len(Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, i]]))[Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, i]] < 0],Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, i]][Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, i]] < 0], color='blue')
+            axarr[i - 1].xaxis.set_ticks_position('bottom')
+            axarr[i - 1].yaxis.set_ticks_position('left')
+    elif len(Alascan.mutid) == 2:
+        axarr.set_title(np.unique(np.array([w.split('_') for w in Alascan.mutid[1]])[:, 0])[0] + ' ddGbind relative to WT')
+        axarr.set_ylabel('kJ/mol')
+        axarr.set_xticks(np.arange(len(Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, 1]])))
+        if 100 < len(Alascan.mutid[1]) <= 150:
+            axarr.set_xticklabels(np.array([w.split('_') for w in Alascan.mutid[1]])[:, 1], rotation='vertical', ha='left', size=6)
+        elif len(Alascan.mutid[1]) > 150:
+            axarr.set_xticklabels(np.array([w.split('_') for w in Alascan.mutid[1]])[:, 1], rotation='vertical', ha='left', size=2)
             dpi_val = 600
         else:
-            axarr[i - 1].set_xticklabels(np.array([w.split('_') for w in Alascan.mutid[i]])[:, 1], rotation='vertical', ha='left')
-        axarr[i - 1].bar(np.arange(len(Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, i]]))[Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, i]] > 0],Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, i]][Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, i]] > 0], color='red')
-        axarr[i - 1].bar(np.arange(len(Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, i]]))[Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, i]] < 0],Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, i]][Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, i]] < 0], color='blue')
-        axarr[i - 1].xaxis.set_ticks_position('bottom')
-        axarr[i - 1].yaxis.set_ticks_position('left')
+            axarr.set_xticklabels(np.array([w.split('_') for w in Alascan.mutid[1]])[:, 1], rotation='vertical', ha='left')
+        axarr.bar(np.arange(len(Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, 1]]))[Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, 1]] > 0],Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, 1]][Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, 1]] > 0], color='red')
+        axarr.bar(np.arange(len(Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, 1]]))[Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, 1]] < 0],Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, 1]][Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, 1]] < 0], color='blue')
+        axarr.xaxis.set_ticks_position('bottom')
+        axarr.yaxis.set_ticks_position('left')
     plt.tight_layout()
     if filename is not None:
         figure.savefig(filename, dpi=dpi_val)
@@ -1035,6 +1063,28 @@ def plotESD(esd, filename=None, cmap='hot'):
     ax.set_xticklabels(esd.ids, rotation=90 )
     ax.set_yticklabels(esd.ids)
     fig.colorbar(heatmap)
+    plt.tight_layout()
+    if filename is not None:
+        fig.savefig(filename)
+
+######################################################################################################################################################
+# Function to plot ESD dendrogram
+######################################################################################################################################################
+def plotDend(esd, filename=None):
+    plt.style.use('seaborn-talk')
+    fig, ax = plt.subplots(sharey=True)
+    Z = cluster.linkage(esd.esd, 'ward')
+    cluster.dendrogram(
+        Z,
+        labels=esd.ids,
+        leaf_rotation=90.,  # rotates the x axis labels
+        leaf_font_size=8.,  # font size for the x axis labels
+        ax=ax
+    )
+    plt.xlabel('Variants')
+    plt.ylabel('ESD')
+    ax.set_xticklabels(esd.ids, rotation=90 )
+    # ax.set_ylim(0,1)
     plt.tight_layout()
     if filename is not None:
         fig.savefig(filename)
