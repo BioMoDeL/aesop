@@ -497,6 +497,7 @@ class Alascan:
         Gcoul = self.Gcoul
 
         dGsolv = Gsolv - Gref
+
         dGsolu = Gsolv[:, 0] - Gsolv[:, 1:].sum(axis=1)
         dGcoul = Gcoul[:, 0] - Gcoul[:, 1:].sum(axis=1)
         ddGsolv = dGsolv[:, 0] - dGsolv[:, 1:].sum(axis=1)
@@ -504,6 +505,13 @@ class Alascan:
         dGbind = ddGsolv + dGcoul
         dGbind_rel = dGbind - dGbind[0]
         return dGbind_rel
+
+    def dGsolv_rel(self):
+        Gsolv = self.Gsolv
+        Gref = self.Gref
+        dGsolv = Gsolv - Gref
+        dGsolv = dGsolv - dGsolv[0, 0]
+        return dGsolv[:, 0]
 
     def run(self):
         self.genDirs()
@@ -1031,9 +1039,9 @@ def plotResults(Alascan, filename=None):
             axarr[i - 1].xaxis.set_ticks_position('bottom')
             axarr[i - 1].yaxis.set_ticks_position('left')
     elif len(Alascan.mutid) == 2:
-        axarr.set_title(np.unique(np.array([w.split('_') for w in Alascan.mutid[1]])[:, 0])[0] + ' ddGbind relative to WT')
+        axarr.set_title(np.unique(np.array([w.split('_') for w in Alascan.mutid[1]])[:, 0])[0] + ' dGsolv relative to WT')
         axarr.set_ylabel('kJ/mol')
-        axarr.set_xticks(np.arange(len(Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, 1]])))
+        axarr.set_xticks(np.arange(len(Alascan.dGsolv_rel()[Alascan.mask_by_sel[:, 1]])))
         if 100 < len(Alascan.mutid[1]) <= 150:
             axarr.set_xticklabels(np.array([w.split('_') for w in Alascan.mutid[1]])[:, 1], rotation='vertical', ha='left', size=6)
         elif len(Alascan.mutid[1]) > 150:
@@ -1041,8 +1049,8 @@ def plotResults(Alascan, filename=None):
             dpi_val = 600
         else:
             axarr.set_xticklabels(np.array([w.split('_') for w in Alascan.mutid[1]])[:, 1], rotation='vertical', ha='left')
-        axarr.bar(np.arange(len(Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, 1]]))[Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, 1]] > 0],Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, 1]][Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, 1]] > 0], color='red')
-        axarr.bar(np.arange(len(Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, 1]]))[Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, 1]] < 0],Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, 1]][Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, 1]] < 0], color='blue')
+        axarr.bar(np.arange(len(Alascan.dGsolv_rel()[Alascan.mask_by_sel[:, 1]]))[Alascan.dGsolv_rel()[Alascan.mask_by_sel[:, 1]] > 0],Alascan.dGsolv_rel()[Alascan.mask_by_sel[:, 1]][Alascan.dGsolv_rel()[Alascan.mask_by_sel[:, 1]] > 0], color='red')
+        axarr.bar(np.arange(len(Alascan.dGsolv_rel()[Alascan.mask_by_sel[:, 1]]))[Alascan.dGsolv_rel()[Alascan.mask_by_sel[:, 1]] < 0],Alascan.dGsolv_rel()[Alascan.mask_by_sel[:, 1]][Alascan.dGsolv_rel()[Alascan.mask_by_sel[:, 1]] < 0], color='blue')
         axarr.xaxis.set_ticks_position('bottom')
         axarr.yaxis.set_ticks_position('left')
     plt.tight_layout()
