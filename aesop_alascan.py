@@ -1057,6 +1057,54 @@ def plotResults(Alascan, filename=None):
     if filename is not None:
         figure.savefig(filename, dpi=dpi_val)
 
+def plotResultsPlotly(Alascan, filename=None):
+    """Summary
+    
+    Parameters
+    ----------
+    Alascan : TYPE
+        Description
+    filename : TYPE, optional
+        Description
+    
+    Returns
+    -------
+    name : TYPE
+        Description
+    """
+    subplot_titles = []
+    for i in xrange(1,len(Alascan.mutid)):
+         subplot_titles.append(np.unique(np.array([w.split('_') for w in Alascan.mutid[i]])[:,0])[0]+' ddGbind relative to WT')
+    fig = tools.make_subplots(rows=len(Alascan.mutid) - 1, cols=1, vertical_spacing=.5, subplot_titles=subplot_titles)
+    for i in xrange(1,len(Alascan.mutid)):
+        pos_y = np.zeros(len(Alascan.ddGbind_rel()[Alascan.mask_by_sel[:,i]]))
+        pos_y[Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, i]] > 0] = Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, i]][Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, i]] > 0]
+        neg_y = np.zeros(len(Alascan.ddGbind_rel()[Alascan.mask_by_sel[:,i]]))
+        neg_y[Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, i]] < 0] = Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, i]][Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, i]] < 0]
+        pos_trace= go.Bar(
+            x=np.array([w.split('_') for w in Alascan.mutid[i]])[:,1],
+            y=pos_y,
+            name = np.unique(np.array([w.split('_') for w in Alascan.mutid[i]])[:,0])[0]+'Loss of binding',
+            marker = dict(
+                color='rgba(0,136,55,1)'
+            )
+        )
+        neg_trace = go.Bar(
+            x=np.array([w.split('_') for w in Alascan.mutid[i]])[:,1],
+            y=neg_y,
+            name = np.unique(np.array([w.split('_') for w in Alascan.mutid[i]])[:,0])[0]+'Gain in binding',
+            marker = dict(
+                color='rgba(123,50,148,1)'
+            )
+        )
+        fig.append_trace(pos_trace, i, 1)
+        fig.append_trace(neg_trace, i, 1)
+        fig['layout']['yaxis'+str(i)].update(title='kJ/mol')
+
+    fig['layout'].update(barmode='stack', hovermode='closest')
+    plotly_fig = go.Figure(fig)
+    plotly.offline.plot(plotly_fig)
+
 ######################################################################################################################################################
 # Function to plot results of ESD.calc()
 ######################################################################################################################################################
