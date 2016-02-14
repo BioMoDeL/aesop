@@ -1149,6 +1149,89 @@ def plotDend(esd, filename=None):
     if filename is not None:
         fig.savefig(filename)
 
+def plotESDPlotly(esd, filename=None, cmap='YIGnBu'):
+    figure = FF.create_dendrogram(esd.esd, orientation='bottom', labels=esd.ids)
+    for i in range(len(figure['data'])):
+        figure['data'][i]['yaxis'] = 'y2'
+    # Create Side Dendrogram
+    dendro_side = FF.create_dendrogram(esd.esd, orientation='right', labels=esd.ids)
+    for i in range(len(dendro_side['data'])):
+        dendro_side['data'][i]['xaxis'] = 'x2'
+    # Add Side Dendrogram Data to Figure
+    figure['data'].extend(dendro_side['data'])
+    # Create Heatmap
+    dendro_side2 = FF.create_dendrogram(esd.esd, orientation='right')
+    for i in range(len(dendro_side2['data'])):
+        dendro_side2['data'][i]['xaxis'] = 'x2'
+    dendro_leaves = dendro_side2['layout']['yaxis']['ticktext']
+    dendro_leaves = list(map(int, dendro_leaves))
+
+    heat_data = esd.esd
+    heat_data = heat_data[dendro_leaves,:]
+    heat_data = heat_data[:,dendro_leaves]
+
+    heatmap = go.Data([
+        go.Heatmap(
+            x=dendro_leaves,
+            y=dendro_leaves,
+            z=heat_data,
+            colorscale=cmap
+        )
+    ])
+    heatmap[0]['x'] = figure['layout']['xaxis']['tickvals']
+    heatmap[0]['y'] = figure['layout']['xaxis']['tickvals']
+
+    # Add Heatmap Data to Figure
+    figure['data'].extend(go.Data(heatmap))
+
+    # Edit Layout
+    figure['layout'].update({
+                             'showlegend':False, 'hovermode': 'closest',
+                             })
+    figure['layout'].update({'margin':{'b':140,
+                                      't':10}})
+
+    # Edit xaxis
+    figure['layout']['xaxis'].update({'domain': [.15, 1],
+                                      'mirror': False,
+                                      'showgrid': False,
+                                      'showline': False,
+                                      'zeroline': False,
+                                      'ticks': ""})
+    # Edit xaxis2
+    figure['layout'].update({'xaxis2': {'domain': [0, .15],
+                                       'mirror': False,
+                                       'showgrid': False,
+                                       'showline': False,
+                                       'zeroline': False,
+                                       'showticklabels': False,
+                                       'ticks': ""}})
+
+    # Edit yaxis
+    figure['layout']['yaxis'].update({'domain': [0, .85],
+                                      'mirror': False,
+                                      'showgrid': False,
+                                      'showline': False,
+                                      'zeroline': False,
+                                      'showticklabels': False,
+                                      'side': 'right',
+                                      'ticktext': dendro_side['layout']['yaxis']['ticktext'],
+                                      'tickvals': dendro_side['layout']['yaxis']['tickvals'],
+                                      'ticks': ""})
+    # Edit yaxis2
+    figure['layout'].update({'yaxis2':{'domain':[.825, .975],
+                                       'mirror': False,
+                                       'showgrid': False,
+                                       'showline': False,
+                                       'zeroline': False,
+                                       'showticklabels': False,
+                                       'ticks': ""}})
+
+    # Plot!
+    plotly.offline.plot(figure)
+    if filename is not None:
+        py.image.save_as(figure, filename=filename)
+
 ######################################################################################################################################################
 # Function to calculate RSA for PDB
 ######################################################################################################################################################
