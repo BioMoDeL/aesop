@@ -14,8 +14,10 @@ from modeller import environ, model, alignment, selection
 from multiprocessing import Pool#, freeze_support
 import gridData as gd
 import itertools as it
-
-
+import plotly.plotly as py
+import plotly.graph_objs as go
+from plotly.offline import download_plotlyjs, init_notebook_mode, iplot
+from plotly.tools import FigureFactory as FF
 
 ######################################################################################################################################################
 # Container for performing an Alanine Scan with AESOP
@@ -1104,6 +1106,8 @@ def plotResultsPlotly(Alascan, filename=None):
     fig['layout'].update(barmode='stack', hovermode='closest')
     plotly_fig = go.Figure(fig)
     plotly.offline.plot(plotly_fig)
+    if filename is not None:
+        py.image.save_as(plotly_fig, filename=filename)
 
 ######################################################################################################################################################
 # Function to plot results of ESD.calc()
