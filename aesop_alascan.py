@@ -14,10 +14,10 @@ from modeller import environ, model, alignment, selection
 from multiprocessing import Pool#, freeze_support
 import gridData as gd
 import itertools as it
-import plotly.plotly as py
-import plotly.graph_objs as go
-from plotly.offline import download_plotlyjs, init_notebook_mode, iplot
-from plotly.tools import FigureFactory as FF
+# import plotly.plotly as py
+# import plotly.graph_objs as go
+# from plotly.offline import download_plotlyjs, init_notebook_mode, iplot
+# from plotly.tools import FigureFactory as FF
 
 ######################################################################################################################################################
 # Container for performing an Alanine Scan with AESOP
@@ -1058,6 +1058,7 @@ def plotResults(Alascan, filename=None):
     plt.tight_layout()
     if filename is not None:
         figure.savefig(filename, dpi=dpi_val)
+    return(figure, axarr)
 
 def plotResultsPlotly(Alascan, filename=None):
     """Summary
