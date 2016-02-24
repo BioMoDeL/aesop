@@ -421,14 +421,25 @@ class Alascan:
         dim_mutid = len(list_mutids)
         dim_sel = len(selstr) + 1
 
+        mask_by_sel = np.copy(self.mask_by_sel)  # Mask parts that are true will be run with APBS
+        mask_by_sel[0, :] = np.ones(dim_sel).astype(bool)
+        mask_by_sel[:, 0] = np.ones(dim_mutid).astype(bool)
+
         Gcoul = np.zeros((dim_mutid, dim_sel))
 
         for i, mutid in zip(xrange(dim_mutid), list_mutids):
             print '\n%s:\tcalculating coulombic energies for mutant: %s' % (self.jobname, mutid)
             for j, seldir in zip(xrange(dim_sel), [pqr_complex_dir] + pqr_sel_dir):
-                subunit_pqr = os.path.join(jobdir, seldir, mutid + '.pqr')
-                energies = execCoulomb(path_coulomb, subunit_pqr)
-                Gcoul[i, j] = energies / pdie
+                if mask_by_sel[i, j]:
+                    subunit_pqr = os.path.join(jobdir, seldir, mutid + '.pqr')
+                    energies = execCoulomb(path_coulomb, subunit_pqr)
+                    Gcoul[i, j] = energies / pdie
+
+        # Fill in results that are duplicates
+        for i in xrange(dim_mutid):
+            for j in xrange(dim_sel):
+                if not mask_by_sel[i, j]:
+                    Gcoul[i, j] = Gcoul[0, j]
 
         self.Gcoul = Gcoul
 
@@ -782,16 +793,106 @@ class DirectedMutagenesis:
             for j, seldir in zip(xrange(dim_sel), [pqr_complex_dir] + pqr_sel_dir):
                 subunit_pqr = os.path.join(jobdir, seldir, mutid + '.pqr')
                 path_prefix_log = os.path.join(jobdir, logs_apbs_dir, mutid)
-                if mask_by_sel[i, j]:
-                    energies = execAPBS(path_apbs, subunit_pqr, complex_pqr, prefix=path_prefix_log, grid=self.grid,
-                                        ion=self.ion, pdie=self.pdie, sdie=self.sdie, cfac=self.cfac)
-                    # print energies[0][0]
-                    # print energies[0][1]
-                    Gsolv[i, j] = energies[0][0]
-                    Gref[i, j] = energies[0][1]
-                if not mask_by_sel[i, j]:
-                    Gsolv[i, j] = Gsolv[0, j]
-                    Gref[i, j] = Gref[0, j]
+                energies = execAPBS(path_apbs, subunit_pqr, complex_pqr, prefix=path_prefix_log, grid=self.grid,
+                                    ion=self.ion, pdie=self.pdie, sdie=self.sdie, cfac=self.cfac)
+                Gsolv[i, j] = energies[0][0]
+                Gref[i, j] = energies[0][1]
+                # if mask_by_sel[i, j]:
+                #     energies = execAPBS(path_apbs, subunit_pqr, complex_pqr, prefix=path_prefix_log, grid=self.grid,
+                #                         ion=self.ion, pdie=self.pdie, sdie=self.sdie, cfac=self.cfac)
+                #     # print energies[0][0]
+                #     # print energies[0][1]
+                #     Gsolv[i, j] = energies[0][0]
+                #     Gref[i, j] = energies[0][1]
+                # if not mask_by_sel[i, j]:
+                #     Gsolv[i, j] = Gsolv[0, j]
+                #     Gref[i, j] = Gref[0, j]
+        self.Gsolv = Gsolv
+        self.Gref = Gref
+
+    def calcAPBS_parallel(self):
+        selstr = self.selstr
+        jobdir = self.jobdir
+        pqr_complex_dir = self.pqr_complex_dir
+        pqr_sel_dir = self.pqr_sel_dir
+        logs_apbs_dir = self.logs_apbs_dir
+        path_apbs = self.apbs
+
+        list_mutids = self.getMutids()
+
+        dim_mutid = len(list_mutids)
+        dim_sel = len(selstr) + 1
+
+        mask_by_sel = np.copy(self.mask_by_sel)  # Mask parts that are true will be run with APBS
+        mask_by_sel[0, :] = np.ones(dim_sel).astype(bool)
+        mask_by_sel[:, 0] = np.ones(dim_mutid).astype(bool)
+
+        Gsolv = np.zeros((dim_mutid, dim_sel)).astype(float)
+        Gref = np.zeros((dim_mutid, dim_sel)).astype(float)
+
+        path_list = []
+        pqr_chain_list = []
+        pqr_complex_list = []
+        prefix_list = []
+        grid_list = []
+        ion_list = []
+        pdie_list = []
+        sdie_list = []
+        cfac_list = []
+        dx_list = []
+        i_list = []
+        j_list = []
+
+        # Find all calculations to be done
+        complex_pqr = os.path.join(jobdir, pqr_complex_dir, list_mutids[0] + '.pqr')
+        for i, mutid in zip(xrange(dim_mutid), list_mutids):
+            for j, seldir in zip(xrange(dim_sel), [pqr_complex_dir] + pqr_sel_dir):
+                subunit_pqr = os.path.join(jobdir, seldir, mutid + '.pqr')
+                # if mask_by_sel[i, j]: # NOT NEEDED FOR DIRECTED MUTATIONS: modeller will rearrange structure slightly
+                path_list.append(path_apbs)
+                pqr_chain_list.append(subunit_pqr)
+                pqr_complex_list.append(complex_pqr)
+                prefix_list.append(os.path.join(jobdir, logs_apbs_dir, '%d_%d_' % (i, j)+mutid))  # added to make sure apbs.in file is unique!
+                grid_list.append(self.grid)
+                ion_list.append(self.ion)
+                pdie_list.append(self.pdie)
+                sdie_list.append(self.sdie)
+                cfac_list.append(self.cfac)
+                dx_list.append(self.dx)
+                i_list.append(i)
+                j_list.append(j)
+
+        # Organize kernel and run batch process
+        kernel = zip(path_list, pqr_chain_list, pqr_complex_list, prefix_list, grid_list, ion_list, pdie_list,
+                     sdie_list, cfac_list, dx_list, i_list, j_list)
+        apbs_results = []
+        p = Pool()
+        print '%s:\trunning batchAPBS ....' % (self.jobname)
+        counter = 0
+        max_count = len(kernel)
+        for result in p.imap_unordered(batchAPBS, kernel):
+            counter += 1
+            print '.... %s:\tbatch APBS %d percent complete ....' % (self.jobname, int(counter * 100 / max_count))
+            i = int(result[0])
+            j = int(result[1])
+            solv = result[2]
+            ref = result[3]
+            # print '%d, %d, %f, %f'%(i, j, solv, ref)
+            apbs_results.append([i, j, solv, ref])
+            Gsolv[i, j] = solv
+            Gref[i, j] = ref
+        apbs_results = np.asarray(apbs_results)
+        self.apbs_results = apbs_results
+        if self.dx == True:
+            self.dx_files = [x+'.dx' for x in prefix_list]
+
+        # # Fill in results that are duplicates # NOT NEEDED FOR DIRECTED MUTATIONS: modeller will rearrange structure slightly
+        # for i in xrange(dim_mutid):
+        #     for j in xrange(dim_sel):
+        #         if not mask_by_sel[i, j]:
+        #             Gsolv[i, j] = Gsolv[0, j]
+        #             Gref[i, j] = Gref[0, j]
+
         self.Gsolv = Gsolv
         self.Gref = Gref
 
@@ -819,6 +920,67 @@ class DirectedMutagenesis:
 
         self.Gcoul = Gcoul
 
+    def calcCoulomb_parallel(self):
+        selstr = self.selstr
+        jobdir = self.jobdir
+        pqr_complex_dir = self.pqr_complex_dir
+        pqr_sel_dir = self.pqr_sel_dir
+        path_coulomb = self.coulomb
+
+        list_mutids = self.getMutids()
+
+        dim_mutid = len(list_mutids)
+        dim_sel = len(selstr) + 1
+
+        mask_by_sel = np.copy(self.mask_by_sel)  # Mask parts that are true will be run with APBS
+        mask_by_sel[0, :] = np.ones(dim_sel).astype(bool)
+        mask_by_sel[:, 0] = np.ones(dim_mutid).astype(bool)
+
+        Gcoul = np.zeros((dim_mutid, dim_sel)).astype(float)
+
+        path_list = []
+        pqr_chain_list = []
+        pdie_list = []
+        i_list = []
+        j_list = []
+
+        # Find all calculations to be done
+        for i, mutid in zip(xrange(dim_mutid), list_mutids):
+            for j, seldir in zip(xrange(dim_sel), [pqr_complex_dir] + pqr_sel_dir):
+                subunit_pqr = os.path.join(jobdir, seldir, mutid + '.pqr')
+                # if mask_by_sel[i, j]: # NOT NEEDED FOR DIRECTED MUTATIONS: modeller will rearrange structure slightly
+                path_list.append(path_coulomb)
+                pqr_chain_list.append(subunit_pqr)
+                pdie_list.append(self.pdie)
+                i_list.append(i)
+                j_list.append(j)
+
+        # Organize kernel and run batch process
+        kernel = zip(path_list, pqr_chain_list, pdie_list, i_list, j_list)
+        coulomb_results = []
+        p = Pool()
+        print '%s:\trunning batchCoulomb ....' % (self.jobname)
+        counter = 0
+        max_count = len(kernel)
+        for result in p.imap_unordered(batchCoulomb, kernel):
+            counter += 1
+            print '.... %s:\tbatch coulomb %d percent complete ....' % (self.jobname, int(counter * 100 / max_count))
+            i = int(result[0])
+            j = int(result[1])
+            coul = result[2]
+            coulomb_results.append([i, j, coul])
+            Gcoul[i, j] = coul
+        coulomb_results = np.asarray(coulomb_results)
+        self.coulomb_results = coulomb_results
+
+        # Fill in results that are duplicates # NOT NEEDED FOR DIRECTED MUTATIONS: modeller will rearrange structure slightly
+        # for i in xrange(dim_mutid):
+        #     for j in xrange(dim_sel):
+        #         if not mask_by_sel[i, j]:
+        #             Gcoul[i, j] = Gcoul[0, j]
+
+        self.Gcoul = Gcoul
+
     def ddGbind_rel(self):
         Gsolv = self.Gsolv
         Gref = self.Gref
@@ -842,6 +1004,7 @@ class DirectedMutagenesis:
         return dGsolv[:, 0]
 
     def run(self):
+        start = ti.default_timer()
         self.genDirs()
         self.genMutid()
         self.genParent()
@@ -849,6 +1012,20 @@ class DirectedMutagenesis:
         self.genPQR()
         self.calcAPBS()
         self.calcCoulomb()
+        stop = ti.default_timer()
+        print '%s:\tAESOP directed mutagenesis scan completed in %.2f seconds' % (self.jobname, stop - start)
+
+    def run_parallel(self):
+        start = ti.default_timer()
+        self.genDirs()
+        self.genMutid()  # contains warning: FutureWarning: elementwise comparison failed; returning scalar instead, but in the future will perform elementwise comparison if tokens[0] == 'and' or tokens[-1] == 'and':
+        self.genParent()
+        self.genPDB()
+        self.genPQR()
+        self.calcAPBS_parallel()
+        self.calcCoulomb_parallel()
+        stop = ti.default_timer()
+        print '%s:\tAESOP directed mutagenesis scan completed in %.2f seconds' % (self.jobname, stop - start)
 
 ######################################################################################################################################################
 # Container for performing ESD analysis on set of PDB files
