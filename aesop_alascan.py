@@ -1034,10 +1034,12 @@ class DirectedMutagenesis:
 class ElecSimilarity: # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD! Coordinates must be consistent!
     def __init__(self, pdbfiles, pdb2pqr_exe, apbs_exe, selstr=None, jobname=None,
                  grid=1, ion=0.150, pdie=20.0, sdie=78.54, ff='parse', cfac=1.5):
-        self.pdbfiles = pdbfiles
+        self.pdbfiles = [os.path.basename(pdbfile) for pdbfile in pdbfiles]
+        self.ids = [os.path.splitext(os.path.basename(pdbfile))[0] for pdbfile in pdbfiles]
         self.pdb2pqr = pdb2pqr_exe
         self.apbs = apbs_exe
         self.dx = True
+
         if jobname is None:
             self.jobname = '%4d%02d%02d_%02d%02d%02d' % (dt.date.today().year, dt.date.today().month,
                                                          dt.date.today().day, dt.datetime.now().hour,
@@ -1049,17 +1051,21 @@ class ElecSimilarity: # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD! Coordi
             os.makedirs(os.path.join(self.jobdir))
         self.pdbdir = os.path.join(self.jobdir, 'pdb_files')
         self.pqrdir = os.path.join(self.jobdir, 'pqr_files')
+        self.dxdir = os.path.join(self.jobdir, 'dx_files')
         if not os.path.exists(self.pdbdir):
             os.makedirs(self.pdbdir)
         if not os.path.exists(self.pqrdir):
             os.makedirs(self.pqrdir)
+        if not os.path.exists(self.dxdir):
+            os.makedirs(self.dxdir)
 
-        for pdbfile in pdbfiles:
+        for i, pdbfile in zip(xrange(len(pdbfiles)), pdbfiles):
             pdb = pd.parsePDB(pdbfile)
             if selstr is None:
                 pd.writePDB(os.path.join(self.pdbdir, os.path.basename(pdbfile)), pdb)
             elif selstr is not None:
-                pd.writePDB(os.path.join(self.pdbdir, os.path.basename(pdbfile)), pdb)
+                pd.writePDB(os.path.join(self.pdbdir, os.path.basename(pdbfile)), pdb.select(selstr[i]))
+
         self.grid = grid
         self.ion = ion
         self.pdie = pdie
@@ -1067,32 +1073,177 @@ class ElecSimilarity: # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD! Coordi
         self.ff = ff
         self.cfac = cfac
 
-    def findGLEN(self):
-        0
+    def centerPDB(self):
+        pdbdir = self.pdbdir
+        pdbfiles = self.pdbfiles
+        for pdbfile in pdbfiles:
+            pdb = pd.parsePDB(os.path.join(pdbdir, pdbfile))
+            pd.moveAtoms(pdb, to=np.zeros(3))
+            pd.writePDB(os.path.join(pdbdir, pdbfile), pdb)
+
+    def superposePDB(self):
+        pdbdir = self.pdbdir
+        pdbfiles = self.pdbfiles
+
+        # Find minimum number of calphas
+        num_res = pd.parsePDB(os.path.join(pdbdir, pdbfiles[0])).numResidues()
+        for pdbfile in pdbfiles:
+            num_res = min(num_res, pd.parsePDB(os.path.join(pdbdir, pdbfile)).numResidues())
+        print 'Superposing %d PDB files on %d alpha carbons' % (len(pdbfiles), num_res)
+
+        # Superpose each structure, overwriting previous PDB file
+        ref = pd.parsePDB(os.path.join(pdbdir, pdbfiles[0]), subset='calpha').getCoords()
+        for pdbfile in pdbfiles:
+            pdb = pd.parsePDB(os.path.join(pdbdir, pdbfile))
+            coords = pdb.calpha.getCoords()
+            T = pd.calcTransformation(coords[:num_res], ref[:num_res])
+            pdb = pd.applyTransformation(T, pdb)
+            pd.writePDB(os.path.join(pdbdir, pdbfile), pdb)
+
+    def initializeGrid(self):
+        pdbdir = self.pdbdir
+        pdbfiles = self.pdbfiles
+        grid = self.grid
+        cfac = self.cfac
+
+        glen = np.zeros(3)
+
+        # Find bounding box
+        ref = pd.parsePDB(os.path.join(pdbdir, pdbfiles[0]))
+        max_xyz = ref.getCoords().max(axis=0)
+        min_xyz = ref.getCoords().min(axis=0)
+        for pdbfile in pdbfiles:
+            pdb = pd.parsePDB(os.path.join(pdbdir, pdbfile))
+            max_xyz = np.vstack((max_xyz, pdb.getCoords().max(axis=0))).max(axis=0)
+            min_xyz = np.vstack((min_xyz, pdb.getCoords().min(axis=0))).min(axis=0)
+
         # Determine mesh dimensions according to Ron's AESOP protocol in the R source file
-        # pdbfiles = self.pdbfiles
-        # grid = self.grid
-        # cfac = self.cfac
-        # glen = np.zeros(1, 3)
-        # for pdbfile in pdbfiles
-        #     pdb = pd.parsePDB(pdbfile)
-        #     coords = pdb.getCoords()
-        #     x = coords[:,0]
-        #     y = coords[:,1]
-        #     z = coords[:,2]
-        #     fg = np.array((np.ceil(np.max(x) - np.min(x)), np.ceil(np.max(y) - np.min(y)), np.ceil(np.max(z) - np.min(z))))
-        #     fg = np.ceil((fg + 5) * cfac)
-        #     glen = np.vstack((glen, fg)).max(axis=0)
-        # dime_list = (32 * np.linspace(1, 100, 100)) + 1  # list of possible dime values
-        # dime_ind = np.ceil(glen / (32 * grid)) - 1  # index of dime to use from list, subtract one to be consistent with python indexing!
-        # dime = np.array((dime_list[int(dime_ind[0])], dime_list[int(dime_ind[1])], dime_list[int(dime_ind[2])]))
-        #
-        # self.dime = dime
-        # self.glen = glen.reshape((1, 3))
+        fg = np.ceil(max_xyz - min_xyz)
+        fg = np.ceil((fg + 5) * cfac)
+        glen = np.vstack((glen, fg)).max(axis=0)
+        dime_list = (32 * np.linspace(1, 100, 100)) + 1  # list of possible dime values
+        dime_ind = np.ceil(glen / (32 * grid)) - 1  # index of dime to use from list, subtract one to be consistent with python indexing!
+        dime = np.array((dime_list[int(dime_ind[0])], dime_list[int(dime_ind[1])], dime_list[int(dime_ind[2])]))
+        ix = 0
+        iy = 0
+        iz = 0
+        counter = 0
+        while((dime[0] * dime[1] * dime[2] % 3 != 0) or (counter <= 5)):
+            ix += 1
+            if(dime[0] * dime[1] * dime[2] % 3 != 0):
+                dime = np.array((dime_list[int(dime_ind[0]+ix)], dime_list[int(dime_ind[1])+iy], dime_list[int(dime_ind[2])+iz]))
+            iy += 1
+            if(dime[0] * dime[1] * dime[2] % 3 != 0):
+                dime = np.array((dime_list[int(dime_ind[0]+ix)], dime_list[int(dime_ind[1])+iy], dime_list[int(dime_ind[2])+iz]))
+            iz += 1
+            if(dime[0] * dime[1] * dime[2] % 3 != 0):
+                dime = np.array((dime_list[int(dime_ind[0]+ix)], dime_list[int(dime_ind[1])+iy], dime_list[int(dime_ind[2])+iz]))
+            counter += 1
 
 
 
 
+        self.dime = dime #.reshape((1, 3))
+        self.glen = glen #.reshape((1, 3))
+        self.gcent = pd.calcCenter(ref).astype(int)
+
+    def genPQR(self):
+        pdbdir = self.pdbdir
+        pqrdir = self.pqrdir
+        pdbfiles = self.pdbfiles
+        path_pdb2pqr = self.pdb2pqr
+        ff = self.ff
+
+        for pdbfile in pdbfiles:
+            infile = os.path.join(pdbdir, pdbfile)
+            outfile = os.path.join(pqrdir, os.path.splitext(pdbfile)[0]+'.pqr')
+            print 'Converting %s to PQR' % (pdbfile)
+            execPDB2PQR(path_pdb2pqr, infile, outfile=outfile, ff=ff)
+
+    def genDX(self):
+        path_apbs = self.apbs
+        pdbfiles = self.pdbfiles
+        pqrdir = self.pqrdir
+        dxdir = self.dxdir
+        grid = self.grid
+        ion = self.ion
+        pdie = self.pdie
+        sdie = self.sdie
+        cfac = self.cfac
+        glen = self.glen
+        gcent = self.gcent
+        dime = self.dime
+
+        pqrfiles = [os.path.join(pqrdir, os.path.splitext(pdbfile)[0]+'.pqr') for pdbfile in pdbfiles]
+        apbsfiles = [os.path.join(dxdir, os.path.splitext(pdbfile)[0]) for pdbfile in pdbfiles]
+        for pqrfile, apbsfile in zip(pqrfiles, apbsfiles):
+            calcDX(path_apbs, pqrfile, prefix=apbsfile, grid=grid, ion=ion, pdie=pdie, sdie=sdie, cfac=cfac, glen=glen, gcent=gcent, dime=dime)
+
+    def genDX_parallel(self):
+        pdbfiles = self.pdbfiles
+        pqrdir = self.pqrdir
+        dxdir = self.dxdir
+        grid = self.grid
+        ion = self.ion
+        pdie = self.pdie
+        sdie = self.sdie
+        cfac = self.cfac
+        glen = self.glen
+        gcent = self.gcent
+        dime = self.dime
+
+        path_apbs = [self.apbs for pdbfile in pdbfiles]
+        pqrfiles = [os.path.join(pqrdir, os.path.splitext(pdbfile)[0]+'.pqr') for pdbfile in pdbfiles]
+        apbsfiles = [os.path.join(dxdir, os.path.splitext(pdbfile)[0]) for pdbfile in pdbfiles]
+        grid = [grid for pdbfile in pdbfiles]
+        ion = [ion for pdbfile in pdbfiles]
+        pdie = [pdie for pdbfile in pdbfiles]
+        sdie = [sdie for pdbfile in pdbfiles]
+        cfac = [cfac for pdbfile in pdbfiles]
+        glen = [glen for pdbfile in pdbfiles]
+        gcent = [gcent for pdbfile in pdbfiles]
+        dime = [dime  for pdbfile in pdbfiles]
+        kernel = zip(path_apbs, pqrfiles, apbsfiles, grid, ion, pdie, sdie, cfac, glen, gcent, dime)
+
+        p = Pool()
+        print '%s:\trunning batchCalcDX ....' % (self.jobname)
+        counter = 0
+        max_count = len(kernel)
+        for result in p.imap_unordered(batchCalcDX, kernel):
+            counter += 1
+            print '.... %s:\tbatch coulomb %d percent complete ....' % (self.jobname, int(counter * 100 / max_count))
+
+    def calcESD(self, method='LD'):
+
+        def symmetrize(a):
+            return a + a.T - np.diag(a.diagonal())
+
+        pdbfiles = self.pdbfiles
+        dxdir = self.dxdir
+
+        self.dxfiles = [os.path.join(dxdir, os.path.splitext(pdbfile)[0]+'.dx') for pdbfile in pdbfiles]
+        files = self.dxfiles
+        ids = self.ids
+
+        grid = gd.Grid(files[0])
+        self.midpoints = grid.midpoints
+        self.edges = grid.edges
+        self.dim_dx = grid.grid.shape
+
+        dim = self.dim_dx[0]*self.dim_dx[1]*self.dim_dx[2]/3
+        esd = np.zeros((len(ids), len(ids)))
+
+        indices = it.combinations(range(len(ids)), 2)
+        for i, j in indices:
+            a = gd.Grid(files[i]).grid.reshape((dim, 3))
+            b = gd.Grid(files[j]).grid.reshape((dim, 3))
+            if method is 'LD':
+                numer = np.linalg.norm(a-b, axis=1)
+                denom = dim * np.max(np.hstack((np.linalg.norm(a, axis=1).reshape((dim, 1)), np.linalg.norm(b, axis=1).reshape((dim, 1)))), axis=1)
+                esd[i, j] = np.divide(numer, denom).sum()
+                print esd[i,j]
+        esd = symmetrize(esd)
+        self.esd = esd
 
 ######################################################################################################################################################
 # Container for performing ESD analysis
@@ -1442,7 +1593,7 @@ def execPDB2PQR(path_pdb2pqr_exe, pdbfile, outfile=None, ff='parse'):
 ######################################################################################################################################################
 # Function to run APBS.exe - should work on any supported OS
 ######################################################################################################################################################
-def execAPBS(path_apbs_exe, pqr_chain, pqr_complex, prefix=None, grid=1.0, ion=0.150, pdie=20.0, sdie=78.54, cfac=1.5, dx=False):
+def execAPBS(path_apbs_exe, pqr_chain, pqr_complex, prefix=None, grid=1.0, ion=0.150, pdie=20.0, sdie=78.54, cfac=1.5, glen=None, dime=None, dx=False):
     """Summary
     
     Parameters
@@ -1490,14 +1641,15 @@ def execAPBS(path_apbs_exe, pqr_chain, pqr_complex, prefix=None, grid=1.0, ion=0
     z = coords[:, 2]
 
     # Determine mesh dimensions according to Ron's AESOP protocol in the R source file
-    fg = np.array((np.ceil(np.max(x) - np.min(x)), np.ceil(np.max(y) - np.min(y)), np.ceil(np.max(z) - np.min(z))))
-    fg = np.ceil((fg + 5) * cfac)
-    dime_list = (32 * np.linspace(1, 100, 100)) + 1  # list of possible dime values
-    dime_ind = np.ceil(
-        fg / (32 * grid)) - 1  # index of dime to use from list, subtract one to be consistent with python indexing!
+    if (dime is None) | (glen is None):
+        fg = np.array((np.ceil(np.max(x) - np.min(x)), np.ceil(np.max(y) - np.min(y)), np.ceil(np.max(z) - np.min(z))))
+        fg = np.ceil((fg + 5) * cfac)
+        dime_list = (32 * np.linspace(1, 100, 100)) + 1  # list of possible dime values
+        dime_ind = np.ceil(
+            fg / (32 * grid)) - 1  # index of dime to use from list, subtract one to be consistent with python indexing!
 
-    glen = fg
-    dime = np.array((dime_list[int(dime_ind[0])], dime_list[int(dime_ind[1])], dime_list[int(dime_ind[2])]))
+        glen = fg
+        dime = np.array((dime_list[int(dime_ind[0])], dime_list[int(dime_ind[1])], dime_list[int(dime_ind[2])]))
 
     # Format APBS input file
     cmd_read = ['read\n',
@@ -1569,6 +1721,78 @@ def execAPBS(path_apbs_exe, pqr_chain, pqr_complex, prefix=None, grid=1.0, ion=0
     return elec
 
 ######################################################################################################################################################
+# Function to run APBS.exe to generate a DX file only - should work on any supported OS
+######################################################################################################################################################
+
+def calcDX(path_apbs_exe, pqrfile, prefix=None, grid=1.0, ion=0.150, pdie=20.0, sdie=78.54, cfac=1.5, glen=None, gcent=np.zeros(3), dime=None):
+    if prefix is None:
+        prefix = os.path.splitext(pqrfile)[0]
+
+    # Determine mesh dimensions according to Ron's AESOP protocol in the R source file
+    if (dime is None) | (glen is None):
+        pqr = pd.parsePQR(pqrfile)
+        coords = pqr.getCoords()
+        x = coords[:, 0]
+        y = coords[:, 1]
+        z = coords[:, 2]
+        fg = np.array((np.ceil(np.max(x) - np.min(x)), np.ceil(np.max(y) - np.min(y)), np.ceil(np.max(z) - np.min(z))))
+        fg = np.ceil((fg + 5) * cfac)
+        dime_list = (32 * np.linspace(1, 100, 100)) + 1  # list of possible dime values
+        dime_ind = np.ceil(
+            fg / (32 * grid)) - 1  # index of dime to use from list, subtract one to be consistent with python indexing!
+
+        glen = fg
+        dime = np.array((dime_list[int(dime_ind[0])], dime_list[int(dime_ind[1])], dime_list[int(dime_ind[2])]))
+
+    # Format APBS input file
+    cmd_read = ['read\n',
+                '   mol pqr %s\n' % (pqrfile),
+                'end\n']
+    cmd_solv = ['elec name solv\n',
+                '   mg-manual\n',
+                '   dime %d %d %d\n' % (dime[0], dime[1], dime[2]),
+                '   glen %d %d %d\n' % (glen[0], glen[1], glen[2]),
+                '   gcent %d %d %d\n' % (gcent[0], gcent[1], gcent[2]),
+                '   mol 1\n',
+                '   lpbe\n',
+                '   bcfl sdh\n',
+                '   srfm smol\n',
+                '   chgm spl2\n',
+                '   ion 1 %.2f 2.0\n' % (ion),
+                '   ion -1 %.2f 2.0\n' % (ion),
+                '   pdie %.2f\n' % (pdie),
+                '   sdie %.2f\n' % (sdie),
+                '   sdens 10.0\n',
+                '   srad 0.0\n',
+                '   swin 0.3\n',
+                '   temp 298.15\n',
+                '   write pot dx %s\n' % (prefix),
+                'end\n']
+
+    cmd_write = ['quit\n']
+    apbs_in = cmd_read + cmd_solv + cmd_write
+
+    # Write APBS input file
+    file_apbs_in = prefix + '.in'
+    file_apbs_log = prefix + '.log'
+    with open(file_apbs_in, 'w') as f:
+        for line in apbs_in:
+            f.write(line)
+
+    # Execute APBS
+    # os.system('"{0}" {1} {2}'.format(path_apbs_exe, '--output-file=%s --output-format=flat'%(file_apbs_log), file_apbs_in))
+    # os.system('{0} {1}'.format(path_apbs_exe, file_apbs_in))
+    # (log, err) = runProcess([path_apbs_exe, file_apbs_in])
+    (log, err) = runProcess([path_apbs_exe, '--output-file=%s' % (file_apbs_log), '--output-format=flat', file_apbs_in])
+    # print err
+    # pattern = re.compile('(?<=Global net ELEC energy =)\s+[+\-]?(?:0|[1-9]\d*)(?:\.\d*)?(?:[eE][+\-]?\d+)?')
+    # elec = np.asarray([x.split() for x in re.findall(pattern, log)]).astype(np.float)
+    # elec = elec.reshape((1, elec.size))
+
+    # return file_apbs_log
+    # return elec
+
+######################################################################################################################################################
 # Function to run multiple APBS processes at once
 ######################################################################################################################################################
 def batchAPBS(kernel):
@@ -1577,6 +1801,15 @@ def batchAPBS(kernel):
     energies = execAPBS(path, pqr_chain, pqr_complex, prefix=prefix, grid=grid, ion=ion, pdie=pdie, sdie=sdie,
                         cfac=cfac, dx=dx)
     return np.array([i, j, energies[0][0], energies[0][1]])
+
+######################################################################################################################################################
+# Function to run multiple APBS processes at once for the purpose of generating only a DX file
+######################################################################################################################################################
+
+def batchCalcDX(kernel):
+    path, pqrfile, prefix, grid, ion, pdie, sdie, cfac, glen, gcent, dime = kernel
+    calcDX(path, pqrfile, prefix=prefix, grid=grid, ion=ion, pdie=pdie, sdie=sdie,
+                        cfac=cfac, glen=glen, gcent=gcent, dime=dime)
 
 ######################################################################################################################################################
 # Function to run multiple Coulomb processes at once
@@ -1732,7 +1965,7 @@ def plotDend(esd, filename=None):
     )
     plt.xlabel('Variants')
     plt.ylabel('ESD')
-    ax.set_xticklabels(esd.ids, rotation=90 )
+    # ax.set_xticklabels(esd.ids, rotation=90 )
     # ax.set_ylim(0,1)
     plt.tight_layout()
     if filename is not None:
