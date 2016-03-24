@@ -1226,9 +1226,6 @@ class ElecSimilarity: # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD! Coordi
                 dime = np.array((dime_list[int(dime_ind[0]+ix)], dime_list[int(dime_ind[1])+iy], dime_list[int(dime_ind[2])+iz]))
             counter += 1
 
-
-
-
         self.dime = dime #.reshape((1, 3))
         self.glen = glen #.reshape((1, 3))
         self.gcent = pd.calcCenter(ref).astype(int)
