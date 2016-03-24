@@ -663,6 +663,11 @@ class DirectedMutagenesis:
         self.cfac = cfac
         self.dx = dx
 
+        self.genDirs()
+        self.genMutid()
+        self.genParent()
+        self.find_grid()
+
     def getMutids(self):
         l = self.mutid
         return [item for sublist in l for item in sublist]
@@ -878,9 +883,9 @@ class DirectedMutagenesis:
             for j, seldir in zip(xrange(dim_sel), [pqr_complex_dir] + pqr_sel_dir):
                 subunit_pqr = os.path.join(jobdir, seldir, mutid + '.pqr')
                 path_prefix_log = os.path.join(jobdir, logs_apbs_dir, mutid)
-                energies = execAPBS(path_apbs, subunit_pqr, complex_pqr, prefix=path_prefix_log, grid=self.grid,
-                                    dime=self.dime, glen=self.glen, gcent=self.gcent, ion=self.ion, pdie=self.pdie,
-                                    sdie=self.sdie, cfac=self.cfac)
+                energies = execAPBS(path_apbs, subunit_pqr, self.dime, self.glen, self.gcent,
+                                        prefix=path_prefix_log, ion=self.ion, pdie=self.pdie, sdie=self.sdie,
+                                        dx=self.dx)
                 Gsolv[i, j] = energies[0][0]
                 Gref[i, j] = energies[0][1]
                 # if mask_by_sel[i, j]:
@@ -918,13 +923,13 @@ class DirectedMutagenesis:
 
         path_list = []
         pqr_chain_list = []
-        pqr_complex_list = []
+        dime_list = []
+        glen_list = []
+        gcent_list = []
         prefix_list = []
-        grid_list = []
         ion_list = []
         pdie_list = []
         sdie_list = []
-        cfac_list = []
         dx_list = []
         i_list = []
         j_list = []
@@ -937,20 +942,20 @@ class DirectedMutagenesis:
                 # if mask_by_sel[i, j]: # NOT NEEDED FOR DIRECTED MUTATIONS: modeller will rearrange structure slightly
                 path_list.append(path_apbs)
                 pqr_chain_list.append(subunit_pqr)
-                pqr_complex_list.append(complex_pqr)
+                dime_list.append(self.dime)
+                glen_list.append(self.glen)
+                gcent_list.append(self.gcent)
                 prefix_list.append(os.path.join(jobdir, logs_apbs_dir, '%d_%d_' % (i, j)+mutid))  # added to make sure apbs.in file is unique!
-                grid_list.append(self.grid)
                 ion_list.append(self.ion)
                 pdie_list.append(self.pdie)
                 sdie_list.append(self.sdie)
-                cfac_list.append(self.cfac)
                 dx_list.append(self.dx)
                 i_list.append(i)
                 j_list.append(j)
 
         # Organize kernel and run batch process
-        kernel = zip(path_list, pqr_chain_list, pqr_complex_list, prefix_list, grid_list, ion_list, pdie_list,
-                     sdie_list, cfac_list, dx_list, i_list, j_list)
+        kernel = zip(path_list, pqr_chain_list, dime_list, glen_list, gcent_list, prefix_list, ion_list, pdie_list,
+                     sdie_list, dx_list, i_list, j_list)
         apbs_results = []
         p = Pool()
         print '%s:\trunning batchAPBS ....' % (self.jobname)
@@ -1091,9 +1096,9 @@ class DirectedMutagenesis:
 
     def run(self):
         start = ti.default_timer()
-        self.genDirs()
-        self.genMutid()
-        self.genParent()
+        # self.genDirs()
+        # self.genMutid()
+        # self.genParent()
         self.genPDB()
         self.genPQR()
         self.calcAPBS()
@@ -1103,9 +1108,9 @@ class DirectedMutagenesis:
 
     def run_parallel(self):
         start = ti.default_timer()
-        self.genDirs()
-        self.genMutid()  # contains warning: FutureWarning: elementwise comparison failed; returning scalar instead, but in the future will perform elementwise comparison if tokens[0] == 'and' or tokens[-1] == 'and':
-        self.genParent()
+        # self.genDirs()
+        # self.genMutid()  # contains warning: FutureWarning: elementwise comparison failed; returning scalar instead, but in the future will perform elementwise comparison if tokens[0] == 'and' or tokens[-1] == 'and':
+        # self.genParent()
         self.genPDB()
         self.genPQR()
         self.calcAPBS_parallel()
