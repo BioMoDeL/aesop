@@ -86,6 +86,11 @@ class Alascan:
         self.cfac = cfac
         self.dx = dx
 
+        self.genDirs()
+        self.genMutid()
+        self.genParent()
+        self.find_grid()
+
     def getPDB(self):
         return self.pdb
 
@@ -179,7 +184,6 @@ class Alascan:
 
     def genParent(self):
         selstr = self.selstr
-        region = self.region
         jobdir = self.jobdir
         pdb_complex_dir = self.pdb_complex_dir
 
@@ -194,33 +198,77 @@ class Alascan:
         system = parent_pdb.select('((' + ') or ('.join(selstr) + '))')
         # print '(('+') or ('.join(selstr)+'))'
         pd.writePDB(infile, system)
+        self.file_pdb_template = infile
 
-    def genPDB(self):
-        selstr = self.selstr
-        region = self.region
-        jobdir = self.jobdir
-        pdb_complex_dir = self.pdb_complex_dir
+    def find_grid(self):
+        pdbfile = self.file_pdb_template
+        grid = self.grid
+        cfac = self.cfac
 
-        parent_file_prefix = 'wt'
-        parent_pdb = pd.parsePDB(self.pdb)
+        glen = np.zeros(3)
 
-        list_mutids = [item for sublist in self.mutid for item in sublist]
-        list_chids = [item for sublist in self.list_chids for item in sublist]
-        list_resnums = [item for sublist in self.list_resnums for item in sublist]
+        # Find bounding box
+        pdb = pd.parsePDB(pdbfile)
+        max_xyz = pdb.getCoords().max(axis=0)
+        min_xyz = pdb.getCoords().min(axis=0)
 
-        infile = os.path.join(jobdir, pdb_complex_dir, parent_file_prefix + '.pdb')
-        system = parent_pdb.select('((' + ') or ('.join(selstr) + '))')
-        # print '(('+') or ('.join(selstr)+'))'
-        pd.writePDB(infile, system)
+        # Determine mesh dimensions according to Ron's AESOP protocol in the R source file
+        fg = np.ceil(max_xyz - min_xyz)
+        fg = np.ceil((fg + 5) * cfac)
+        glen = np.vstack((glen, fg)).max(axis=0)
+        dime_list = (32 * np.linspace(1, 100, 100)) + 1  # list of possible dime values
+        dime_ind = np.ceil(glen / (32 * grid)) - 1  # index of dime to use from list, subtract one to be consistent with python indexing!
+        dime = np.array((dime_list[int(dime_ind[0])], dime_list[int(dime_ind[1])], dime_list[int(dime_ind[2])]))
+        ix = 0
+        iy = 0
+        iz = 0
+        counter = 0
+        while((dime[0] * dime[1] * dime[2] % 3 != 0) or (counter <= 5)):
+            ix += 1
+            if(dime[0] * dime[1] * dime[2] % 3 != 0):
+                dime = np.array((dime_list[int(dime_ind[0]+ix)], dime_list[int(dime_ind[1])+iy], dime_list[int(dime_ind[2])+iz]))
+            iy += 1
+            if(dime[0] * dime[1] * dime[2] % 3 != 0):
+                dime = np.array((dime_list[int(dime_ind[0]+ix)], dime_list[int(dime_ind[1])+iy], dime_list[int(dime_ind[2])+iz]))
+            iz += 1
+            if(dime[0] * dime[1] * dime[2] % 3 != 0):
+                dime = np.array((dime_list[int(dime_ind[0]+ix)], dime_list[int(dime_ind[1])+iy], dime_list[int(dime_ind[2])+iz]))
+            counter += 1
 
-        for mutid, chain, resnum in zip(list_mutids[1:], list_chids[1:], list_resnums[1:]):
-            outpath = os.path.join(jobdir, pdb_complex_dir, mutid)
-            print '\n%s:\tgenerating PDB for mutant: %s' % (self.jobname, mutid)
-            mutatePDB(pdb=infile, mutid=outpath, resnum=resnum, chain=chain, resid='ALA')
+        self.dime = dime #.reshape((1, 3))
+        self.glen = glen #.reshape((1, 3))
+        self.gcent = pd.calcCenter(pdb).astype(int)
+
+    def set_grid(self, dime, glen, gcent):
+        self.dime = dime
+        self.glen = glen
+        self.gcent = gcent
+
+    # def genPDB(self):
+    #     selstr = self.selstr
+    #     region = self.region
+    #     jobdir = self.jobdir
+    #     pdb_complex_dir = self.pdb_complex_dir
+    #
+    #     parent_file_prefix = 'wt'
+    #     parent_pdb = pd.parsePDB(self.pdb)
+    #
+    #     list_mutids = [item for sublist in self.mutid for item in sublist]
+    #     list_chids = [item for sublist in self.list_chids for item in sublist]
+    #     list_resnums = [item for sublist in self.list_resnums for item in sublist]
+    #
+    #     infile = os.path.join(jobdir, pdb_complex_dir, parent_file_prefix + '.pdb')
+    #     system = parent_pdb.select('((' + ') or ('.join(selstr) + '))')
+    #     # print '(('+') or ('.join(selstr)+'))'
+    #     pd.writePDB(infile, system)
+    #
+    #     for mutid, chain, resnum in zip(list_mutids[1:], list_chids[1:], list_resnums[1:]):
+    #         outpath = os.path.join(jobdir, pdb_complex_dir, mutid)
+    #         print '\n%s:\tgenerating PDB for mutant: %s' % (self.jobname, mutid)
+    #         mutatePDB(pdb=infile, mutid=outpath, resnum=resnum, chain=chain, resid='ALA')
 
     def genTruncatedPQR(self):
         selstr = self.selstr
-        region = self.region
         jobdir = self.jobdir
         pdb_complex_dir = self.pdb_complex_dir
         pqr_complex_dir = self.pqr_complex_dir
@@ -258,7 +306,6 @@ class Alascan:
 
     def genPQR(self):
         selstr = self.selstr
-        region = self.region
         jobdir = self.jobdir
         pdb_complex_dir = self.pdb_complex_dir
         pqr_complex_dir = self.pqr_complex_dir
@@ -281,7 +328,6 @@ class Alascan:
 
     def calcAPBS(self):
         selstr = self.selstr
-        region = self.region
         jobdir = self.jobdir
         pqr_complex_dir = self.pqr_complex_dir
         pqr_sel_dir = self.pqr_sel_dir
@@ -300,7 +346,7 @@ class Alascan:
         Gsolv = np.zeros((dim_mutid, dim_sel))
         Gref = np.zeros((dim_mutid, dim_sel))
 
-        complex_pqr = os.path.join(jobdir, pqr_complex_dir, list_mutids[0] + '.pqr')
+        # complex_pqr = os.path.join(jobdir, pqr_complex_dir, list_mutids[0] + '.pqr')
         for i, mutid in zip(xrange(dim_mutid), list_mutids):
             print '\n%s:\tcalculating solvation and reference energies for mutant: %s' % (self.jobname, mutid)
             # complex_pqr = os.path.join(jobdir, pqr_complex_dir, mutid+'.pqr')
@@ -308,8 +354,10 @@ class Alascan:
                 subunit_pqr = os.path.join(jobdir, seldir, mutid + '.pqr')
                 path_prefix_log = os.path.join(jobdir, logs_apbs_dir, mutid)
                 if mask_by_sel[i, j]:
-                    energies = execAPBS(path_apbs, subunit_pqr, complex_pqr, prefix=path_prefix_log, grid=self.grid,
-                                        ion=self.ion, pdie=self.pdie, sdie=self.sdie, cfac=self.cfac)
+                    # path, pqr_chain, dime, glen, gcent, prefix, ion, pdie, sdie, dx, i, j = kernel
+                    energies = execAPBS(path_apbs, subunit_pqr, self.dime, self.glen, self.gcent,
+                                        prefix=path_prefix_log, ion=self.ion, pdie=self.pdie, sdie=self.sdie,
+                                        dx=self.dx)
                     # print energies[0][0]
                     # print energies[0][1]
                     Gsolv[i, j] = energies[0][0]
@@ -322,7 +370,6 @@ class Alascan:
 
     def calcAPBS_parallel(self):
         selstr = self.selstr
-        region = self.region
         jobdir = self.jobdir
         pqr_complex_dir = self.pqr_complex_dir
         pqr_sel_dir = self.pqr_sel_dir
@@ -343,39 +390,39 @@ class Alascan:
 
         path_list = []
         pqr_chain_list = []
-        pqr_complex_list = []
+        dime_list = []
+        glen_list = []
+        gcent_list = []
         prefix_list = []
-        grid_list = []
         ion_list = []
         pdie_list = []
         sdie_list = []
-        cfac_list = []
         dx_list = []
         i_list = []
         j_list = []
 
         # Find all calculations to be done
-        complex_pqr = os.path.join(jobdir, pqr_complex_dir, list_mutids[0] + '.pqr')
         for i, mutid in zip(xrange(dim_mutid), list_mutids):
             for j, seldir in zip(xrange(dim_sel), [pqr_complex_dir] + pqr_sel_dir):
                 subunit_pqr = os.path.join(jobdir, seldir, mutid + '.pqr')
                 if mask_by_sel[i, j]:
                     path_list.append(path_apbs)
                     pqr_chain_list.append(subunit_pqr)
-                    pqr_complex_list.append(complex_pqr)
+                    dime_list.append(self.dime)
+                    glen_list.append(self.glen)
+                    gcent_list.append(self.gcent)
                     prefix_list.append(os.path.join(jobdir, logs_apbs_dir, '%d_%d_' % (i, j)+mutid))  # added to make sure apbs.in file is unique!
-                    grid_list.append(self.grid)
                     ion_list.append(self.ion)
                     pdie_list.append(self.pdie)
                     sdie_list.append(self.sdie)
-                    cfac_list.append(self.cfac)
                     dx_list.append(self.dx)
                     i_list.append(i)
                     j_list.append(j)
 
         # Organize kernel and run batch process
-        kernel = zip(path_list, pqr_chain_list, pqr_complex_list, prefix_list, grid_list, ion_list, pdie_list,
-                     sdie_list, cfac_list, dx_list, i_list, j_list)
+        kernel = zip(path_list, pqr_chain_list, dime_list, glen_list, gcent_list, prefix_list, ion_list, pdie_list,
+                     sdie_list, dx_list, i_list, j_list)
+
         apbs_results = []
         p = Pool()
         print '%s:\trunning batchAPBS ....' % (self.jobname)
@@ -527,26 +574,15 @@ class Alascan:
         return dGsolv[:, 0]
 
     def run(self):
-        self.genDirs()
-        self.genMutid()
-        self.genPDB()
-        self.genPQR()
-        self.calcAPBS()
-        self.calcCoulomb()
-
-    def run_truncated(self):
-        self.genDirs()
-        self.genMutid()
-        self.genParent()
+        start = ti.default_timer()
         self.genTruncatedPQR()
         self.calcAPBS()
         self.calcCoulomb()
+        stop = ti.default_timer()
+        print '%s:\tAESOP alanine scan completed in %.2f seconds' % (self.jobname, stop - start)
 
     def run_parallel(self):
         start = ti.default_timer()
-        self.genDirs()
-        self.genMutid()  # contains warning: FutureWarning: elementwise comparison failed; returning scalar instead, but in the future will perform elementwise comparison if tokens[0] == 'and' or tokens[-1] == 'and':
-        self.genParent()
         self.genTruncatedPQR()
         self.calcAPBS_parallel()
         self.calcCoulomb_parallel()
@@ -703,6 +739,9 @@ class DirectedMutagenesis:
         self.list_resnums = list_resnums
         self.list_resnames = list_resnames
         self.mask_by_sel = mask_by_sel
+        # self.gcent = None
+        # self.dime = None
+        # self.glen = None
 
     def genParent(self):
         selstr = self.selstr
@@ -720,6 +759,52 @@ class DirectedMutagenesis:
         system = parent_pdb.select('((' + ') or ('.join(selstr) + '))')
         # print '(('+') or ('.join(selstr)+'))'
         pd.writePDB(infile, system)
+
+        self.file_pdb_template = infile
+
+    def find_grid(self):
+        pdbfile = self.file_pdb_template
+        grid = self.grid
+        cfac = self.cfac
+
+        glen = np.zeros(3)
+
+        # Find bounding box
+        pdb = pd.parsePDB(pdbfile)
+        max_xyz = pdb.getCoords().max(axis=0)
+        min_xyz = pdb.getCoords().min(axis=0)
+
+        # Determine mesh dimensions according to Ron's AESOP protocol in the R source file
+        fg = np.ceil(max_xyz - min_xyz)
+        fg = np.ceil((fg + 5) * cfac)
+        glen = np.vstack((glen, fg)).max(axis=0)
+        dime_list = (32 * np.linspace(1, 100, 100)) + 1  # list of possible dime values
+        dime_ind = np.ceil(glen / (32 * grid)) - 1  # index of dime to use from list, subtract one to be consistent with python indexing!
+        dime = np.array((dime_list[int(dime_ind[0])], dime_list[int(dime_ind[1])], dime_list[int(dime_ind[2])]))
+        ix = 0
+        iy = 0
+        iz = 0
+        counter = 0
+        while((dime[0] * dime[1] * dime[2] % 3 != 0) or (counter <= 5)):
+            ix += 1
+            if(dime[0] * dime[1] * dime[2] % 3 != 0):
+                dime = np.array((dime_list[int(dime_ind[0]+ix)], dime_list[int(dime_ind[1])+iy], dime_list[int(dime_ind[2])+iz]))
+            iy += 1
+            if(dime[0] * dime[1] * dime[2] % 3 != 0):
+                dime = np.array((dime_list[int(dime_ind[0]+ix)], dime_list[int(dime_ind[1])+iy], dime_list[int(dime_ind[2])+iz]))
+            iz += 1
+            if(dime[0] * dime[1] * dime[2] % 3 != 0):
+                dime = np.array((dime_list[int(dime_ind[0]+ix)], dime_list[int(dime_ind[1])+iy], dime_list[int(dime_ind[2])+iz]))
+            counter += 1
+
+        self.dime = dime #.reshape((1, 3))
+        self.glen = glen #.reshape((1, 3))
+        self.gcent = pd.calcCenter(pdb).astype(int)
+
+    def set_grid(self, dime, glen, gcent):
+        self.dime = dime
+        self.glen = glen
+        self.gcent = gcent
 
     def genPDB(self):
         selstr = self.selstr
@@ -794,7 +879,8 @@ class DirectedMutagenesis:
                 subunit_pqr = os.path.join(jobdir, seldir, mutid + '.pqr')
                 path_prefix_log = os.path.join(jobdir, logs_apbs_dir, mutid)
                 energies = execAPBS(path_apbs, subunit_pqr, complex_pqr, prefix=path_prefix_log, grid=self.grid,
-                                    ion=self.ion, pdie=self.pdie, sdie=self.sdie, cfac=self.cfac)
+                                    dime=self.dime, glen=self.glen, gcent=self.gcent, ion=self.ion, pdie=self.pdie,
+                                    sdie=self.sdie, cfac=self.cfac)
                 Gsolv[i, j] = energies[0][0]
                 Gref[i, j] = energies[0][1]
                 # if mask_by_sel[i, j]:
@@ -1459,7 +1545,6 @@ def mutatePQR(pqrfile, mutid, resnum, chain=None):  # Only use this function wit
     # Write mutant pqr
     pd.writePQR(mutid + '.pqr', mutant)
 
-
 ######################################################################################################################################################
 # Function to mutate a single residue in a PDB structure, mutates with modeller by building internal coordinates of residue
 ######################################################################################################################################################
@@ -1560,7 +1645,6 @@ def mutatePDB(pdb, mutid, resnum, chain=None, resid='ALA'):
     # h.res_num_from(m, aln)  # Restore old residue numbering and chain indexing
     # h.write(file=mutid + '.pdb')
 
-
 ######################################################################################################################################################
 # Function to run PDB2PQR.exe - should work on any supported OS
 ######################################################################################################################################################
@@ -1589,11 +1673,10 @@ def execPDB2PQR(path_pdb2pqr_exe, pdbfile, outfile=None, ff='parse'):
     (log, err) = runProcess([path_pdb2pqr_exe, '--ff=%s' % (ff), '--chain', pdbfile, outfile])
     return (log, err)
 
-
 ######################################################################################################################################################
 # Function to run APBS.exe - should work on any supported OS
 ######################################################################################################################################################
-def execAPBS(path_apbs_exe, pqr_chain, pqr_complex, prefix=None, grid=1.0, ion=0.150, pdie=20.0, sdie=78.54, cfac=1.5, glen=None, dime=None, dx=False):
+def execAPBS(path_apbs_exe, pqr_chain, dime, glen, gcent, prefix=None, ion=0.150, pdie=20.0, sdie=78.54, dx=False):
     """Summary
     
     Parameters
@@ -1634,33 +1717,33 @@ def execAPBS(path_apbs_exe, pqr_chain, pqr_complex, prefix=None, grid=1.0, ion=0
 
     # cfac = 1.5 # hard-coded scaling factor for mesh dimension, for now
 
-    pqr = pd.parsePQR(pqr_complex)
-    coords = pqr.getCoords()
-    x = coords[:, 0]
-    y = coords[:, 1]
-    z = coords[:, 2]
+    # pqr = pd.parsePQR(pqr_complex)
+    # coords = pqr.getCoords()
+    # x = coords[:, 0]
+    # y = coords[:, 1]
+    # z = coords[:, 2]
 
-    # Determine mesh dimensions according to Ron's AESOP protocol in the R source file
-    if (dime is None) | (glen is None):
-        fg = np.array((np.ceil(np.max(x) - np.min(x)), np.ceil(np.max(y) - np.min(y)), np.ceil(np.max(z) - np.min(z))))
-        fg = np.ceil((fg + 5) * cfac)
-        dime_list = (32 * np.linspace(1, 100, 100)) + 1  # list of possible dime values
-        dime_ind = np.ceil(
-            fg / (32 * grid)) - 1  # index of dime to use from list, subtract one to be consistent with python indexing!
-
-        glen = fg
-        dime = np.array((dime_list[int(dime_ind[0])], dime_list[int(dime_ind[1])], dime_list[int(dime_ind[2])]))
+    # # Determine mesh dimensions according to Ron's AESOP protocol in the R source file
+    # if (dime is None) | (glen is None):
+    #     fg = np.array((np.ceil(np.max(x) - np.min(x)), np.ceil(np.max(y) - np.min(y)), np.ceil(np.max(z) - np.min(z))))
+    #     fg = np.ceil((fg + 5) * cfac)
+    #     dime_list = (32 * np.linspace(1, 100, 100)) + 1  # list of possible dime values
+    #     dime_ind = np.ceil(
+    #         fg / (32 * grid)) - 1  # index of dime to use from list, subtract one to be consistent with python indexing!
+    #
+    #     glen = fg
+    #     dime = np.array((dime_list[int(dime_ind[0])], dime_list[int(dime_ind[1])], dime_list[int(dime_ind[2])]))
 
     # Format APBS input file
     cmd_read = ['read\n',
                 '   mol pqr %s\n' % (pqr_chain),
-                '   mol pqr %s\n' % (pqr_complex),
+                # '   mol pqr %s\n' % (pqr_complex),
                 'end\n']
     cmd_solv = ['elec name solv\n',
                 '   mg-manual\n',
                 '   dime %d %d %d\n' % (dime[0], dime[1], dime[2]),
                 '   glen %d %d %d\n' % (glen[0], glen[1], glen[2]),
-                '   gcent mol 2\n',
+                '   gcent %d %d %d\n' % (gcent[0], gcent[1], gcent[2]),
                 '   mol 1\n',
                 '   lpbe\n',
                 '   bcfl sdh\n',
@@ -1682,7 +1765,7 @@ def execAPBS(path_apbs_exe, pqr_chain, pqr_complex, prefix=None, grid=1.0, ion=0
                '   mg-manual\n',
                '   dime %d %d %d\n' % (dime[0], dime[1], dime[2]),
                '   glen %d %d %d\n' % (glen[0], glen[1], glen[2]),
-               '   gcent mol 2\n',
+               '   gcent %d %d %d\n' % (gcent[0], gcent[1], gcent[2]),
                '   mol 1\n',
                '   lpbe\n',
                '   bcfl sdh\n',
@@ -1723,7 +1806,6 @@ def execAPBS(path_apbs_exe, pqr_chain, pqr_complex, prefix=None, grid=1.0, ion=0
 ######################################################################################################################################################
 # Function to run APBS.exe to generate a DX file only - should work on any supported OS
 ######################################################################################################################################################
-
 def calcDX(path_apbs_exe, pqrfile, prefix=None, grid=1.0, ion=0.150, pdie=20.0, sdie=78.54, cfac=1.5, glen=None, gcent=np.zeros(3), dime=None):
     if prefix is None:
         prefix = os.path.splitext(pqrfile)[0]
@@ -1796,16 +1878,15 @@ def calcDX(path_apbs_exe, pqrfile, prefix=None, grid=1.0, ion=0.150, pdie=20.0, 
 # Function to run multiple APBS processes at once
 ######################################################################################################################################################
 def batchAPBS(kernel):
-    path, pqr_chain, pqr_complex, prefix, grid, ion, pdie, sdie, cfac, dx, i, j = kernel
+    # path, pqr_chain, pqr_complex, prefix, grid, ion, pdie, sdie, cfac, dx, i, j = kernel
+    path, pqr_chain, dime, glen, gcent, prefix, ion, pdie, sdie, dx, i, j = kernel
     # print 'Calculating solvation and reference energies for: %s' % (os.path.basename(pqr_chain).split('.')[0])
-    energies = execAPBS(path, pqr_chain, pqr_complex, prefix=prefix, grid=grid, ion=ion, pdie=pdie, sdie=sdie,
-                        cfac=cfac, dx=dx)
+    energies = execAPBS(path, pqr_chain, dime, glen, gcent, prefix=prefix, ion=ion, pdie=pdie, sdie=sdie, dx=dx)
     return np.array([i, j, energies[0][0], energies[0][1]])
 
 ######################################################################################################################################################
 # Function to run multiple APBS processes at once for the purpose of generating only a DX file
 ######################################################################################################################################################
-
 def batchCalcDX(kernel):
     path, pqrfile, prefix, grid, ion, pdie, sdie, cfac, glen, gcent, dime = kernel
     calcDX(path, pqrfile, prefix=prefix, grid=grid, ion=ion, pdie=pdie, sdie=sdie,
