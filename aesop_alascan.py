@@ -1,3 +1,10 @@
+"""Summary
+
+Attributes
+----------
+AA_dict : TYPE
+    Description
+"""
 import os as os
 # import sys as sys
 import subprocess as sp
@@ -34,26 +41,120 @@ class Alascan:
     ----------
     apbs : TYPE
         Description
-    dirs : int
+    apbs_results : TYPE
+        Description
+    cfac : TYPE
+        Description
+    coulomb : TYPE
+        Description
+    coulomb_results : TYPE
+        Description
+    dime : TYPE
+        Description
+    dx : TYPE
+        Description
+    dx_files : TYPE
+        Description
+    E_ref : TYPE
+        Description
+    E_solv : TYPE
+        Description
+    ff : TYPE
+        Description
+    file_pdb_template : TYPE
+        Description
+    gcent : TYPE
+        Description
+    Gcoul : TYPE
+        Description
+    glen : TYPE
+        Description
+    Gref : TYPE
+        Description
+    grid : TYPE
+        Description
+    Gsolv : TYPE
         Description
     ion : TYPE
+        Description
+    jobdir : TYPE
+        Description
+    jobname : TYPE
+        Description
+    list_chids : TYPE
+        Description
+    list_resnames : TYPE
+        Description
+    list_resnums : TYPE
+        Description
+    logs_apbs_dir : str
+        Description
+    mask_by_sel : TYPE
+        Description
+    mutid : list
         Description
     pdb : TYPE
         Description
     pdb2pqr : TYPE
         Description
+    pdb_complex_dir : TYPE
+        Description
     pdie : TYPE
         Description
-    prefix : TYPE
+    pqr_complex_dir : TYPE
+        Description
+    pqr_sel_dir : TYPE
+        Description
+    region : TYPE
         Description
     sdie : TYPE
         Description
     selstr : TYPE
         Description
+    
+    Deleted Attributes
+    ------------------
+    dirs : int
+        Description
+    prefix : TYPE
+        Description
     """
 
     def __init__(self, pdb, pdb2pqr_exe, apbs_exe, coulomb_exe=None, selstr=['protein'], jobname=None, region=None,
                  grid=1, ion=0.150, pdie=20.0, sdie=78.54, ff='parse', cfac=1.5, dx=False):
+        """Summary
+        
+        Parameters
+        ----------
+        pdb : TYPE
+            Description
+        pdb2pqr_exe : TYPE
+            Description
+        apbs_exe : TYPE
+            Description
+        coulomb_exe : None, optional
+            Description
+        selstr : list, optional
+            Description
+        jobname : None, optional
+            Description
+        region : None, optional
+            Description
+        grid : int, optional
+            Description
+        ion : float, optional
+            Description
+        pdie : float, optional
+            Description
+        sdie : float, optional
+            Description
+        ff : str, optional
+            Description
+        cfac : float, optional
+            Description
+        dx : bool, optional
+            Description
+        """
         self.pdb = pdb
         self.pdb2pqr = pdb2pqr_exe
         self.apbs = apbs_exe
@@ -92,25 +193,74 @@ class Alascan:
         self.find_grid()
 
     def getPDB(self):
+        """Summary
+        
+        Returns
+        -------
+        TYPE
+            Description
+        """
         return self.pdb
 
     def getSel(self):
+        """Summary
+        
+        Returns
+        -------
+        TYPE
+            Description
+        """
         return self.selstr
 
     def getDirs(self):
+        """Summary
+        
+        Returns
+        -------
+        TYPE
+            Description
+        """
         return self.dirs
 
     def getPrefix(self):
+        """Summary
+        
+        Returns
+        -------
+        TYPE
+            Description
+        """
         return self.prefix
 
     def getMutids(self):
+        """Summary
+        
+        Returns
+        -------
+        TYPE
+            Description
+        """
         l = self.mutid
         return [item for sublist in l for item in sublist]
 
     def getDX(self):
+        """Summary
+        
+        Returns
+        -------
+        TYPE
+            Description
+        """
         return self.dx_files
 
     def genDirs(self):
+        """Summary
+        
+        Returns
+        -------
+        TYPE
+            Description
+        """
         # Create necessary directories for PDB files
         pdb_complex_dir = 'complex_pdb'
         if not os.path.exists(os.path.join(self.jobdir, pdb_complex_dir)):
@@ -136,6 +286,13 @@ class Alascan:
         self.logs_apbs_dir = 'apbs_logs'
 
     def genMutid(self):
+        """Summary
+        
+        Returns
+        -------
+        TYPE
+            Description
+        """
         selstr = self.selstr
         region = self.region
 
@@ -183,6 +340,13 @@ class Alascan:
         self.mask_by_sel = mask_by_sel
 
     def genParent(self):
+        """Summary
+        
+        Returns
+        -------
+        TYPE
+            Description
+        """
         selstr = self.selstr
         jobdir = self.jobdir
         pdb_complex_dir = self.pdb_complex_dir
@@ -201,6 +365,13 @@ class Alascan:
         self.file_pdb_template = infile
 
     def find_grid(self):
+        """Summary
+        
+        Returns
+        -------
+        TYPE
+            Description
+        """
         pdbfile = self.file_pdb_template
         grid = self.grid
         cfac = self.cfac
@@ -240,6 +411,22 @@ class Alascan:
         self.gcent = pd.calcCenter(pdb).astype(int)
 
     def set_grid(self, dime, glen, gcent):
+        """Summary
+        
+        Parameters
+        ----------
+        dime : TYPE
+            Description
+        glen : TYPE
+            Description
+        gcent : TYPE
+            Description
+        
+        Returns
+        -------
+        TYPE
+            Description
+        """
         self.dime = dime
         self.glen = glen
         self.gcent = gcent
@@ -268,6 +455,13 @@ class Alascan:
     #         mutatePDB(pdb=infile, mutid=outpath, resnum=resnum, chain=chain, resid='ALA')
 
     def genTruncatedPQR(self):
+        """Summary
+        
+        Returns
+        -------
+        TYPE
+            Description
+        """
         selstr = self.selstr
         jobdir = self.jobdir
         pdb_complex_dir = self.pdb_complex_dir
@@ -305,6 +499,13 @@ class Alascan:
                 pd.writePQR(selfile, pqr)
 
     def genPQR(self):
+        """Summary
+        
+        Returns
+        -------
+        TYPE
+            Description
+        """
         selstr = self.selstr
         jobdir = self.jobdir
         pdb_complex_dir = self.pdb_complex_dir
@@ -327,6 +528,13 @@ class Alascan:
                 pd.writePQR(selfile, pqr)
 
     def calcAPBS(self):
+        """Summary
+        
+        Returns
+        -------
+        TYPE
+            Description
+        """
         selstr = self.selstr
         jobdir = self.jobdir
         pqr_complex_dir = self.pqr_complex_dir
@@ -369,6 +577,13 @@ class Alascan:
         self.Gref = Gref
 
     def calcAPBS_parallel(self):
+        """Summary
+        
+        Returns
+        -------
+        TYPE
+            Description
+        """
         selstr = self.selstr
         jobdir = self.jobdir
         pqr_complex_dir = self.pqr_complex_dir
@@ -455,6 +670,13 @@ class Alascan:
         self.Gref = Gref
 
     def calcCoulomb(self):
+        """Summary
+        
+        Returns
+        -------
+        TYPE
+            Description
+        """
         selstr = self.selstr
         region = self.region
         jobdir = self.jobdir
@@ -491,6 +713,13 @@ class Alascan:
         self.Gcoul = Gcoul
 
     def calcCoulomb_parallel(self):
+        """Summary
+        
+        Returns
+        -------
+        TYPE
+            Description
+        """
         selstr = self.selstr
         region = self.region
         jobdir = self.jobdir
@@ -552,6 +781,13 @@ class Alascan:
         self.Gcoul = Gcoul
 
     def ddGbind_rel(self):
+        """Summary
+        
+        Returns
+        -------
+        TYPE
+            Description
+        """
         Gsolv = self.Gsolv
         Gref = self.Gref
         Gcoul = self.Gcoul
@@ -567,6 +803,13 @@ class Alascan:
         return dGbind_rel
 
     def dGsolv_rel(self):
+        """Summary
+        
+        Returns
+        -------
+        TYPE
+            Description
+        """
         Gsolv = self.Gsolv
         Gref = self.Gref
         dGsolv = Gsolv - Gref
@@ -574,6 +817,13 @@ class Alascan:
         return dGsolv[:, 0]
 
     def run(self):
+        """Summary
+        
+        Returns
+        -------
+        TYPE
+            Description
+        """
         start = ti.default_timer()
         self.genTruncatedPQR()
         self.calcAPBS()
@@ -582,6 +832,13 @@ class Alascan:
         print '%s:\tAESOP alanine scan completed in %.2f seconds' % (self.jobname, stop - start)
 
     def run_parallel(self):
+        """Summary
+        
+        Returns
+        -------
+        TYPE
+            Description
+        """
         start = ti.default_timer()
         self.genTruncatedPQR()
         self.calcAPBS_parallel()
@@ -590,6 +847,18 @@ class Alascan:
         print '%s:\tAESOP alanine scan completed in %.2f seconds' % (self.jobname, stop - start)
 
     def summary(self, filename=None):
+        """Summary
+        
+        Parameters
+        ----------
+        filename : None, optional
+            Description
+        
+        Returns
+        -------
+        TYPE
+            Description
+        """
         plotResults(self, filename=None)
 
 ######################################################################################################################################################
@@ -604,31 +873,129 @@ class Alascan:
 ######################################################################################################################################################
 class DirectedMutagenesis:
     """Summary
-
+    
     Attributes
     ----------
     apbs : TYPE
         Description
-    dirs : int
+    apbs_results : TYPE
+        Description
+    cfac : TYPE
+        Description
+    coulomb : TYPE
+        Description
+    coulomb_results : TYPE
+        Description
+    dime : TYPE
+        Description
+    dx : TYPE
+        Description
+    dx_files : TYPE
+        Description
+    E_ref : TYPE
+        Description
+    E_solv : TYPE
+        Description
+    ff : TYPE
+        Description
+    file_pdb_template : TYPE
+        Description
+    gcent : TYPE
+        Description
+    Gcoul : TYPE
+        Description
+    glen : TYPE
+        Description
+    Gref : TYPE
+        Description
+    grid : TYPE
+        Description
+    Gsolv : TYPE
         Description
     ion : TYPE
+        Description
+    jobdir : TYPE
+        Description
+    jobname : TYPE
+        Description
+    list_chids : TYPE
+        Description
+    list_resnames : TYPE
+        Description
+    list_resnums : TYPE
+        Description
+    logs_apbs_dir : str
+        Description
+    mask_by_sel : TYPE
+        Description
+    mutation : TYPE
+        Description
+    mutid : list
         Description
     pdb : TYPE
         Description
     pdb2pqr : TYPE
         Description
+    pdb_complex_dir : TYPE
+        Description
     pdie : TYPE
         Description
-    prefix : TYPE
+    pqr_complex_dir : TYPE
+        Description
+    pqr_sel_dir : TYPE
         Description
     sdie : TYPE
         Description
     selstr : TYPE
         Description
+    target : TYPE
+        Description
+    
+    Deleted Attributes
+    ------------------
+    dirs : int
+        Description
+    prefix : TYPE
+        Description
     """
 
     def __init__(self, pdb, target, mutation, pdb2pqr_exe, apbs_exe, coulomb_exe=None, selstr=['protein'], jobname=None,
                  grid=1, ion=0.150, pdie=20.0, sdie=78.54, ff='parse', cfac=1.5, dx=False):
+        """Summary
+        
+        Parameters
+        ----------
+        pdb : TYPE
+            Description
+        target : TYPE
+            Description
+        mutation : TYPE
+            Description
+        pdb2pqr_exe : TYPE
+            Description
+        apbs_exe : TYPE
+            Description
+        coulomb_exe : None, optional
+            Description
+        selstr : list, optional
+            Description
+        jobname : None, optional
+            Description
+        grid : int, optional
+            Description
+        ion : float, optional
+            Description
+        pdie : float, optional
+            Description
+        sdie : float, optional
+            Description
+        ff : str, optional
+            Description
+        cfac : float, optional
+            Description
+        dx : bool, optional
+            Description
+        """
         self.pdb = pdb
         self.pdb2pqr = pdb2pqr_exe
         self.apbs = apbs_exe
@@ -669,10 +1036,24 @@ class DirectedMutagenesis:
         self.find_grid()
 
     def getMutids(self):
+        """Summary
+        
+        Returns
+        -------
+        TYPE
+            Description
+        """
         l = self.mutid
         return [item for sublist in l for item in sublist]
 
     def genDirs(self):
+        """Summary
+        
+        Returns
+        -------
+        TYPE
+            Description
+        """
         # Create necessary directories for PDB files
         pdb_complex_dir = 'complex_pdb'
         if not os.path.exists(os.path.join(self.jobdir, pdb_complex_dir)):
@@ -698,6 +1079,13 @@ class DirectedMutagenesis:
         self.logs_apbs_dir = 'apbs_logs'
 
     def genMutid(self):
+        """Summary
+        
+        Returns
+        -------
+        TYPE
+            Description
+        """
         selstr = self.selstr
         target = self.target
         mutation = self.mutation
@@ -749,6 +1137,13 @@ class DirectedMutagenesis:
         # self.glen = None
 
     def genParent(self):
+        """Summary
+        
+        Returns
+        -------
+        TYPE
+            Description
+        """
         selstr = self.selstr
         jobdir = self.jobdir
         pdb_complex_dir = self.pdb_complex_dir
@@ -768,6 +1163,13 @@ class DirectedMutagenesis:
         self.file_pdb_template = infile
 
     def find_grid(self):
+        """Summary
+        
+        Returns
+        -------
+        TYPE
+            Description
+        """
         pdbfile = self.file_pdb_template
         grid = self.grid
         cfac = self.cfac
@@ -807,11 +1209,34 @@ class DirectedMutagenesis:
         self.gcent = pd.calcCenter(pdb).astype(int)
 
     def set_grid(self, dime, glen, gcent):
+        """Summary
+        
+        Parameters
+        ----------
+        dime : TYPE
+            Description
+        glen : TYPE
+            Description
+        gcent : TYPE
+            Description
+        
+        Returns
+        -------
+        TYPE
+            Description
+        """
         self.dime = dime
         self.glen = glen
         self.gcent = gcent
 
     def genPDB(self):
+        """Summary
+        
+        Returns
+        -------
+        TYPE
+            Description
+        """
         selstr = self.selstr
         jobdir = self.jobdir
         pdb_complex_dir = self.pdb_complex_dir
@@ -834,6 +1259,13 @@ class DirectedMutagenesis:
             mutatePDB(pdb=infile, mutid=outpath, resnum=resnum, chain=chain, resid=mut)
 
     def genPQR(self):
+        """Summary
+        
+        Returns
+        -------
+        TYPE
+            Description
+        """
         selstr = self.selstr
         jobdir = self.jobdir
         pdb_complex_dir = self.pdb_complex_dir
@@ -857,6 +1289,13 @@ class DirectedMutagenesis:
                 pd.writePQR(selfile, pqr)
 
     def calcAPBS(self):
+        """Summary
+        
+        Returns
+        -------
+        TYPE
+            Description
+        """
         selstr = self.selstr
         jobdir = self.jobdir
         pqr_complex_dir = self.pqr_complex_dir
@@ -902,6 +1341,13 @@ class DirectedMutagenesis:
         self.Gref = Gref
 
     def calcAPBS_parallel(self):
+        """Summary
+        
+        Returns
+        -------
+        TYPE
+            Description
+        """
         selstr = self.selstr
         jobdir = self.jobdir
         pqr_complex_dir = self.pqr_complex_dir
@@ -988,6 +1434,13 @@ class DirectedMutagenesis:
         self.Gref = Gref
 
     def calcCoulomb(self):
+        """Summary
+        
+        Returns
+        -------
+        TYPE
+            Description
+        """
         selstr = self.selstr
         jobdir = self.jobdir
         pqr_complex_dir = self.pqr_complex_dir
@@ -1012,6 +1465,13 @@ class DirectedMutagenesis:
         self.Gcoul = Gcoul
 
     def calcCoulomb_parallel(self):
+        """Summary
+        
+        Returns
+        -------
+        TYPE
+            Description
+        """
         selstr = self.selstr
         jobdir = self.jobdir
         pqr_complex_dir = self.pqr_complex_dir
@@ -1073,6 +1533,13 @@ class DirectedMutagenesis:
         self.Gcoul = Gcoul
 
     def ddGbind_rel(self):
+        """Summary
+        
+        Returns
+        -------
+        TYPE
+            Description
+        """
         Gsolv = self.Gsolv
         Gref = self.Gref
         Gcoul = self.Gcoul
@@ -1088,6 +1555,13 @@ class DirectedMutagenesis:
         return dGbind_rel
 
     def dGsolv_rel(self):
+        """Summary
+        
+        Returns
+        -------
+        TYPE
+            Description
+        """
         Gsolv = self.Gsolv
         Gref = self.Gref
         dGsolv = Gsolv - Gref
@@ -1095,6 +1569,13 @@ class DirectedMutagenesis:
         return dGsolv[:, 0]
 
     def run(self):
+        """Summary
+        
+        Returns
+        -------
+        TYPE
+            Description
+        """
         start = ti.default_timer()
         # self.genDirs()
         # self.genMutid()
@@ -1107,6 +1588,13 @@ class DirectedMutagenesis:
         print '%s:\tAESOP directed mutagenesis scan completed in %.2f seconds' % (self.jobname, stop - start)
 
     def run_parallel(self):
+        """Summary
+        
+        Returns
+        -------
+        TYPE
+            Description
+        """
         start = ti.default_timer()
         # self.genDirs()
         # self.genMutid()  # contains warning: FutureWarning: elementwise comparison failed; returning scalar instead, but in the future will perform elementwise comparison if tokens[0] == 'and' or tokens[-1] == 'and':
@@ -1123,8 +1611,88 @@ class DirectedMutagenesis:
 #   alascan     -   Alascan class with certain class functions.
 ######################################################################################################################################################
 class ElecSimilarity: # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD! Coordinates must be consistent!
+    """Summary
+    
+    Attributes
+    ----------
+    apbs : TYPE
+        Description
+    cfac : TYPE
+        Description
+    dim_dx : TYPE
+        Description
+    dime : TYPE
+        Description
+    dx : bool
+        Description
+    dxdir : TYPE
+        Description
+    dxfiles : TYPE
+        Description
+    edges : TYPE
+        Description
+    esd : TYPE
+        Description
+    ff : TYPE
+        Description
+    gcent : TYPE
+        Description
+    glen : TYPE
+        Description
+    grid : TYPE
+        Description
+    ids : TYPE
+        Description
+    ion : TYPE
+        Description
+    jobdir : TYPE
+        Description
+    jobname : TYPE
+        Description
+    midpoints : TYPE
+        Description
+    pdb2pqr : TYPE
+        Description
+    pdbdir : TYPE
+        Description
+    pdbfiles : TYPE
+        Description
+    pdie : TYPE
+        Description
+    pqrdir : TYPE
+        Description
+    sdie : TYPE
+        Description
+    """
     def __init__(self, pdbfiles, pdb2pqr_exe, apbs_exe, selstr=None, jobname=None,
                  grid=1, ion=0.150, pdie=20.0, sdie=78.54, ff='parse', cfac=1.5):
+        """Summary
+        
+        Parameters
+        ----------
+        pdbfiles : TYPE
+            Description
+        pdb2pqr_exe : TYPE
+            Description
+        apbs_exe : TYPE
+            Description
+        selstr : None, optional
+            Description
+        jobname : None, optional
+            Description
+        grid : int, optional
+            Description
+        ion : float, optional
+            Description
+        pdie : float, optional
+            Description
+        sdie : float, optional
+            Description
+        ff : str, optional
+            Description
+        cfac : float, optional
+            Description
+        """
         self.pdbfiles = [os.path.basename(pdbfile) for pdbfile in pdbfiles]
         self.ids = [os.path.splitext(os.path.basename(pdbfile))[0] for pdbfile in pdbfiles]
         self.pdb2pqr = pdb2pqr_exe
@@ -1165,6 +1733,13 @@ class ElecSimilarity: # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD! Coordi
         self.cfac = cfac
 
     def centerPDB(self):
+        """Summary
+        
+        Returns
+        -------
+        TYPE
+            Description
+        """
         pdbdir = self.pdbdir
         pdbfiles = self.pdbfiles
         for pdbfile in pdbfiles:
@@ -1173,6 +1748,13 @@ class ElecSimilarity: # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD! Coordi
             pd.writePDB(os.path.join(pdbdir, pdbfile), pdb)
 
     def superposePDB(self):
+        """Summary
+        
+        Returns
+        -------
+        TYPE
+            Description
+        """
         pdbdir = self.pdbdir
         pdbfiles = self.pdbfiles
 
@@ -1192,6 +1774,13 @@ class ElecSimilarity: # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD! Coordi
             pd.writePDB(os.path.join(pdbdir, pdbfile), pdb)
 
     def initializeGrid(self):
+        """Summary
+        
+        Returns
+        -------
+        TYPE
+            Description
+        """
         pdbdir = self.pdbdir
         pdbfiles = self.pdbfiles
         grid = self.grid
@@ -1236,6 +1825,13 @@ class ElecSimilarity: # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD! Coordi
         self.gcent = pd.calcCenter(ref).astype(int)
 
     def genPQR(self):
+        """Summary
+        
+        Returns
+        -------
+        TYPE
+            Description
+        """
         pdbdir = self.pdbdir
         pqrdir = self.pqrdir
         pdbfiles = self.pdbfiles
@@ -1249,6 +1845,13 @@ class ElecSimilarity: # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD! Coordi
             execPDB2PQR(path_pdb2pqr, infile, outfile=outfile, ff=ff)
 
     def genDX(self):
+        """Summary
+        
+        Returns
+        -------
+        TYPE
+            Description
+        """
         path_apbs = self.apbs
         pdbfiles = self.pdbfiles
         pqrdir = self.pqrdir
@@ -1268,6 +1871,13 @@ class ElecSimilarity: # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD! Coordi
             calcDX(path_apbs, pqrfile, prefix=apbsfile, grid=grid, ion=ion, pdie=pdie, sdie=sdie, cfac=cfac, glen=glen, gcent=gcent, dime=dime)
 
     def genDX_parallel(self):
+        """Summary
+        
+        Returns
+        -------
+        TYPE
+            Description
+        """
         pdbfiles = self.pdbfiles
         pqrdir = self.pqrdir
         dxdir = self.dxdir
@@ -1302,8 +1912,31 @@ class ElecSimilarity: # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD! Coordi
             print '.... %s:\tbatch coulomb %d percent complete ....' % (self.jobname, int(counter * 100 / max_count))
 
     def calcESD(self, method='LD'):
-
+        """Summary
+        
+        Parameters
+        ----------
+        method : str, optional
+            Description
+        
+        Returns
+        -------
+        TYPE
+            Description
+        """
         def symmetrize(a):
+            """Summary
+            
+            Parameters
+            ----------
+            a : TYPE
+                Description
+            
+            Returns
+            -------
+            TYPE
+                Description
+            """
             return a + a.T - np.diag(a.diagonal())
 
         pdbfiles = self.pdbfiles
@@ -1338,7 +1971,43 @@ class ElecSimilarity: # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD! Coordi
 #   alascan     -   Alascan class with certain class functions.
 ######################################################################################################################################################
 class ESD:
+    """Summary
+    
+    Attributes
+    ----------
+    dim_dx : TYPE
+        Description
+    edges : TYPE
+        Description
+    esd : TYPE
+        Description
+    files : TYPE
+        Description
+    ids : TYPE
+        Description
+    ion : TYPE
+        Description
+    jobname : TYPE
+        Description
+    mask : TYPE
+        Description
+    midpoints : TYPE
+        Description
+    pdbfile : TYPE
+        Description
+    pdie : TYPE
+        Description
+    sdie : TYPE
+        Description
+    """
     def __init__(self, alascan):
+        """Summary
+        
+        Parameters
+        ----------
+        alascan : TYPE
+            Description
+        """
         dx_files = alascan.getDX() # Get only files with index [0-9]+.
         pattern_id = re.compile('\d+_0_(wt|seg\d+_[A-Z]\d+[A-Z])[.]dx')
         pattern_file = re.compile('(.*[0-9]+_0_(wt|seg[0-9]+_[A-Z]\d+[A-Z])[.]dx)')
@@ -1365,6 +2034,18 @@ class ESD:
         #     self.coords[i,:] = grid.grid.reshape((1, dim_coords))
 
     def findSurfaceGridPts(self, path_dssp):
+        """Summary
+        
+        Parameters
+        ----------
+        path_dssp : TYPE
+            Description
+        
+        Returns
+        -------
+        TYPE
+            Description
+        """
         pdbfile = self.pdbfile
         pdb = pd.parsePDB(pdbfile)
         xyz = pdb.getCoords()
@@ -1382,14 +2063,49 @@ class ESD:
 
 
     def setMask(self, mask):
+        """Summary
+        
+        Parameters
+        ----------
+        mask : TYPE
+            Description
+        
+        Returns
+        -------
+        TYPE
+            Description
+        """
         if len(mask) == len(self.mask):
             self.mask = mask
         else:
             print 'Error: unable to set mask, must be an array of length %d' % (len(self.mask))
 
     def calc(self, method='LD'):
-
+        """Summary
+        
+        Parameters
+        ----------
+        method : str, optional
+            Description
+        
+        Returns
+        -------
+        TYPE
+            Description
+        """
         def symmetrize(a):
+            """Summary
+            
+            Parameters
+            ----------
+            a : TYPE
+                Description
+            
+            Returns
+            -------
+            TYPE
+                Description
+            """
             return a + a.T - np.diag(a.diagonal())
 
         files = self.files
@@ -1423,8 +2139,31 @@ class ESD:
         # self.esd = esd
 
     def calc_batch(self, method='LD'): # NOT WORKING ... DON'T USE!
-
+        """Summary
+        
+        Parameters
+        ----------
+        method : str, optional
+            Description
+        
+        Returns
+        -------
+        TYPE
+            Description
+        """
         def symmetrize(a):
+            """Summary
+            
+            Parameters
+            ----------
+            a : TYPE
+                Description
+            
+            Returns
+            -------
+            TYPE
+                Description
+            """
             return a + a.T - np.diag(a.diagonal())
 
         files = self.files
@@ -1462,6 +2201,18 @@ class ESD:
 # Function to run batch esd with LD method
 ######################################################################################################################################################
 def f_ld(kernel):
+    """Summary
+    
+    Parameters
+    ----------
+    kernel : TYPE
+        Description
+    
+    Returns
+    -------
+    TYPE
+        Description
+    """
     i, j, file_i, file_j = kernel
     a = gd.Grid(file_i).grid
     b = gd.Grid(file_j).grid
@@ -1477,6 +2228,18 @@ def f_ld(kernel):
 # Function to run commands, recording output
 ######################################################################################################################################################
 def runProcess(command):
+    """Summary
+    
+    Parameters
+    ----------
+    command : TYPE
+        Description
+    
+    Returns
+    -------
+    TYPE
+        Description
+    """
     proc = sp.Popen(command, stdout=sp.PIPE, stderr=sp.PIPE)
     # proc = sp.Popen(command, stdout=sp.PIPE, shell=True)
     (out, err) = proc.communicate()
@@ -1487,6 +2250,24 @@ def runProcess(command):
 # Function to mutate a single residue in a PDB structure, mutates with side-chain truncation
 ######################################################################################################################################################
 def mutatePQR(pqrfile, mutid, resnum, chain=None):  # Only use this function with PARSE for now ...
+    """Summary
+    
+    Parameters
+    ----------
+    pqrfile : TYPE
+        Description
+    mutid : TYPE
+        Description
+    resnum : TYPE
+        Description
+    chain : None, optional
+        Description
+    
+    Returns
+    -------
+    TYPE
+        Description
+    """
     parent = pd.parsePQR(pqrfile)
     if chain is None:
         residue = parent.select('resnum %d' % (int(resnum)))
@@ -1659,14 +2440,19 @@ def execPDB2PQR(path_pdb2pqr_exe, pdbfile, outfile=None, ff='parse'):
         Description
     pdbfile : TYPE
         Description
-    optargs : str, optional
-        Description
     outfile : TYPE, optional
+        Description
+    ff : str, optional
         Description
     
     Returns
     -------
     name : TYPE
+        Description
+    
+    Deleted Parameters
+    ------------------
+    optargs : str, optional
         Description
     """
     if outfile is None:
@@ -1684,26 +2470,37 @@ def execAPBS(path_apbs_exe, pqr_chain, dime, glen, gcent, prefix=None, ion=0.150
     Parameters
     ----------
     path_apbs_exe : STRING
-        Full path to APBS executable, EX: 'C:\\APBS\\apbs.exe'
+        Full path to APBS executable, EX: 'C:\APBS\apbs.exe'
     pqr_chain : STRING
         PQR file name containing the segment that will undergo electrostatic calculations
-    pqr_complex : STRING
-        PQR file name containing the complex that AESOP is analyzing, must contain pqr_chain
+    dime : TYPE
+        Description
+    glen : TYPE
+        Description
+    gcent : TYPE
+        Description
     prefix : STRING, optional
         Phrase to prepend before any file that is generated before writing
-    grid : float, optional
-        Grid spacing for the mesh grid based electrostatic calculations. Suggested value of 1 or below
     ion : float, optional
         Ionic strength for APBS calculation
     pdie : float, optional
         Protein dielectric constant for APBS calculation
     sdie : float, optional
         Solvent dielectric constant for APBS calculation
+    dx : bool, optional
+        Description
     
     Returns
     -------
     file_apbs_log : STRING
         File name for the log file that APBS generates. This file contains results from calculations performed and must be parsed
+    
+    Deleted Parameters
+    ------------------
+    pqr_complex : STRING
+        PQR file name containing the complex that AESOP is analyzing, must contain pqr_chain
+    grid : float, optional
+        Grid spacing for the mesh grid based electrostatic calculations. Suggested value of 1 or below
     """
     # path_apbs_exe -   full path to apbs executable ('C:\\APBS\\apbs.exe')
     # pqr_chain     -   path to file with single chain pqr (mutant or parent)
@@ -1809,6 +2606,38 @@ def execAPBS(path_apbs_exe, pqr_chain, dime, glen, gcent, prefix=None, ion=0.150
 # Function to run APBS.exe to generate a DX file only - should work on any supported OS
 ######################################################################################################################################################
 def calcDX(path_apbs_exe, pqrfile, prefix=None, grid=1.0, ion=0.150, pdie=20.0, sdie=78.54, cfac=1.5, glen=None, gcent=np.zeros(3), dime=None):
+    """Summary
+    
+    Parameters
+    ----------
+    path_apbs_exe : TYPE
+        Description
+    pqrfile : TYPE
+        Description
+    prefix : None, optional
+        Description
+    grid : float, optional
+        Description
+    ion : float, optional
+        Description
+    pdie : float, optional
+        Description
+    sdie : float, optional
+        Description
+    cfac : float, optional
+        Description
+    glen : None, optional
+        Description
+    gcent : TYPE, optional
+        Description
+    dime : None, optional
+        Description
+    
+    Returns
+    -------
+    TYPE
+        Description
+    """
     if prefix is None:
         prefix = os.path.splitext(pqrfile)[0]
 
@@ -1880,6 +2709,18 @@ def calcDX(path_apbs_exe, pqrfile, prefix=None, grid=1.0, ion=0.150, pdie=20.0, 
 # Function to run multiple APBS processes at once
 ######################################################################################################################################################
 def batchAPBS(kernel):
+    """Summary
+    
+    Parameters
+    ----------
+    kernel : TYPE
+        Description
+    
+    Returns
+    -------
+    TYPE
+        Description
+    """
     # path, pqr_chain, pqr_complex, prefix, grid, ion, pdie, sdie, cfac, dx, i, j = kernel
     path, pqr_chain, dime, glen, gcent, prefix, ion, pdie, sdie, dx, i, j = kernel
     # print 'Calculating solvation and reference energies for: %s' % (os.path.basename(pqr_chain).split('.')[0])
@@ -1890,6 +2731,18 @@ def batchAPBS(kernel):
 # Function to run multiple APBS processes at once for the purpose of generating only a DX file
 ######################################################################################################################################################
 def batchCalcDX(kernel):
+    """Summary
+    
+    Parameters
+    ----------
+    kernel : TYPE
+        Description
+    
+    Returns
+    -------
+    TYPE
+        Description
+    """
     path, pqrfile, prefix, grid, ion, pdie, sdie, cfac, glen, gcent, dime = kernel
     calcDX(path, pqrfile, prefix=prefix, grid=grid, ion=ion, pdie=pdie, sdie=sdie,
                         cfac=cfac, glen=glen, gcent=gcent, dime=dime)
@@ -1898,6 +2751,18 @@ def batchCalcDX(kernel):
 # Function to run multiple Coulomb processes at once
 ######################################################################################################################################################
 def batchCoulomb(kernel):
+    """Summary
+    
+    Parameters
+    ----------
+    kernel : TYPE
+        Description
+    
+    Returns
+    -------
+    TYPE
+        Description
+    """
     path, pqr_chain, pdie, i, j = kernel
     # print 'Calculating coulombic energies for: %s' % (os.path.basename(pqr_chain).split('.')[0])
     energies = execCoulomb(path, pqr_chain)
@@ -1908,6 +2773,20 @@ def batchCoulomb(kernel):
 # Function to run coulomb.exe - should work on any supported OS
 ######################################################################################################################################################
 def execCoulomb(path_coulomb_exe, pqr):
+    """Summary
+    
+    Parameters
+    ----------
+    path_coulomb_exe : TYPE
+        Description
+    pqr : TYPE
+        Description
+    
+    Returns
+    -------
+    TYPE
+        Description
+    """
     (log, err) = runProcess([path_coulomb_exe, pqr])
     pattern = re.compile(
         '(?<=Total energy =)\s+[+\-]?(?:0|[1-9]\d*)(?:\.\d*)?(?:[eE][+\-]?\d+)?')  # May need to update regex
@@ -1918,6 +2797,20 @@ def execCoulomb(path_coulomb_exe, pqr):
 # Function to run DSSP.exe - should work on any supported OS
 ######################################################################################################################################################
 def execDSSP(pdbfile, dssp):
+    """Summary
+    
+    Parameters
+    ----------
+    pdbfile : TYPE
+        Description
+    dssp : TYPE
+        Description
+    
+    Returns
+    -------
+    TYPE
+        Description
+    """
     (log, err) = runProcess([dssp, pdbfile])
     return log
 
@@ -1925,6 +2818,20 @@ def execDSSP(pdbfile, dssp):
 # Function to plot results of Alascan
 ######################################################################################################################################################
 def plotResults(Alascan, filename=None):
+    """Summary
+    
+    Parameters
+    ----------
+    Alascan : TYPE
+        Description
+    filename : None, optional
+        Description
+    
+    Returns
+    -------
+    TYPE
+        Description
+    """
     plt.style.use('seaborn-talk')
     figure, axarr = plt.subplots(len(Alascan.mutid) - 1, sharey=True)
     dpi_val = 300
@@ -2018,6 +2925,22 @@ def plotResultsPlotly(Alascan, filename=None):
 # Function to plot results of ESD.calc()
 ######################################################################################################################################################
 def plotESD(esd, filename=None, cmap='hot'):
+    """Summary
+    
+    Parameters
+    ----------
+    esd : TYPE
+        Description
+    filename : None, optional
+        Description
+    cmap : str, optional
+        Description
+    
+    Returns
+    -------
+    TYPE
+        Description
+    """
     plt.style.use('seaborn-talk')
     fig, ax = plt.subplots(sharey=True)
     heatmap = ax.pcolor(esd.esd, cmap=cmap, vmin=0, vmax=1)
@@ -2036,6 +2959,20 @@ def plotESD(esd, filename=None, cmap='hot'):
 # Function to plot ESD dendrogram
 ######################################################################################################################################################
 def plotDend(esd, filename=None):
+    """Summary
+    
+    Parameters
+    ----------
+    esd : TYPE
+        Description
+    filename : None, optional
+        Description
+    
+    Returns
+    -------
+    TYPE
+        Description
+    """
     plt.style.use('seaborn-talk')
     fig, ax = plt.subplots(sharey=True)
     Z = cluster.linkage(esd.esd, 'ward')
@@ -2055,6 +2992,22 @@ def plotDend(esd, filename=None):
         fig.savefig(filename)
 
 def plotESDPlotly(esd, filename=None, cmap='YIGnBu'):
+    """Summary
+    
+    Parameters
+    ----------
+    esd : TYPE
+        Description
+    filename : None, optional
+        Description
+    cmap : str, optional
+        Description
+    
+    Returns
+    -------
+    TYPE
+        Description
+    """
     figure = FF.create_dendrogram(esd.esd, orientation='bottom', labels=esd.ids)
     for i in range(len(figure['data'])):
         figure['data'][i]['yaxis'] = 'y2'
@@ -2141,6 +3094,20 @@ def plotESDPlotly(esd, filename=None, cmap='YIGnBu'):
 # Function to calculate RSA for PDB
 ######################################################################################################################################################
 def calcRSA(pdbfile, dssp):
+    """Summary
+    
+    Parameters
+    ----------
+    pdbfile : TYPE
+        Description
+    dssp : TYPE
+        Description
+    
+    Returns
+    -------
+    TYPE
+        Description
+    """
     # SA from: C. Chotia, The Nature of the Accessible and Buried Surfaces in Proteins, J. Mol. Biol., 105(1975)1-14.
     SA_dict = {'C': 135, 'D': 150, 'S': 115, 'Q': 180, 'K': 200,
                'I': 175, 'P': 145, 'T': 140, 'F': 210, 'N': 160,
