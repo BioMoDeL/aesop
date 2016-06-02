@@ -10,7 +10,11 @@ Authors: Reed Harrison, Rohith Mohan, and Dimitrios Morikis
 - **Examples**
 	- All materials for example cases are provided in the tests folder
 - **Documentation**
-	- HTML documentation provided within the docs folder 
+	- HTML documentation provided within the docs folder
+- **Dependencies**
+	- APBS and PDB2PQR
+	- Required Python libraries: numpy, scipy, prody, matplotlib, modeller, griddataformats
+	- Optional Python libraries: multiprocessing
 
 ## Methods
 - **Alascan**
@@ -34,3 +38,7 @@ Authors: Reed Harrison, Rohith Mohan, and Dimitrios Morikis
  	- Show heatmap summary of results from methods exploring electrostatic similarity (ElecSimilarity)
 - aesop.plotDend
  	- Show dendrogram summary of results from methods exploring electrostatic similarity (ElecSimilarity)
+
+## Notes
+- We recommend using Anaconda to aid in installation of Python scientific libraries
+- Depending on your platform, ProDy may need to be installed with an executable
