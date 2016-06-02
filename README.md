@@ -36,7 +36,7 @@ Authors: Reed Harrison, Rohith Mohan, and Dimitrios Morikis
 	- Show bargraph summary of results from computational mutagenesis methods (Alascan, DirectedMutagenesis)
 - aesop.plotESD()
  	- Show heatmap summary of results from methods exploring electrostatic similarity (ElecSimilarity)
-- aesop.plotDend
+- aesop.plotDend()
  	- Show dendrogram summary of results from methods exploring electrostatic similarity (ElecSimilarity)
 
 ## Notes
