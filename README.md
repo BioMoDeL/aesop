@@ -12,17 +12,17 @@ Authors: Reed Harrison, Rohith Mohan, and Dimitrios Morikis
 	- HTML documentation provided within the docs folder 
 
 ## Methods
-**Alascan**
+- **Alascan**
 	- Perform a computational alanine scan on a provided protein structure using a side-chain truncation scheme
 	- Association free energies for mutatants (relative to the parent) may be predicted if 2 or more selection strings are provided
 	- Users may restrict mutations to some region of the protein structure
 
-**DirectedMutagenesis**
+- **DirectedMutagenesis**
 	- Perform a directed mutagenesis scan on a provided protein structure using Modeller to swap amino acids
 	- Association free energies for mutatants (relative to the parent) may be predicted if 2 or more selection strings are provided
 	- Mutations must be specified
 
-**ElecSimilarity**
+- **ElecSimilarity**
 	- Compare electrostatic potential vector fields between multiple protein structures
 	- If structures are very dissimilar, the user should superpose coordinates for each protein structure according to their desired method
 
