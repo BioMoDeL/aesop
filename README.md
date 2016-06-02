@@ -1,5 +1,5 @@
 # aesop-python
-AESOP: Analysis of Electrostatic Structures of Proteins
+**AESOP**: Analysis of Electrostatic Structures of Proteins
 
 Authors: Reed Harrison, Rohith Mohan, and Dimitrios Morikis
 
