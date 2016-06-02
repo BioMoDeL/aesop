@@ -26,6 +26,33 @@ import itertools as it
 # from plotly.offline import download_plotlyjs, init_notebook_mode, iplot
 # from plotly.tools import FigureFactory as FF
 
+# Print Licencse on startup
+print("""
+AESOP: Analysis of Electrostatic Structure of Proteins
+
+Reed E. S. Harrison, Rohith R. Mohan, Dimitios Morikis
+University of California, Riverside; Department of Bioengineering
+
+Correspondence should be directed to Prof. Dimitrios Morikis at dmorikis@ucr.edu  
+
+Copyright (C) 2016  Reed E. S. Harrison, Rohith R. Mohan, Dimitios Morikis
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+""")
+    
+
+
 ######################################################################################################################################################
 # Container for performing an Alanine Scan with AESOP
 #   pdb     -   PDB file for performing Alascan. Must contain all chain selections with standard aminoacid nomenclature
@@ -906,14 +933,14 @@ class Alascan:
         mutids = self.getMutids()
         energies = None
         if len(selstr) > 1:
-        	energies = self.ddGa_rel()
-    	elif len(selstr) == 1:
-    		energies = self.dGsolv_rel()
-		lines = ['%s, %f' % (lbl, val) for lbl, val in zip(mutids, energies)]
-    	if filename is None:
-			print lines
-		if filename is not None:
-			np.savetxt(filename, lines, fmt='%s')
+            energies = self.ddGa_rel()
+        elif len(selstr) == 1:
+            energies = self.dGsolv_rel()
+        lines = ['%s, %f' % (lbl, val) for lbl, val in zip(mutids, energies)]
+        if filename is None:
+            print(lines)
+        if filename is not None:
+            np.savetxt(filename, lines, fmt='%s')
 
 ######################################################################################################################################################
 # Container for performing an Directed Mutagenesis Scan with AESOP
@@ -2975,9 +3002,9 @@ def plotScan(Alascan, filename=None):
     dpi_val = 300
     if len(Alascan.mutid) > 2:
         for i in xrange(1, len(Alascan.mutid)):
-            axarr[i - 1].set_title(np.unique(np.array([w.split('_') for w in Alascan.mutid[i]])[:, 0])[0] + ' ddGbind relative to WT')
+            axarr[i - 1].set_title(np.unique(np.array([w.split('_') for w in Alascan.mutid[i]])[:, 0])[0] + ' ddGa relative to WT')
             axarr[i - 1].set_ylabel('kJ/mol')
-            axarr[i - 1].set_xticks(np.arange(len(Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, i]])))
+            axarr[i - 1].set_xticks(np.arange(len(Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]])))
             if 100 < len(Alascan.mutid[i]) <= 150:
                 axarr[i - 1].set_xticklabels(np.array([w.split('_') for w in Alascan.mutid[i]])[:, 1], rotation='vertical', ha='left', size=6)
             elif len(Alascan.mutid[i]) > 150:
@@ -2985,8 +3012,8 @@ def plotScan(Alascan, filename=None):
                 dpi_val = 600
             else:
                 axarr[i - 1].set_xticklabels(np.array([w.split('_') for w in Alascan.mutid[i]])[:, 1], rotation='vertical', ha='left')
-            axarr[i - 1].bar(np.arange(len(Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, i]]))[Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, i]] > 0],Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, i]][Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, i]] > 0], color='red')
-            axarr[i - 1].bar(np.arange(len(Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, i]]))[Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, i]] < 0],Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, i]][Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, i]] < 0], color='blue')
+            axarr[i - 1].bar(np.arange(len(Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]]))[Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]] > 0],Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]][Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]] > 0], color='red')
+            axarr[i - 1].bar(np.arange(len(Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]]))[Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]] < 0],Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]][Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]] < 0], color='blue')
             axarr[i - 1].xaxis.set_ticks_position('bottom')
             axarr[i - 1].yaxis.set_ticks_position('left')
     elif len(Alascan.mutid) == 2:
@@ -3027,13 +3054,13 @@ def plotScan_interactive(Alascan, filename=None):
     """
     subplot_titles = []
     for i in xrange(1,len(Alascan.mutid)):
-         subplot_titles.append(np.unique(np.array([w.split('_') for w in Alascan.mutid[i]])[:,0])[0]+' ddGbind relative to WT')
+         subplot_titles.append(np.unique(np.array([w.split('_') for w in Alascan.mutid[i]])[:,0])[0]+' ddGa relative to WT')
     fig = tools.make_subplots(rows=len(Alascan.mutid) - 1, cols=1, vertical_spacing=.5, subplot_titles=subplot_titles)
     for i in xrange(1,len(Alascan.mutid)):
-        pos_y = np.zeros(len(Alascan.ddGbind_rel()[Alascan.mask_by_sel[:,i]]))
-        pos_y[Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, i]] > 0] = Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, i]][Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, i]] > 0]
-        neg_y = np.zeros(len(Alascan.ddGbind_rel()[Alascan.mask_by_sel[:,i]]))
-        neg_y[Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, i]] < 0] = Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, i]][Alascan.ddGbind_rel()[Alascan.mask_by_sel[:, i]] < 0]
+        pos_y = np.zeros(len(Alascan.ddGa_rel()[Alascan.mask_by_sel[:,i]]))
+        pos_y[Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]] > 0] = Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]][Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]] > 0]
+        neg_y = np.zeros(len(Alascan.ddGa_rel()[Alascan.mask_by_sel[:,i]]))
+        neg_y[Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]] < 0] = Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]][Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]] < 0]
         pos_trace= go.Bar(
             x=np.array([w.split('_') for w in Alascan.mutid[i]])[:,1],
             y=pos_y,
@@ -3104,8 +3131,8 @@ def plotDend(esd, filename=None):
     
     Parameters
     ----------
-    esd : ndarray
-        ESD matrix from ElecSimilarity class (ElecSimilarity.esd).
+    esd : ElecSimilarity class
+        ElecSimilarity class containing final esd matrix.
     filename : str, optional
         If the resulting plot should be written to disk, specify a filename. Otherwise, the image will only be saved.
     
@@ -3138,8 +3165,8 @@ def plotESD_interactive(esd, filename=None, cmap='YIGnBu'):
     
     Parameters
     ----------
-    esd : ndarray
-        ESD matrix from ElecSimilarity class (ElecSimilarity.esd).
+    esd : ElecSimilarity class
+        ElecSimilarity class containing final esd matrix.
     filename : str, optional
         If the resulting plot should be written to disk, specify a filename. Otherwise, the image will only be saved.
     cmap : str, optional
