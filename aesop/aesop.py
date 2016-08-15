@@ -1,10 +1,3 @@
-"""Summary
-
-Attributes
-----------
-AA_dict : dict
-    Variable used to convert between 1 letter and 3 letter amino acid IDs
-"""
 import os as os
 # import sys as sys
 import subprocess as sp
@@ -13,7 +6,7 @@ import timeit as ti
 import re as re
 import numpy as np
 import prody as pd
-import scipy.spatial as spatial
+# import scipy.spatial as spatial
 # import scipy.interpolate as interp
 import scipy.cluster.hierarchy as cluster
 import matplotlib.pyplot as plt
@@ -30,12 +23,12 @@ import itertools as it
 print("""
 AESOP: Analysis of Electrostatic Structure of Proteins
 
-Reed E. S. Harrison, Rohith R. Mohan, Dimitios Morikis
+Reed E. S. Harrison, Rohith R. Mohan, Dimitrios Morikis
 University of California, Riverside; Department of Bioengineering
 
 Correspondence should be directed to Prof. Dimitrios Morikis at dmorikis@ucr.edu  
 
-Copyright (C) 2016  Reed E. S. Harrison, Rohith R. Mohan, Dimitios Morikis
+Copyright (C) 2016  Reed E. S. Harrison, Rohith R. Mohan, Dimitrios Morikis
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -148,7 +141,7 @@ class Alascan:
         Description
     """
 
-    def __init__(self, pdb, pdb2pqr_exe, apbs_exe, coulomb_exe=None, selstr=['protein'], jobname=None, region=None,
+    def __init__(self, pdb, pdb2pqr_exe='pdb2pqr', apbs_exe='apbs', coulomb_exe='coulomb', selstr=['protein'], jobname=None, region=None,
                  grid=1, ion=0.150, pdie=20.0, sdie=78.54, ff='parse', cfac=1.5, dx=False):
         """Summary
         Constructor for the Alascan class.
@@ -1040,7 +1033,7 @@ class DirectedMutagenesis:
         Description
     """
 
-    def __init__(self, pdb, target, mutation, pdb2pqr_exe, apbs_exe, coulomb_exe=None, selstr=['protein'], jobname=None,
+    def __init__(self, pdb, target, mutation, pdb2pqr_exe='pdb2pqr', apbs_exe='apbs', coulomb_exe='coulomb', selstr=['protein'], jobname=None,
                  grid=1, ion=0.150, pdie=20.0, sdie=78.54, ff='parse', cfac=1.5, dx=False):
         """Summary
         
@@ -1780,7 +1773,7 @@ class ElecSimilarity: # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD! Coordi
     sdie : numeric
         Solvent dielectric constant to be used in APBS.
     """
-    def __init__(self, pdbfiles, pdb2pqr_exe, apbs_exe, selstr=None, jobname=None,
+    def __init__(self, pdbfiles, pdb2pqr_exe='pdb2pqr', apbs_exe='apbs', selstr=None, jobname=None,
                  grid=1, ion=0.150, pdie=20.0, sdie=78.54, ff='parse', cfac=1.5):
         """Summary
         Constructor for ElecSimilarity class. Responsible for preliminary parameterization.
@@ -2097,6 +2090,30 @@ class ElecSimilarity: # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD! Coordi
                 print esd[i,j]
         esd = symmetrize(esd)
         self.esd = esd
+
+	def run(self, center=False, superpose=False):
+		if center:
+			self.centerPDB()
+		if superpose:
+			self.superposePDB()
+		self.initializeGrid()
+		self.genPQR()
+		self.genDX()
+		self.calcESD()
+
+    def run_parallel(self, n_workers=None, center=False, superpose=False):
+    	if center:
+			self.centerPDB()
+		if superpose:
+			self.superposePDB()
+		self.initializeGrid()
+		self.genPQR()
+		if n_workers is None:
+			self.genDX_parallel()
+		if n_workers is not None:
+			self.genDX_parallel(n_workers)
+		self.calcESD()
+    	
 
 # ######################################################################################################################################################
 # # Container for performing ESD analysis
@@ -3342,6 +3359,13 @@ def plotESD_interactive(esd, filename=None, cmap='YIGnBu'):
 ######################################################################################################################################################
 # Dictionary to convert between 3 letter and 1 letter amino acid codes
 ######################################################################################################################################################
+"""Summary
+
+Attributes
+----------
+AA_dict : dict
+    Variable used to convert between 1 letter and 3 letter amino acid IDs
+"""
 AA_dict = {'CYS': 'C', 'ASP': 'D', 'SER': 'S', 'GLN': 'Q', 'LYS': 'K',
            'ILE': 'I', 'PRO': 'P', 'THR': 'T', 'PHE': 'F', 'ASN': 'N',
            'GLY': 'G', 'HIS': 'H', 'LEU': 'L', 'ARG': 'R', 'TRP': 'W',
