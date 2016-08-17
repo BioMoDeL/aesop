@@ -2101,8 +2101,8 @@ class ElecSimilarity: # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD! Coordi
 		self.genDX()
 		self.calcESD()
 
-    def run_parallel(self, n_workers=None, center=False, superpose=False):
-    	if center:
+	def run_parallel(self, n_workers=None, center=False, superpose=False):
+		if center:
 			self.centerPDB()
 		if superpose:
 			self.superposePDB()
