@@ -1,1 +1,6 @@
-mock
+prody
+modeller
+scipy
+numpy
+multiprocessing
+gridDataFormats
