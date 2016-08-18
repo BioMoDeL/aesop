@@ -1,6 +1,1 @@
-prody
-modeller
-scipy
-numpy
-multiprocessing
-gridDataFormats
+mock
