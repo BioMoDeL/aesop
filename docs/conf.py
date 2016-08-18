@@ -1,3 +1,14 @@
+import sys
+from unittest.mock import MagicMock
+
+class Mock(MagicMock):
+    @classmethod
+    def __getattr__(cls, name):
+            return Mock()
+
+MOCK_MODULES = ['prody', 'gridData', 'scipy', 'numpy', 'modeller', 'multiprocessing']
+sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
+
 # -*- coding: utf-8 -*-
 #
 # AESOP documentation build configuration file, created by
