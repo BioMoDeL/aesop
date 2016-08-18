@@ -3,11 +3,14 @@
 =========
 
 (A)nalysis of (E)lectrostatic (S)tructures (o)f (P)roteins
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-**Authors**: Reed Harrison, Rohith Mohan, and Dimitrios Morikis
 
+**Authors**: Reed Harrison, Rohith Mohan, and Dimitrios Morikis
+   
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
+
+   Index <self>
+   Documentation <aesop>
 
 Indices and tables
 ==================
@@ -27,7 +30,7 @@ Framework
 - **Examples**
 	- All materials for example cases are provided in the tests folder
 - **Documentation**
-	- HTML documentation provided within the docs folder
+	- HTML documentation provided within the docs folder and online (http://aesop-python.readthedocs.io/en/latest/)
 - **Dependencies**
 	- APBS and PDB2PQR
 	- Required Python libraries: numpy, scipy, prody, matplotlib, modeller, griddataformats
