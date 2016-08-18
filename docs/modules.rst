@@ -2,7 +2,7 @@ aesop-python
 ============
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 4
 
-   Index <index>
-   API <aesop>
+   aesop
+   setup
