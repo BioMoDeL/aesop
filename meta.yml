@@ -1,0 +1,37 @@
+package:
+	name: AESOP
+	version: 0.0.2
+
+source:
+	git_rev: latest
+	git_url: https://github.com/rohithmohan/aesop-python.git
+
+requirements:
+	build:
+		- python
+		- prody
+		- multiprocessing
+		- scipy
+		- numpy
+		- gridDataFormats
+
+	run:
+		- python
+		- prody
+		- multiprocessing
+		- scipy
+		- numpy
+		- gridDataFormats
+
+test:
+	imports:
+		- prody
+		- gridDataFormats
+		- multiprocessing
+		- scipy
+		- numpy
+
+about:
+	home: https://github.com/rohithmohan/aesop-python
+	license: MIT
+	license_file: LICENSE
