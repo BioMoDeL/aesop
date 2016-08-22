@@ -1,9 +1,18 @@
-# aesop-python
-**AESOP**: Analysis of Electrostatic Structures of Proteins
+
+
+AESOP
+=====
+
+
+(A)nalysis of (E)lectrostatic (S)tructures (o)f (P)roteins
 
 Authors: Reed Harrison, Rohith Mohan, and Dimitrios Morikis
 
-## Framework
+
+Framework
+=========
+
+
 - AESOP is a computational framework to explore electrostatic structures within proteins. The library depends on external tools including: APBS, PDB2PQR, Modeller, and ProDy
 - **Atomic Selections**
 	- All selection strings must be made according to the style of ProDy (http://prody.csb.pitt.edu/manual/reference/atomic/select.html)
@@ -16,7 +25,11 @@ Authors: Reed Harrison, Rohith Mohan, and Dimitrios Morikis
 	- Required Python libraries: numpy, scipy, prody, matplotlib, modeller, griddataformats
 	- Optional Python libraries: multiprocessing
 
-## Methods
+
+Methods
+=======
+
+
 - **Alascan**
 	- Perform a computational alanine scan on a provided protein structure using a side-chain truncation scheme
 	- Association free energies for mutatants (relative to the parent) may be predicted if 2 or more selection strings are provided
@@ -31,7 +44,11 @@ Authors: Reed Harrison, Rohith Mohan, and Dimitrios Morikis
 	- Compare electrostatic potential vector fields between multiple protein structures
 	- If structures are very dissimilar, the user should superpose coordinates for each protein structure according to their desired method
 
-## General Utilities
+
+General Utilities
+=================
+
+
 - aesop.plotScan()
 	- Show bargraph summary of results from computational mutagenesis methods (Alascan, DirectedMutagenesis)
 - aesop.plotESD()
@@ -39,6 +56,10 @@ Authors: Reed Harrison, Rohith Mohan, and Dimitrios Morikis
 - aesop.plotDend()
  	- Show dendrogram summary of results from methods exploring electrostatic similarity (ElecSimilarity)
 
-## Notes
+
+Notes
+=====
+
+
 - We recommend using Anaconda to aid in installation of Python scientific libraries
 - Depending on your platform, ProDy may need to be installed with an executable

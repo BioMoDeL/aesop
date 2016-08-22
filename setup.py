@@ -11,7 +11,7 @@ with open('LICENSE') as f:
 
 setup(
     name='aesop',
-    version='0.0.3',
+    version='0.0.10',
     description='Module for analyzing electrostatics with protein structures',
     long_description=readme,
     author='Reed Harrison, Rohith Mohan',
@@ -21,12 +21,12 @@ setup(
     packages=find_packages(exclude=('tests', 'docs')),
     install_requires=['prody', 'gridDataFormats', 'scipy', 'numpy', 'python-dateutil'],
     include_package_data=True,
-    package_data={
-        'aesop-python':
-            ['README.rst',
-            'LICENSE',
-            ],
-    },
+#    package_data={
+#        'aesop-python':
+#            ['README.rst',
+#            'LICENSE',
+#            ],
+#    },
     zip_safe=False	
 )
 
