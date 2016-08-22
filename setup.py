@@ -13,7 +13,6 @@ setup(
     name='aesop',
     version='0.0.2',
     description='Module for analyzing electrostatics with protein structures',
-    description-file = README.md,
     long_description=readme,
     author='Reed Harrison, Rohith Mohan',
     author_email='reed.harrison@email.ucr.edu, rohith.mohan@email.ucr.edu',
