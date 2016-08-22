@@ -19,7 +19,7 @@ setup(
     url='https://github.com/rohithmohan/aesop-python',
     license=license,
     packages=find_packages(exclude=('tests', 'docs', 'old')),
-    install_requires=['prody', 'gridDataFormats'],
+    install_requires=['prody', 'griddataformats'],
 #    zip_safe=False	
 )
 
