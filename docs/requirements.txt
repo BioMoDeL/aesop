@@ -1,7 +1,7 @@
 #prody
 #modeller
-scipy
-numpy
+#scipy
+#numpy
 #multiprocessing
 #gridDataFormats
 #os

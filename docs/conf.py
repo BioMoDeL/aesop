@@ -16,7 +16,7 @@ import sys
 import os
 import mock
  
-MOCK_MODULES = ['matplotlib', 'modeller', 'prody', 'gridData', 'datetime', 'subprocess', 'multiprocessing', 're', 'itertools', 'timeit']#, 'numpy', 'scipy']
+MOCK_MODULES = ['matplotlib.pyplot', 'modeller', 'prody', 'gridData', 'datetime', 'subprocess', 'multiprocessing', 're', 'itertools', 'timeit', 'numpy', 'scipy.cluster.hierarchy', 'plotly.plotly', 'plotly.graph_objs', 'plotly.offline', 'plotly.tools']
 for mod_name in MOCK_MODULES:
     sys.modules[mod_name] = mock.Mock()
 
