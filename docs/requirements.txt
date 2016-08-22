@@ -1,6 +1,6 @@
-prody
-modeller
-scipy
-numpy
-multiprocessing
-gridDataFormats
+#prody
+#modeller
+#scipy
+#numpy
+#multiprocessing
+#gridDataFormats
