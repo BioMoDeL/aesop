@@ -19,7 +19,7 @@ setup(
     url='https://github.com/rohithmohan/aesop-python',
     license=license,
     packages=find_packages(exclude=('tests', 'docs')),
-    install_requires=['prody', 'gridDataFormats', 'scipy', 'numpy', 'python-dateutil'],
+#    install_requires=['prody', 'gridDataFormats', 'scipy', 'numpy', 'python-dateutil'], # Commented out for ReadTheDocs
     include_package_data=True,
 #    package_data={
 #        'aesop-python':
