@@ -5,12 +5,13 @@
 (A)nalysis of (E)lectrostatic (S)tructures (o)f (P)roteins
 
 **Authors**: Reed Harrison, Rohith Mohan, and Dimitrios Morikis
-   
+
+Contents:
+
 .. toctree::
    :maxdepth: 1
 
-   Index <self>
-   Documentation <aesop>
+   API <api>
 
 Indices and tables
 ==================
