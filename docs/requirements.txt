@@ -1,9 +1,9 @@
-prody
-modeller
-scipy
-numpy
+#prody
+#modeller
+#scipy
+#numpy
 multiprocessing
-gridDataFormats
+#gridDataFormats
 subprocess
 datetime
 timeit
