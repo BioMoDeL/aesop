@@ -10,7 +10,7 @@ import prody as pd
 # import scipy.interpolate as interp
 import scipy.cluster.hierarchy as cluster
 import matplotlib.pyplot as plt
-from modeller import environ, model, alignment, selection
+# from modeller import environ, model, alignment, selection
 from multiprocessing import Pool, cpu_count #, freeze_support
 import gridData as gd
 import itertools as it
@@ -2509,6 +2509,8 @@ def mutatePDB(pdb, mutid, resnum, chain=None, resid='ALA'):
     # chain (optional) can specify what chain the residue to be mutated is located on
     # mutid is the prefix for the written mutated structure to be written
     # resid is the residue to mutate to
+
+    from modeller import environ, model, alignment, selection
 
     env = environ()
     env.libs.topology.read(file='$(LIB)/top_heav.lib')
