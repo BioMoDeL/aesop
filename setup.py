@@ -3,11 +3,11 @@
 from setuptools import setup, find_packages
 
 
-#with open('README.md') as f:
-#    readme = f.read()
+with open('README.md') as f:
+    readme = f.read()
 
-#with open('LICENSE') as f:
-#    license = f.read()
+with open('LICENSE') as f:
+    license = f.read()
 
 setup(
     name='aesop',
@@ -18,8 +18,8 @@ setup(
     author_email='reed.harrison@email.ucr.edu, rohith.mohan@email.ucr.edu',
     url='https://github.com/rohithmohan/aesop-python',
     license=license,
-    packages=find_packages(exclude=('tests', 'docs', 'old'))#,
-#    install_requires=['prody', 'griddataformats'],
+    packages=find_packages(exclude=('tests', 'docs')),
+    install_requires=['prody', 'gridDataFormats', 'scipy', 'numpy', 'python-dateutil']#,
 #    zip_safe=False	
 )
 
