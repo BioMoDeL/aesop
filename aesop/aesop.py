@@ -2510,7 +2510,10 @@ def mutatePDB(pdb, mutid, resnum, chain=None, resid='ALA'):
     # mutid is the prefix for the written mutated structure to be written
     # resid is the residue to mutate to
 
-    from modeller import environ, model, alignment, selection
+    try:
+        from modeller import environ, model, alignment, selection
+    except:
+        print('Failed to load modeller: please ensure module is installed and license key set')
 
     env = environ()
     env.libs.topology.read(file='$(LIB)/top_heav.lib')
