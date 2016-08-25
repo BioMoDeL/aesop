@@ -18,6 +18,7 @@ from mock import Mock as MagicMock
 # from mock import Mock
 
 class Mock(MagicMock):
+	__all__ = []
     @classmethod
     def __getattr__(cls, name):
             return Mock()
