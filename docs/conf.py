@@ -29,12 +29,12 @@ class Mock(object):
     return Mock()
 
 
-# MOCK_MODULES = ['matplotlib.pyplot', 'modeller', 'prody',
-#                 'gridData', 'datetime', 'subprocess', 'multiprocessing',
-#                 're', 'itertools', 'timeit', 'numpy',
-#                 'scipy.cluster.hierarchy', 'plotly.plotly',
-#                 'plotly.graph_objs', 'plotly.offline', 'plotly.tools']
-MOCK_MODULES = ['prody', 'scipy.cluster.hierarchy', 'numpy', 'plotly.plotly', 'plotly.graph_objs', 'plotly.offline', 'plotly.tools']
+MOCK_MODULES = ['matplotlib.pyplot', 'modeller', 'prody',
+                'gridData', 'datetime', 'subprocess', 'multiprocessing',
+                're', 'itertools', 'timeit', 'numpy',
+                'scipy.cluster.hierarchy', 'plotly.plotly',
+                'plotly.graph_objs', 'plotly.offline', 'plotly.tools']
+# MOCK_MODULES = ['prody', 'scipy.cluster.hierarchy', 'numpy', 'plotly.plotly', 'plotly.graph_objs', 'plotly.offline', 'plotly.tools']
 
 # sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 for mod_name in MOCK_MODULES:
