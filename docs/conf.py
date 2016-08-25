@@ -16,13 +16,20 @@ import sys
 import os
 from mock import Mock as MagicMock
 
+
 class Mock(MagicMock):
     @classmethod
     def __getattr__(cls, name):
-            return Mock()
- 
-MOCK_MODULES = ['matplotlib.pyplot', 'modeller', 'prody', 'gridData', 'datetime', 'subprocess', 'multiprocessing', 're', 'itertools', 'timeit', 'numpy', 'scipy.cluster.hierarchy', 'plotly.plotly', 'plotly.graph_objs', 'plotly.offline', 'plotly.tools']
+        return Mock()
+
+MOCK_MODULES = ['matplotlib.pyplot', 'modeller', 'prody',
+                'gridData', 'datetime', 'subprocess', 'multiprocessing',
+                're', 'itertools', 'timeit', 'numpy',
+                'scipy.cluster.hierarchy', 'plotly.plotly',
+                'plotly.graph_objs', 'plotly.offline', 'plotly.tools']
+
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
+
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -218,17 +225,17 @@ htmlhelp_basename = 'AESOPdoc'
 # -- Options for LaTeX output ---------------------------------------------
 
 latex_elements = {
-# The paper size ('letterpaper' or 'a4paper').
-#'papersize': 'letterpaper',
+    # The paper size ('letterpaper' or 'a4paper').
+    #'papersize': 'letterpaper',
 
-# The font size ('10pt', '11pt' or '12pt').
-#'pointsize': '10pt',
+    # The font size ('10pt', '11pt' or '12pt').
+    #'pointsize': '10pt',
 
-# Additional stuff for the LaTeX preamble.
-#'preamble': '',
+    # Additional stuff for the LaTeX preamble.
+    #'preamble': '',
 
-# Latex figure (float) alignment
-#'figure_align': 'htbp',
+    # Latex figure (float) alignment
+    #'figure_align': 'htbp',
 }
 
 # Grouping the document tree into LaTeX files. List of tuples
