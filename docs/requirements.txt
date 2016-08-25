@@ -2,7 +2,7 @@ numpy
 scipy
 #prody
 gridDataFormats
-modeller
+#modeller
 plotly
 matplotlib
 numpydoc
