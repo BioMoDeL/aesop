@@ -16,11 +16,6 @@ import sys
 import os
 from mock import Mock as MagicMock
 # from mock import Mock
-import sphinx_rtd_theme
-
-html_theme = "sphinx_rtd_theme"
-
-html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
 class Mock(MagicMock):
     __all__ = []
@@ -321,3 +316,11 @@ texinfo_documents = [
 
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #texinfo_no_detailmenu = False
+
+
+# USE RTD THEME
+import sphinx_rtd_theme
+
+html_theme = "sphinx_rtd_theme"
+
+html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
