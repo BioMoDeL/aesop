@@ -24,7 +24,7 @@ class Mock(MagicMock):
 
 MOCK_MODULES = ['matplotlib.pyplot', 'modeller', 'prody',
                 'gridData', 'datetime', 'subprocess', 'multiprocessing',
-                're', 'itertools', 'timeit', 'numpy',
+                're', 'timeit', 'numpy',
                 'scipy.cluster.hierarchy', 'plotly.plotly',
                 'plotly.graph_objs', 'plotly.offline', 'plotly.tools']
 
