@@ -15,7 +15,7 @@
 import sys
 import os
 
-# Use a mock module for ProDy to facilitate generation of documentation
+# Use a mock module for ProDy and Modeller to facilitate generation of documentation
 from mock import Mock as MagicMock
 
 class Mock(MagicMock):
