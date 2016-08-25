@@ -1,8 +1,9 @@
 numpy
 scipy
-prody
+#prody
 gridDataFormats
 modeller
 plotly
 matplotlib
+numpydoc
 sphinx_rtd_theme
