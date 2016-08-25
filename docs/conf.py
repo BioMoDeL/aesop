@@ -37,7 +37,7 @@ class Mock(MagicMock):
 #                 'plotly.graph_objs', 'plotly.offline', 'plotly.tools']
 # MOCK_MODULES = ['prody', 'scipy.cluster.hierarchy', 'numpy', 'plotly.plotly', 'plotly.graph_objs', 'plotly.offline', 'plotly.tools',
 # 				'matplotlib.pyplot', 'modeller', 'gridData']
-MOCK_MODULES = ['scipy.cluster.vq', 'scipy.cluster.hierarchy', 'prody', 'gridData', 'modeller', 'matplotlib.pyplot', 'plotly.plotly', 'plotly.tools',
+MOCK_MODULES = ['prody', 'gridData', 'modeller', 'matplotlib.pyplot', 'plotly.plotly', 'plotly.tools',
 				'plotly.graph_objs', 'plotly.offline']
 
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
