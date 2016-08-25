@@ -14,19 +14,19 @@
 
 import sys
 import os
-# from mock import Mock as MagicMock
-from mock import Mock
+from mock import Mock as MagicMock
+# from mock import Mock
 
-# class Mock(MagicMock):
-#     @classmethod
-#     def __getattr__(cls, name):
-#             return Mock()
-class Mock(object):
-  def __init__(self, *args, **kwargs):
-    pass
+class Mock(MagicMock):
+    @classmethod
+    def __getattr__(cls, name):
+            return Mock()
+# class Mock(object):
+#   def __init__(self, *args, **kwargs):
+#     pass
 
-  def __getattr__(self, name):
-    return Mock()
+#   def __getattr__(self, name):
+#     return Mock()
 
 
 # MOCK_MODULES = ['matplotlib.pyplot', 'modeller', 'prody',
