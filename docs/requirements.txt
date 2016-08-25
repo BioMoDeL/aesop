@@ -1,6 +1,2 @@
-prody
-modeller
-scipy
 numpy
-multiprocessing
-gridDataFormats
+sphinx_rtd_theme
