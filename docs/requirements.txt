@@ -1,3 +1,8 @@
 numpy
-sphinx_rtd_theme
 scipy
+prody
+gridDataFormats
+modeller
+plotly
+matplotlib
+sphinx_rtd_theme

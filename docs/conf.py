@@ -14,22 +14,24 @@
 
 import sys
 import os
+
+# Use a mock module for ProDy to facilitate generation of documentation
 from mock import Mock as MagicMock
-# from mock import Mock
 
 class Mock(MagicMock):
     __all__ = []
     @classmethod
     def __getattr__(cls, name):
-            return Mock()
+        return Mock()
+MOCK_MODULES = ['prody']
+sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
+            
 # class Mock(object):
 #   def __init__(self, *args, **kwargs):
 #     pass
 
 #   def __getattr__(self, name):
 #     return Mock()
-
-
 # MOCK_MODULES = ['matplotlib.pyplot', 'modeller', 'prody',
 #                 'gridData', 'datetime', 'subprocess', 'multiprocessing',
 #                 're', 'itertools', 'timeit', 'numpy',
@@ -37,10 +39,8 @@ class Mock(MagicMock):
 #                 'plotly.graph_objs', 'plotly.offline', 'plotly.tools']
 # MOCK_MODULES = ['prody', 'scipy.cluster.hierarchy', 'numpy', 'plotly.plotly', 'plotly.graph_objs', 'plotly.offline', 'plotly.tools',
 # 				'matplotlib.pyplot', 'modeller', 'gridData']
-MOCK_MODULES = ['prody', 'gridData', 'modeller', 'matplotlib.pyplot', 'plotly.plotly', 'plotly.tools',
-				'plotly.graph_objs', 'plotly.offline']
-
-sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
+# MOCK_MODULES = ['prody', 'gridData', 'modeller', 'matplotlib.pyplot', 'plotly.plotly', 'plotly.tools',
+# 				'plotly.graph_objs', 'plotly.offline']
 # for mod_name in MOCK_MODULES:
 #   sys.modules[mod_name] = Mock()
 
@@ -60,6 +60,9 @@ sys.path.insert(0, os.path.abspath('../'))
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
+	'sphinx.ext.autosummary',
+	'sphinx.ext.mathjax',
+	'numpydoc',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -140,7 +143,9 @@ todo_include_todos = False
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = 'alabaster'
+import sphinx_rtd_theme
+html_theme = "sphinx_rtd_theme"
+html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -316,11 +321,3 @@ texinfo_documents = [
 
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #texinfo_no_detailmenu = False
-
-
-# USE RTD THEME
-import sphinx_rtd_theme
-
-html_theme = "sphinx_rtd_theme"
-
-html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]

@@ -1,12 +1,14 @@
-AESOP package
-=============
+.. _aesop::
+
+API
+===
 
 Submodules
 ----------
 
 The aesop submodule contains all relevant classes and functions for now. Organization may be revised at a later date.
 
-aesop.aesop module
+AESOP modules
 ------------------
 
 .. automodule:: aesop.aesop
