@@ -40,9 +40,9 @@ class Mock(MagicMock):
 MOCK_MODULES = ['numpy', 'scipy.cluster.hierarchy', 'prody', 'gridData', 'modeller', 'matplotlib.pyplot', 'plotly.plotly', 'plotly.tools',
 				'plotly.graph_objs', 'plotly.offline']
 
-# sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
-for mod_name in MOCK_MODULES:
-  sys.modules[mod_name] = Mock()
+sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
+# for mod_name in MOCK_MODULES:
+#   sys.modules[mod_name] = Mock()
 
 
 # If extensions (or modules to document with autodoc) are in another directory,
