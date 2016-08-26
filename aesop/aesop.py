@@ -1715,6 +1715,33 @@ class DirectedMutagenesis:
         stop = ti.default_timer()
         print '%s:\tAESOP directed mutagenesis scan completed in %.2f seconds' % (self.jobname, stop - start)
 
+    def summary(self, filename=None):
+        """Summary
+        Summarize results from the computational alanine scan once complete.
+
+        Parameters
+        ----------
+        filename : str, optional
+            In order to write summary to a text file, supply the filename (full path).
+        
+        Returns
+        -------
+        None
+            Prints summary of residues and energies relative to the parent structure if no filename is provided. Otherwise, writes to text file.
+        """
+        selstr = self.selstr
+        mutids = self.getMutids()
+        energies = None
+        if len(selstr) > 1:
+            energies = self.ddGa_rel()
+        elif len(selstr) == 1:
+            energies = self.dGsolv_rel()
+        lines = ['%s, %f' % (lbl, val) for lbl, val in zip(mutids, energies)]
+        if filename is None:
+            print(lines)
+        if filename is not None:
+            np.savetxt(filename, lines, fmt='%s')
+
 ######################################################################################################################################################
 # Container for performing ESD analysis on set of PDB files
 #   alascan     -   Alascan class with certain class functions.
