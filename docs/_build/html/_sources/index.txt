@@ -11,15 +11,12 @@ Contents:
 .. toctree::
    :maxdepth: 1
 
-   Documentation <aesop>
-   Modules <modules>
+   installation
+   elecsimilarity
+   alascan
+   directmutagenesis
+   aesop
 
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
 
 Project summary
 ===============
@@ -67,3 +64,11 @@ Notes
 """""
 - We recommend using Anaconda to aid in installation of Python scientific libraries
 - Depending on your platform, ProDy may need to be installed with an executable
+
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
