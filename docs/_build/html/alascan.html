@@ -30,9 +30,7 @@
   
 
   
-    <link rel="top" title="AESOP 0.0.10 documentation" href="index.html"/>
-        <link rel="next" title="Directed Mutagenesis Scan" href="directmutagenesis.html"/>
-        <link rel="prev" title="Electrostatic Similarity" href="elecsimilarity.html"/> 
+    <link rel="top" title="AESOP 0.0.10 documentation" href="index.html"/> 
 
   
   <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
@@ -66,11 +64,23 @@
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html#anaconda-installation">Anaconda Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="elecsimilarity.html">Electrostatic Similarity</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="">Alanine Scan</a></li>
-<li class="toctree-l1"><a class="reference internal" href="directmutagenesis.html">Directed Mutagenesis Scan</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html#installing-aesop">Installing AESOP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html#install-pdb2pqr-apbs-and-coulomb">Install PDB2PQR, APBS and Coulomb</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html#install-other-dependencies">Install Other Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="elecsimilarity.html">Electrostatic Similarity</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="elecsimilarity.html#example-case-ltp-plant-proteins">Example case: LTP plant proteins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="elecsimilarity.html#references">References</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Alanine Scan</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#example-case-barnase-barstar">Example case: Barnase-Barstar</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="directmutagenesis.html">Directed Mutagenesis Scan</a><ul class="simple">
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="aesop.html">API</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="aesop.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aesop.html#package">Package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="aesop.html#aesop-modules">AESOP modules</a></li>
 <li class="toctree-l2"><a class="reference internal" href="aesop.html#module-contents">Module contents</a></li>
 </ul>
@@ -112,21 +122,49 @@
             
   <div class="section" id="alanine-scan">
 <h1>Alanine Scan<a class="headerlink" href="#alanine-scan" title="Permalink to this headline">¶</a></h1>
-<p>Discuss usage</p>
+<p>Given a PDB structure of atomistic resolution, the alanine scan method iteratively perturbs the native
+structure by mutating single amino acids to alanine one residue at a time. In this manner, the method
+can predict those mutations that are predicted to significantly affect the free energy of association for
+a complex according to the thermodynamic cycle.</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">Alascan</span></code></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<div class="section" id="example-case-barnase-barstar">
+<h2>Example case: Barnase-Barstar<a class="headerlink" href="#example-case-barnase-barstar" title="Permalink to this headline">¶</a></h2>
+<p>Open a new python session, import the Alascan class, and import the plotScan function:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">aesop</span> <span class="kn">import</span> <span class="n">Alascan</span><span class="p">,</span> <span class="n">plotScan</span>
+</pre></div>
+</div>
+<p>Next, you must specify the full paths to your <code class="docutils literal"><span class="pre">apbs</span></code>, <code class="docutils literal"><span class="pre">coulomb</span></code>, and <code class="docutils literal"><span class="pre">pdb2pqr</span></code> executables, if
+the paths for the directories containing the executables have not already been added to the environment.
+Here is an example for a Windows system:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">path_apbs</span>    <span class="o">=</span> <span class="s1">&#39;C:</span><span class="se">\\</span><span class="s1">APBS</span><span class="se">\\</span><span class="s1">apbs.exe&#39;</span>
+<span class="n">path_coulomb</span> <span class="o">=</span> <span class="s1">&#39;C:</span><span class="se">\\</span><span class="s1">APBS</span><span class="se">\\</span><span class="s1">coulomb.exe&#39;</span>
+<span class="n">path_pdb2pqr</span> <span class="o">=</span> <span class="s1">&#39;C:</span><span class="se">\\</span><span class="s1">PDB2PQR</span><span class="se">\\</span><span class="s1">pdb2pqr.exe&#39;</span>
+</pre></div>
+</div>
+<p>Next we will specify the jobname and pdbfile to used in the method. After running the alanine scan, jobname
+will be used to create a folder where files for the method will be generated. You can download the PDB file
+for this example from this link (<a class="reference download internal" href="_downloads/barnase_barstar.pdb"><code class="xref download docutils literal"><span class="pre">download</span></code></a>).
+Make sure you place the PDB in your working directory:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">jobname</span> <span class="o">=</span> <span class="s1">&#39;alascan&#39;</span>
+<span class="n">pdbfile</span> <span class="o">=</span> <span class="s1">&#39;barnase_barstar.pdb&#39;</span>
+</pre></div>
+</div>
+</div>
 </div>
 
 
           </div>
           <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="directmutagenesis.html" class="btn btn-neutral float-right" title="Directed Mutagenesis Scan">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="elecsimilarity.html" class="btn btn-neutral" title="Electrostatic Similarity"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
-    </div>
   
 
   <hr/>

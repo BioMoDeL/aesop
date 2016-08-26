@@ -31,7 +31,6 @@
 
   
     <link rel="top" title="AESOP 0.0.10 documentation" href="index.html"/>
-        <link rel="next" title="Alanine Scan" href="alascan.html"/>
         <link rel="prev" title="Installation" href="installation.html"/> 
 
   
@@ -66,11 +65,23 @@
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html#anaconda-installation">Anaconda Installation</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="">Electrostatic Similarity</a></li>
-<li class="toctree-l1"><a class="reference internal" href="alascan.html">Alanine Scan</a></li>
-<li class="toctree-l1"><a class="reference internal" href="directmutagenesis.html">Directed Mutagenesis Scan</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html#installing-aesop">Installing AESOP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html#install-pdb2pqr-apbs-and-coulomb">Install PDB2PQR, APBS and Coulomb</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html#install-other-dependencies">Install Other Dependencies</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Electrostatic Similarity</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#example-case-ltp-plant-proteins">Example case: LTP plant proteins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#references">References</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="alascan.html">Alanine Scan</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="alascan.html#example-case-barnase-barstar">Example case: Barnase-Barstar</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="directmutagenesis.html">Directed Mutagenesis Scan</a><ul class="simple">
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="aesop.html">API</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="aesop.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aesop.html#package">Package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="aesop.html#aesop-modules">AESOP modules</a></li>
 <li class="toctree-l2"><a class="reference internal" href="aesop.html#module-contents">Module contents</a></li>
 </ul>
@@ -112,7 +123,71 @@
             
   <div class="section" id="electrostatic-similarity">
 <h1>Electrostatic Similarity<a class="headerlink" href="#electrostatic-similarity" title="Permalink to this headline">¶</a></h1>
-<p>Usage</p>
+<p>The electrostatic similarity method generates grid potentials for a list of PDB files and compares
+all potential files in a pairwise manner. Here we will provide a test case that compares several
+members of a family of plant proteins. This example is based on a more comprehensive, published study.</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">ElecSimilarity</span></code></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<div class="section" id="example-case-ltp-plant-proteins">
+<h2>Example case: LTP plant proteins<a class="headerlink" href="#example-case-ltp-plant-proteins" title="Permalink to this headline">¶</a></h2>
+<p>Open a new python session, import the ElecSimilarity class, and import the plotDend and plotESD functions:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">aesop</span> <span class="kn">import</span> <span class="n">ElecSimilarity</span><span class="p">,</span> <span class="n">plotDend</span><span class="p">,</span> <span class="n">plotESD</span>
+</pre></div>
+</div>
+<p>Next, you must specify the full paths to your <code class="docutils literal"><span class="pre">apbs</span></code> and <code class="docutils literal"><span class="pre">pdb2pqr</span></code> executables, if
+the paths for the directories containing the executables have not already been added to the environment.
+Here is an example for a Windows system:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">path_apbs</span>    <span class="o">=</span> <span class="s1">&#39;C:</span><span class="se">\\</span><span class="s1">APBS</span><span class="se">\\</span><span class="s1">apbs.exe&#39;</span>
+<span class="n">path_pdb2pqr</span> <span class="o">=</span> <span class="s1">&#39;C:</span><span class="se">\\</span><span class="s1">PDB2PQR</span><span class="se">\\</span><span class="s1">pdb2pqr.exe&#39;</span>
+</pre></div>
+</div>
+<p>Now we will specify what PDB files the method should compare. Here we will use only 3 PDB files
+(<a class="reference download internal" href="_downloads/LTP_pdb.zip"><code class="xref download docutils literal"><span class="pre">download</span></code></a>). After downloading the PDB files, unzip them and place
+them in the current working directory:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">pdbfiles</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;1MZL.pdb&#39;</span><span class="p">,</span> <span class="s1">&#39;SCA1.pdb&#39;</span><span class="p">,</span> <span class="s1">&#39;SCA3.pdb&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>When the method is run, intermediate files will be generated and stored in a folder of the current
+working directory. The user has the option of naming this folder by specifying a job name:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">jobname</span> <span class="o">=</span> <span class="s1">&#39;LTP_test&#39;</span>
+</pre></div>
+</div>
+<p>Next, the method is initialized by:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">family</span> <span class="o">=</span> <span class="n">ElecSimilarity</span><span class="p">(</span><span class="n">pdbfiles</span><span class="p">,</span> <span class="n">pdb2pqr_exe</span><span class="o">=</span><span class="n">path_pdb2pqr</span><span class="p">,</span> <span class="n">apbs_exe</span><span class="o">=</span><span class="n">path_apbs</span><span class="p">,</span> <span class="n">jobname</span><span class="o">=</span><span class="n">jobname</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Finally, we are ready to run the analysis. This will take several minutes, so please be patient:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">family</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>You can view results using built-in functions:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">plotDend</span><span class="p">(</span><span class="n">family</span><span class="p">)</span>
+<span class="n">plotESD</span><span class="p">(</span><span class="n">family</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>... or you can access the raw ESD matrix:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">data</span> <span class="o">=</span> <span class="n">family</span><span class="o">.</span><span class="n">esd</span>
+</pre></div>
+</div>
+<p>Other modules such as numpy or pandas will allow exporting of the ESD matrix to file:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="n">np</span><span class="o">.</span><span class="n">savetxt</span><span class="p">(</span><span class="n">fname</span><span class="o">=</span><span class="s1">&#39;esd_matrix.txt&#39;</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%.4f</span><span class="s1">&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="references">
+<h2>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
+<p>Cite</p>
+</div>
 </div>
 
 
@@ -120,8 +195,6 @@
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="alascan.html" class="btn btn-neutral float-right" title="Alanine Scan">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="installation.html" class="btn btn-neutral" title="Installation"><span class="fa fa-arrow-circle-left"></span> Previous</a>
