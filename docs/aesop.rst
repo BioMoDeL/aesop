@@ -17,10 +17,10 @@ AESOP modules
     :show-inheritance:
 
 
-Module contents
----------------
-
-.. automodule:: aesop
-    :members:
-    :undoc-members:
-    :show-inheritance:
+#Module contents
+#---------------
+#
+#.. automodule:: aesop
+#    :members:
+#    :undoc-members:
+#    :show-inheritance:
