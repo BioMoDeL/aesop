@@ -64,7 +64,7 @@ Install from source
 
 To install from source, you can use the following commands to clone the GitHub repository and install manually::
 
-	git clone git@github.com:rohithmohan/aesop-python.git
+	git clone git@github.com:rohithmohan/aesop.git
 	cd aesop-python
 	pip install setup.py
 
