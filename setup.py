@@ -18,7 +18,7 @@ setup(
     author_email='reed.harrison@email.ucr.edu, rohith.mohan@email.ucr.edu',
     url='https://github.com/rohithmohan/aesop-python',
     license=license,
-    packages=find_packages(exclude=('tests', 'docs')),
+    packages=find_packages(exclude=('tests', 'docs', 'data')),
 #    install_requires=['prody', 'gridDataFormats', 'scipy', 'numpy', 'python-dateutil'], # Commented out for ReadTheDocs
     include_package_data=True,
 #    package_data={
