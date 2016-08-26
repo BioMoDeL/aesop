@@ -2618,7 +2618,7 @@ def mutatePDB(pdb, mutid, resnum, chain=None, resid='ALA'):
 def execPDB2PQR(path_pdb2pqr_exe, pdbfile, outfile=None, ff='parse'):
     """Summary
     Calls the APBS executable according to:
-    	<path to pdb2pqr appropriate for OS> --ff=parse --chain inputfile outputfile
+        <path to pdb2pqr appropriate for OS> --ff=parse --chain inputfile outputfile
     
     Parameters
     ----------
