@@ -3,7 +3,6 @@
 Installation
 ============
 
-<<<<<<< HEAD
 Anaconda installation
 ===========
 We recommend installing the Anaconda Python Distribution as it comes with several packages used by AESOP pre-installed.
@@ -67,6 +66,3 @@ To install from source, you can use the following commands to clone the GitHub r
 .. note::
 
 	This may require administrative privileges. 
-=======
-How to install ...
->>>>>>> parent of 244f328... Updates to installation page.
