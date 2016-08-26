@@ -5,7 +5,7 @@ Electrostatic Similarity
 
 The electrostatic similarity method generates grid potentials for a list of PDB files and compares 
 all potential files in a pairwise manner. Here we will provide a test case that compares several 
-members of a family of plant proteins. This example is based on a more comprehensive, published study.
+members of a family of plant proteins. This example is based on a more comprehensive, published study [Chae2010]_.
 
 .. currentmodule:: aesop
 .. autosummary::
@@ -64,4 +64,4 @@ Other modules such as numpy or pandas will allow exporting of the ESD matrix to 
 References
 """"""""""
 
-Cite
+.. [Chae2010] `Chae, K., B.J. Gonong, S.C. Kim, C.A. Kieslich, D. Morikis, S. Balasubramanian, and E.M. Lord. 2010. A multifaceted study of stigma/style cysteine-rich adhesin (SCA)-like Arabidopsis lipid transfer proteins (LTPs) suggests diversified roles for these LTPs in plant growth and reproduction. J. Exp. Bot. 61: 4277–4290 <https://doi.org/10.1093/jxb/erq228>`_.
