@@ -44,7 +44,7 @@ Multiprocessing (optional)::
 
 .. note::
 
-	Multiprocessing is only needed if you are planning to take advantage of utilizing multiple cores in your analysis.
+	Multiprocessing is only needed if you are planning to utilize multiple cores in your analysis.
 
 Installing AESOP
 """"""""""""""""
