@@ -3,10 +3,10 @@
 API
 ===
 
-Submodules
-----------
+Package
+-------
 
-The aesop submodule contains all relevant classes and functions for now. Organization may be revised at a later date.
+The aesop submodule contains all relevant classes and functions for the AESOP package.
 
 AESOP modules
 ------------------

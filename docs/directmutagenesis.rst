@@ -3,4 +3,10 @@
 Directed Mutagenesis Scan
 =========================
 
-Usage
+Description of Method
+
+.. currentmodule:: aesop
+.. autosummary::
+	:toctree: api/generated/
+	
+	DirectedMutagenesis
