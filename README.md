@@ -40,4 +40,4 @@ Authors: Reed Harrison, Rohith Mohan, and Dimitrios Morikis
  	- Show dendrogram summary of results from methods exploring electrostatic similarity (ElecSimilarity)
 
 ## Notes
-- Please visit [aesop.readthedocs.io](https:/aesop.readthedocs.io) for documentation and instructions on installation.
+- Please visit [aesop.readthedocs.io](https://aesop.readthedocs.io) for documentation and instructions on installation.
