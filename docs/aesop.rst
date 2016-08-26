@@ -4,12 +4,12 @@ API
 ===
 
 Package
--------
+"""""""
 
 The aesop submodule contains all relevant classes and functions for the AESOP package.
 
-AESOP modules
-------------------
+AESOP contents
+""""""""""""""
 
 .. automodule:: aesop.aesop
     :members:
@@ -17,10 +17,3 @@ AESOP modules
     :show-inheritance:
 
 
-#Module contents
-#---------------
-#
-#.. automodule:: aesop
-#    :members:
-#    :undoc-members:
-#    :show-inheritance:
