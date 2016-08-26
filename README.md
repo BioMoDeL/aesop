@@ -40,5 +40,4 @@ Authors: Reed Harrison, Rohith Mohan, and Dimitrios Morikis
  	- Show dendrogram summary of results from methods exploring electrostatic similarity (ElecSimilarity)
 
 ## Notes
-- We recommend using Anaconda to aid in installation of Python scientific libraries
-- Depending on your platform, ProDy may need to be installed with an executable
+- Please visit [aesop.readthedocs.io](https:/aesop.readthedocs.io) for documentation and instructions on installation.
