@@ -11,7 +11,7 @@ import prody as pd
 import scipy.cluster.hierarchy as cluster
 import matplotlib.pyplot as plt
 # from modeller import environ, model, alignment, selection
-from multiprocessing import Pool, cpu_count #, freeze_support
+from multiprocessing import Pool, cpu_count  # , freeze_support
 import gridData as gd
 import itertools as it
 # import plotly.plotly as py
@@ -43,21 +43,24 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """)
-    
 
 
-######################################################################################################################################################
+##########################################################################
 # Container for performing an Alanine Scan with AESOP
-#   pdb     -   PDB file for performing Alascan. Must contain all chain selections with standard aminoacid nomenclature
+#   pdb     -   PDB file for performing Alascan.
+#               Must contain all chain selections with
+#               standard aminoacid nomenclature
 #   selstr  -   List of selection strings for performing mutations
 #   ion     -   Ionic strength
-#   pdie    -   Protein dielectric constant   
+#   pdie    -   Protein dielectric constant
 #   sdie    -   Solvent dielectric constant
-######################################################################################################################################################
+##########################################################################
 class Alascan:
     """Summary
-    Summary of internal varialbles in the Alascan class. All parameters are set in the Alascan.__init__(...) and the analysis is run with Alascan.run().
-    
+    Summary of internal varialbles in the Alascan class.
+    All parameters are set in the Alascan.__init__(...)
+    and the analysis is run with Alascan.run().
+
     Attributes
     ----------
     apbs : str
@@ -67,15 +70,20 @@ class Alascan:
     cfac : float
         Scaling factor for grid dimensions. We suggest to leave this unchanged.
     coulomb : str
-        Full path to coulomb executable from APBS package. Must be compatible with OS.
+        Full path to coulomb executable from APBS package.
+        Must be compatible with OS.
     coulomb_results : str
         Full path to folder containing results from coulomb.
     dime : list
-        List of three integers. Parameter required for APBS. Please see description at: http://www.poissonboltzmann.org/docs/apbs-overview/
+        List of three integers. Parameter required for APBS.
+        Please see description at:
+        http://www.poissonboltzmann.org/docs/apbs-overview/
     dx : bool
-        Variable that specifies if potential files should be written to disk. Default is False.
+        Variable that specifies if potential files should be written to disk.
+        Default is False.
     dx_files : list
-        If written to disk, list of potential files written to disk. The folder containing these files is given by Alascan.apbs_results.
+        If written to disk, list of potential files written to disk.
+        The folder containing these files is given by Alascan.apbs_results.
     E_ref : ndarray
         Description
     E_solv : ndarray
@@ -85,21 +93,29 @@ class Alascan:
     file_pdb_template : TYPE
         Description
     gcent : list
-        List of three integers. Parameter required for APBS. Please see description at: http://www.poissonboltzmann.org/docs/apbs-overview/
+        List of three integers. Parameter required for APBS.
+        Please see description at:
+        http://www.poissonboltzmann.org/docs/apbs-overview/
     Gcoul : ndarray
         Coulombic free energies, corresponding to Alascan.mutid.
     glen : list
-        List of three integers. Parameter required for APBS. Please see description at: http://www.poissonboltzmann.org/docs/apbs-overview/
+        List of three integers. Parameter required for APBS.
+        Please see description at:
+        http://www.poissonboltzmann.org/docs/apbs-overview/
     Gref : ndarray
         Reference-state free energies, corresponding to Alascan.mutid.
     grid : numeric
-        Distance spacing of grid points. If the grid dimensions are not divisible by three, resolution will be increased (smaller grid spacing) until grid dimensions are divisible by three.
+        Distance spacing of grid points.
+        If the grid dimensions are not divisible by three,
+        resolution will be increased (smaller grid spacing) until
+        grid dimensions are divisible by three.
     Gsolv : ndarray
         Solvated-state free energies, corresponding to Alascan.mutid.
     ion : numeric
         Ionic strength to be used in the solvated-state APBS calculations.
     jobdir : str
-        [Optional] Path to folder containing results. If not specified, a directory will be generated.
+        [Optional] Path to folder containing results.
+        If not specified, a directory will be generated.
     jobname : str
         [Optional] Name for current job, will be used to create the jobdir.
     list_chids : list
@@ -109,30 +125,48 @@ class Alascan:
     list_resnums : list
         Residue numbers where mutation was made. Corresponds to Alascan.mutic.
     logs_apbs_dir : str
-        Folder in jobdir containing output from APBS (logs, input files, dx files)
+        Folder in jobdir containing output from
+        APBS (logs, input files, dx files)
     mask_by_sel : ndarray
-        Matrix containing selection masks. The first column corresponds to the selection string for the parent and each column thereafter corresponds to an element of the selection string (selstr) in the same order.
+        Matrix containing selection masks. The first column corresponds
+        to the selection string for the parent and each column
+        thereafter corresponds to an element of the selection
+        string (selstr) in the same order.
     mutid : list
-        List of mutant IDs. The first element corresponds to the parent. Subsequent elements correspond to each element of the selection string list (selstr). Please use Alascan.getMutids() to get vectorized version.
+        List of mutant IDs. The first element corresponds to the parent.
+        Subsequent elements correspond to each element of the
+        selection string list (selstr). Please use Alascan.getMutids()
+        to get vectorized version.
     pdb : str
-        Path to PDB file with atomic coordinates. Must follow formatting conventions of the Protein Databank.
+        Path to PDB file with atomic coordinates. Must follow formatting
+        conventions of the Protein Databank.
     pdb2pqr : str
         Full path to PDB2PQR executable.
     pdb_complex_dir : str
-        Folder name in the job directory that contains the PDB file(s) of the complex structures.
+        Folder name in the job directory that contains the PDB file(s) of
+        the complex structures.
     pdie : numeric
         Protein dielectric constant to be used in APBS.
     pqr_complex_dir : str
-        Folder name in the job directory containing PQR files for each protein complex.
+        Folder name in the job directory containing PQR files for each
+        protein complex.
     pqr_sel_dir : list
-        List of folder names in the job directory that contain PQR files for selection strings (selstr). Each element of pqr_sel_dir corresponds to the same element of selstr.
+        List of folder names in the job directory that contain PQR files for
+        selection strings (selstr). Each element of pqr_sel_dir corresponds
+        to the same element of selstr.
     region : list
-        List of additional selection strings specifying the zone where mutations should occur. Generally unused, unless a region of interest is involved. Each element of region should correspond to the same element of selstr. That is, each region selection string will futher narrow down the initial selection string.
+        List of additional selection strings specifying the zone where
+        mutations should occur. Generally unused, unless a region of interest
+        is involved. Each element of region should correspond to the same
+        element of selstr. That is, each region selection string will futher
+        narrow down the initial selection string.
     sdie : numeric
         Solvent dielectric constant to be used in APBS.
     selstr : list
-        List of selection strings. Typically each selection string will correspond to a chain in a protein complex. We advise users to specify two or more selection strings. (Ex: ['chain A', 'chain B'])
-    
+        List of selection strings. Typically each selection string will
+        correspond to a chain in a protein complex. We advise users to
+        specify two or more selection strings. (Ex: ['chain A', 'chain B'])
+
     Deleted Attributes
     ------------------
     dirs : int
@@ -145,7 +179,7 @@ class Alascan:
                  grid=1, ion=0.150, pdie=20.0, sdie=78.54, ff='parse', cfac=1.5, dx=False):
         """Summary
         Constructor for the Alascan class.
-        
+
         Parameters
         ----------
         pdb : str
@@ -157,13 +191,22 @@ class Alascan:
         coulomb_exe : str, optional
             Path to executable for Coulomb from the APBS toolbox.
         selstr : list, optional
-            List of selection strings. Typically each selection string will correspond to a chain in a protein complex. We advise users to specify two or more selection strings. The default selection will only investigate solvation free energies as there will be no binding event. (Ex: ['chain A', 'chain B'])
+            List of selection strings. Typically each selection string will
+            correspond to a chain in a protein complex. We advise users to
+            specify two or more selection strings. The default selection will
+            only investigate solvation free energies as there will be no
+            binding event. (Ex: ['chain A', 'chain B'])
         jobname : str, optional
-            A string representing the full path to the directory where results will be stored.
+            A string representing the full path to the directory where
+            results will be stored.
         region : str, optional
-            If provided, region should be a selection string that specifies where mutations should be made. This must be the same length as selstr. Elements of selstr and region must correspond.
+            If provided, region should be a selection string that specifies
+            where mutations should be made. This must be the same length as
+            selstr. Elements of selstr and region must correspond.
         grid : int, optional
-            Desired grid spacing to be used in APBS. Depending on the PDB file, actual grid spacing may be a finer resolution. Defaults to 1 angstrom.
+            Desired grid spacing to be used in APBS. Depending on the PDB
+            file, actual grid spacing may be a finer resolution.
+            Defaults to 1 angstrom.
         ion : float, optional
             Ionic strength (M) to be used in APBS.
         pdie : float, optional
@@ -171,11 +214,14 @@ class Alascan:
         sdie : float, optional
             Solvent dielectric constant to be used in APBS>
         ff : str, optional
-            Force field to assign charges to individual atoms. We recommend using PARSE for this analysis, the default value.
+            Force field to assign charges to individual atoms.
+            We recommend using PARSE for this analysis, the default value.
         cfac : float, optional
-            Scaling factor for grid dimension. This generally should not be changed without a reason.
+            Scaling factor for grid dimension.
+            This generally should not be changed without a reason.
         dx : bool, optional
-            Boolean flag stating if potential files should be written to disk (True) or not (False).
+            Boolean flag stating if potential files should be written to
+            disk (True) or not (False).
         """
         self.pdb = pdb
         self.pdb2pqr = pdb2pqr_exe
@@ -195,8 +241,9 @@ class Alascan:
         self.sdie = sdie
         if jobname is None:
             self.jobname = '%4d%02d%02d_%02d%02d%02d' % (
-            dt.date.today().year, dt.date.today().month, dt.date.today().day, dt.datetime.now().hour,
-            dt.datetime.now().minute, dt.datetime.now().second)
+                dt.date.today().year, dt.date.today().month,
+                dt.date.today().day, dt.datetime.now().hour,
+                dt.datetime.now().minute, dt.datetime.now().second)
         else:
             self.jobname = jobname
         self.jobdir = jobname
@@ -216,7 +263,7 @@ class Alascan:
 
     # def getPDB(self):
     #     """Summary
-        
+
     #     Returns
     #     -------
     #     string
@@ -226,7 +273,7 @@ class Alascan:
 
     # def getSel(self):
     #     """Summary
-        
+
     #     Returns
     #     -------
     #     TYPE
@@ -236,7 +283,7 @@ class Alascan:
 
     # def getDirs(self):
     #     """Summary
-        
+
     #     Returns
     #     -------
     #     TYPE
@@ -246,7 +293,7 @@ class Alascan:
 
     # def getPrefix(self):
     #     """Summary
-        
+
     #     Returns
     #     -------
     #     TYPE
@@ -256,7 +303,7 @@ class Alascan:
 
     def getMutids(self):
         """Summary
-        
+
         Returns
         -------
         list
@@ -267,7 +314,7 @@ class Alascan:
 
     # def getDX(self):
     #     """Summary
-        
+
     #     Returns
     #     -------
     #     TYPE
@@ -277,12 +324,15 @@ class Alascan:
 
     def genDirs(self):
         """Summary
-        This subroutine will generate all directories needed to contain structural files, logs, etc. In the future we may implement a method to remove such files when outputs are more standardized.
-        
+        This subroutine will generate all directories needed to contain
+        structural files, logs, etc. In the future we may implement a
+        method to remove such files when outputs are more standardized.
+
         Returns
         -------
         None
-            No output, operates on the class and generates folders in the job directory.
+            No output, operates on the class and generates folders in the job
+            directory.
         """
         # Create necessary directories for PDB files
         pdb_complex_dir = 'complex_pdb'
@@ -310,17 +360,22 @@ class Alascan:
 
     def genMutid(self):
         """Summary
-        This subroutine reads the input PDB, selects the structure where mutations will occur, and saves all mutant IDs in the class. If region is specified in the constructor, then the constraint will be applied here.
+        This subroutine reads the input PDB, selects the structure where
+        mutations will occur, and saves all mutant IDs in the class.
+        If region is specified in the constructor, then the constraint
+        will be applied here.
 
         Returns
         -------
         None
-            Operates on the class to generate a list of mutant IDs for each selection string. The following class variables will be generated (see class description):
-            	- mutid
-            	- list_chids
-            	- list_resnums
-            	- list_resnames
-            	- mask_by_sel
+            Operates on the class to generate a list of mutant IDs for each
+            selection string. The following class variables will be generated
+            (see class description):
+                - mutid
+                - list_chids
+                - list_resnums
+                - list_resnames
+                - mask_by_sel
         """
         selstr = self.selstr
         region = self.region
@@ -341,7 +396,8 @@ class Alascan:
         index = np.linspace(1, len(selstr), len(selstr)).astype(int)
         for i, sel, reg in zip(index, selstr, region):
             # print ' and '.join([sel, reg, 'charged', 'calpha'])
-            combined_selection = parent_pdb.select(' and '.join([sel, reg, 'charged', 'calpha']))
+            combined_selection = parent_pdb.select(
+                ' and '.join([sel, reg, 'charged', 'calpha']))
             # if sel is not reg:
             #     combined_selection = parent_pdb.select(''.join(['(', ') and ('.join((sel, reg, 'charged', 'calpha')), ')']))
             # elif sel is reg:
@@ -349,7 +405,8 @@ class Alascan:
             list_chids[i] = combined_selection.getChids().tolist()
             list_resnums[i] = combined_selection.getResnums().tolist()
             list_resnames[i] = combined_selection.getResnames().tolist()
-            code = ['seg%d' % (i) + '_' + AA_dict[res_id] + res_no + 'A' for ch_id, res_no, res_id in
+            code = ['seg%d' % (i) + '_' + AA_dict[res_id] +
+                    res_no + 'A' for ch_id, res_no, res_id in
                     zip(list_chids[i], map(str, list_resnums[i]), list_resnames[i])]
             list_mutids[i] = code
 
@@ -370,12 +427,15 @@ class Alascan:
 
     def genParent(self):
         """Summary
-        Reads PDB file specified in the constructor; applies and combines results from the selection strings; and saves the final template structure in the job directory.
-        
+        Reads PDB file specified in the constructor; applies and combines
+        results from the selection strings; and saves the final template
+        structure in the job directory.
+
         Returns
         -------
         None
-            Template pdb written in job directory and location saved in Alascan.file_pdb_template.
+            Template pdb written in job directory and location saved in
+            Alascan.file_pdb_template.
         """
         selstr = self.selstr
         jobdir = self.jobdir
@@ -385,10 +445,13 @@ class Alascan:
         parent_pdb = pd.parsePDB(self.pdb)
 
         # list_mutids = [item for sublist in self.mutid for item in sublist]
-        # list_chids = [item for sublist in self.list_chids for item in sublist]
-        # list_resnums = [item for sublist in self.list_resnums for item in sublist]
+        # list_chids = [item for sublist in self.list_chids
+        #               for item in sublist]
+        # list_resnums = [item for sublist in self.list_resnums
+        #               for item in sublist]
 
-        infile = os.path.join(jobdir, pdb_complex_dir, parent_file_prefix + '.pdb')
+        infile = os.path.join(jobdir, pdb_complex_dir,
+                              parent_file_prefix + '.pdb')
         system = parent_pdb.select('((' + ') or ('.join(selstr) + '))')
         # print '(('+') or ('.join(selstr)+'))'
         pd.writePDB(infile, system)
@@ -414,13 +477,18 @@ class Alascan:
         max_xyz = pdb.getCoords().max(axis=0)
         min_xyz = pdb.getCoords().min(axis=0)
 
-        # Determine mesh dimensions according to Ron's AESOP protocol in the R source file
+        # Determine mesh dimensions according to Ron's AESOP protocol in the R
+        # source file
         fg = np.ceil(max_xyz - min_xyz)
         fg = np.ceil((fg + 5) * cfac)
         glen = np.vstack((glen, fg)).max(axis=0)
-        dime_list = (32 * np.linspace(1, 100, 100)) + 1  # list of possible dime values
-        dime_ind = np.ceil(glen / (32 * grid)) - 1  # index of dime to use from list, subtract one to be consistent with python indexing!
-        dime = np.array((dime_list[int(dime_ind[0])], dime_list[int(dime_ind[1])], dime_list[int(dime_ind[2])]))
+        dime_list = (32 * np.linspace(1, 100, 100)) + \
+            1  # list of possible dime values
+        # index of dime to use from list, subtract one to be consistent with
+        # python indexing!
+        dime_ind = np.ceil(glen / (32 * grid)) - 1
+        dime = np.array((dime_list[int(dime_ind[0])], dime_list[
+                        int(dime_ind[1])], dime_list[int(dime_ind[2])]))
         ix = 0
         iy = 0
         iz = 0
@@ -428,22 +496,33 @@ class Alascan:
         while((dime[0] * dime[1] * dime[2] % 3 != 0) or (counter <= 5)):
             ix += 1
             if(dime[0] * dime[1] * dime[2] % 3 != 0):
-                dime = np.array((dime_list[int(dime_ind[0]+ix)], dime_list[int(dime_ind[1])+iy], dime_list[int(dime_ind[2])+iz]))
+                dime = np.array((dime_list[int(dime_ind[
+                                0] + ix)], dime_list[int(dime_ind[1]) + iy],
+                    dime_list[int(dime_ind[2]) + iz]))
             iy += 1
             if(dime[0] * dime[1] * dime[2] % 3 != 0):
-                dime = np.array((dime_list[int(dime_ind[0]+ix)], dime_list[int(dime_ind[1])+iy], dime_list[int(dime_ind[2])+iz]))
+                dime = np.array((dime_list[int(dime_ind[
+                                0] + ix)], dime_list[int(dime_ind[1]) + iy],
+                    dime_list[int(dime_ind[2]) + iz]))
             iz += 1
             if(dime[0] * dime[1] * dime[2] % 3 != 0):
-                dime = np.array((dime_list[int(dime_ind[0]+ix)], dime_list[int(dime_ind[1])+iy], dime_list[int(dime_ind[2])+iz]))
+                dime = np.array((dime_list[int(dime_ind[
+                                0] + ix)], dime_list[int(dime_ind[1]) + iy],
+                    dime_list[int(dime_ind[2]) + iz]))
             counter += 1
 
-        self.dime = dime #.reshape((1, 3))
-        self.glen = glen #.reshape((1, 3))
+        self.dime = dime  # .reshape((1, 3))
+        self.glen = glen  # .reshape((1, 3))
         self.gcent = pd.calcCenter(pdb).astype(int)
 
     def set_grid(self, dime, glen, gcent):
         """Summary
-        In the case that the user wishes to manually specify grid dimension, this may be accomplished with the set_grid method. Typically, this is used when grid space parameters must be consistent for many analyses. Please see description at: http://www.poissonboltzmann.org/docs/apbs-overview/ for description of parameters.
+        In the case that the user wishes to manually specify grid dimension,
+        this may be accomplished with the set_grid method.
+        Typically, this is used when grid space parameters must be consistent
+        for many analyses. Please see description
+        at: http://www.poissonboltzmann.org/docs/apbs-overview/ for
+        description of parameters.
 
         Parameters
         ----------
@@ -453,7 +532,7 @@ class Alascan:
             List of three integers.
         gcent : list
             List of three integers.
-        
+
         Returns
         -------
         TYPE
@@ -489,7 +568,7 @@ class Alascan:
     def genTruncatedPQR(self):
         """Summary
         Generate a structure for each mutant ID by truncating the side chain to form alanine.
-        
+
         Returns
         -------
         None
@@ -505,11 +584,13 @@ class Alascan:
 
         list_mutids = [item for sublist in self.mutid for item in sublist]
         list_chids = [item for sublist in self.list_chids for item in sublist]
-        list_resnums = [item for sublist in self.list_resnums for item in sublist]
+        list_resnums = [
+            item for sublist in self.list_resnums for item in sublist]
 
         # Calculate PQR for parent
         infile = os.path.join(jobdir, pdb_complex_dir, list_mutids[0] + '.pdb')
-        outfile = os.path.join(jobdir, pqr_complex_dir, list_mutids[0] + '.pqr')
+        outfile = os.path.join(jobdir, pqr_complex_dir,
+                               list_mutids[0] + '.pqr')
         print '\n%s:\tgenerating PQR for parent: %s' % (self.jobname, list_mutids[0])
         execPDB2PQR(path_pdb2pqr, infile, outfile=outfile, ff=ff)
         complex_pqr = pd.parsePQR(outfile)
@@ -533,7 +614,7 @@ class Alascan:
 
     # def genPQR(self):
     #     """Summary
-        
+
     #     Returns
     #     -------
     #     TYPE
@@ -581,7 +662,8 @@ class Alascan:
         dim_mutid = len(list_mutids)
         dim_sel = len(selstr) + 1
 
-        mask_by_sel = np.copy(self.mask_by_sel)  # Mask parts that are true will be run with APBS
+        # Mask parts that are true will be run with APBS
+        mask_by_sel = np.copy(self.mask_by_sel)
         mask_by_sel[0, :] = np.ones(dim_sel).astype(bool)
         mask_by_sel[:, 0] = np.ones(dim_mutid).astype(bool)
 
@@ -613,16 +695,18 @@ class Alascan:
     def calcAPBS_parallel(self, n_workers=None):
         """Summary
         Run APBS on each structure in mutant library, in parallel.
-        
+
         Parameters
         ----------
         n_workers : int
-            Number of processes to run. If None, method will use all available threads.
+            Number of processes to run. If None, method will use all available
+            threads.
 
         Returns
         -------
         None
-            Saves solvated-state and reference-state free energies as class attributes.
+            Saves solvated-state and reference-state free energies as class
+            attributes.
         """
         selstr = self.selstr
         jobdir = self.jobdir
@@ -639,7 +723,8 @@ class Alascan:
         dim_mutid = len(list_mutids)
         dim_sel = len(selstr) + 1
 
-        mask_by_sel = np.copy(self.mask_by_sel)  # Mask parts that are true will be run with APBS
+        # Mask parts that are true will be run with APBS
+        mask_by_sel = np.copy(self.mask_by_sel)
         mask_by_sel[0, :] = np.ones(dim_sel).astype(bool)
         mask_by_sel[:, 0] = np.ones(dim_mutid).astype(bool)
 
@@ -669,7 +754,8 @@ class Alascan:
                     dime_list.append(self.dime)
                     glen_list.append(self.glen)
                     gcent_list.append(self.gcent)
-                    prefix_list.append(os.path.join(jobdir, logs_apbs_dir, '%d_%d_' % (i, j)+mutid))  # added to make sure apbs.in file is unique!
+                    prefix_list.append(os.path.join(jobdir, logs_apbs_dir, '%d_%d_' % (
+                        i, j) + mutid))  # added to make sure apbs.in file is unique!
                     ion_list.append(self.ion)
                     pdie_list.append(self.pdie)
                     sdie_list.append(self.sdie)
@@ -700,7 +786,7 @@ class Alascan:
         apbs_results = np.asarray(apbs_results)
         self.apbs_results = apbs_results
         if self.dx == True:
-            self.dx_files = [x+'.dx' for x in prefix_list]
+            self.dx_files = [x + '.dx' for x in prefix_list]
 
         # Fill in results that are duplicates
         for i in xrange(dim_mutid):
@@ -715,7 +801,7 @@ class Alascan:
     def calcCoulomb(self):
         """Summary
         Calculates Coulombic free energies with coulomb.exe from the APBS toolbox.
-        
+
         Returns
         -------
         None
@@ -734,7 +820,8 @@ class Alascan:
         dim_mutid = len(list_mutids)
         dim_sel = len(selstr) + 1
 
-        mask_by_sel = np.copy(self.mask_by_sel)  # Mask parts that are true will be run with APBS
+        # Mask parts that are true will be run with APBS
+        mask_by_sel = np.copy(self.mask_by_sel)
         mask_by_sel[0, :] = np.ones(dim_sel).astype(bool)
         mask_by_sel[:, 0] = np.ones(dim_mutid).astype(bool)
 
@@ -759,7 +846,7 @@ class Alascan:
     def calcCoulomb_parallel(self, n_workers=None):
         """Summary
         Calculates Coulombic free energies with coulomb.exe from the APBS toolbox in a parallel manner.
-        
+
         Parameters
         ----------
         n_workers : int
@@ -785,7 +872,8 @@ class Alascan:
         dim_mutid = len(list_mutids)
         dim_sel = len(selstr) + 1
 
-        mask_by_sel = np.copy(self.mask_by_sel)  # Mask parts that are true will be run with APBS
+        # Mask parts that are true will be run with APBS
+        mask_by_sel = np.copy(self.mask_by_sel)
         mask_by_sel[0, :] = np.ones(dim_sel).astype(bool)
         mask_by_sel[:, 0] = np.ones(dim_mutid).astype(bool)
 
@@ -836,7 +924,7 @@ class Alascan:
     def ddGa_rel(self):
         """Summary
         Calculates and returns the free energy of association relative to the parent free energy of association.
-        
+
         Returns
         -------
         ndarray
@@ -859,7 +947,7 @@ class Alascan:
     def dGsolv_rel(self):
         """Summary
         Calculates and returns the free energy of a solvation for each mutant relative to the parent free energy of solvation.
-        
+
         Returns
         -------
         ndarray
@@ -874,7 +962,7 @@ class Alascan:
     def run(self):
         """Summary
         Perform a compuational alanine scan on the initialized Alascan class.
-        
+
         Returns
         -------
         None
@@ -890,7 +978,7 @@ class Alascan:
     def run_parallel(self, n_workers=None):
         """Summary
         Perform a computational alanine scan on the initialized Alascan class using multiple processes in parallel.
-        
+
         Parameters
         ----------
         n_workers : int
@@ -916,7 +1004,7 @@ class Alascan:
         ----------
         filename : str, optional
             In order to write summary to a text file, supply the filename (full path).
-        
+
         Returns
         -------
         None
@@ -935,7 +1023,7 @@ class Alascan:
         if filename is not None:
             np.savetxt(filename, lines, fmt='%s')
 
-######################################################################################################################################################
+##########################################################################
 # Container for performing an Directed Mutagenesis Scan with AESOP
 #   pdb     -   PDB file for performing Alascan. Must contain all chain selections with standard amino acid nomenclature
 #   selstr  -   List of selection strings for chain selection. This does not change what is mutated.
@@ -944,10 +1032,12 @@ class Alascan:
 #   ion     -   Ionic strength
 #   pdie    -   Protein dielectric constant
 #   sdie    -   Solvent dielectric constant
-######################################################################################################################################################
+##########################################################################
+
+
 class DirectedMutagenesis:
     """Summary
-    
+
     Attributes
     ----------
     apbs : str
@@ -957,15 +1047,19 @@ class DirectedMutagenesis:
     cfac : numeric
         Scaling factor for grid dimensions. We suggest to leave this unchanged.
     coulomb : str
-        Full path to coulomb executable from APBS package. Must be compatible with OS.
+        Full path to coulomb executable from APBS package.
+        Must be compatible with OS.
     coulomb_results : str
         Full path to folder containing results from coulomb.
     dime : list
-        List of three integers. Parameter required for APBS. Please see description at: http://www.poissonboltzmann.org/docs/apbs-overview/
+        List of three integers. Parameter required for APBS. Please see
+        description at: http://www.poissonboltzmann.org/docs/apbs-overview/
     dx : bool
-        Variable that specifies if potential files should be written to disk. Default is False.
+        Variable that specifies if potential files should be written to disk.
+        Default is False.
     dx_files : list
-        If written to disk, list of potential files written to disk. The folder containing these files is given by Alascan.apbs_results.
+        If written to disk, list of potential files written to disk.
+        The folder containing these files is given by Alascan.apbs_results.
     E_ref : ndarray
         Description
     E_solv : ndarray
@@ -975,21 +1069,26 @@ class DirectedMutagenesis:
     file_pdb_template : TYPE
         Description
     gcent : list
-        List of three integers. Parameter required for APBS. Please see description at: http://www.poissonboltzmann.org/docs/apbs-overview/
+        List of three integers. Parameter required for APBS. Please see
+        description at: http://www.poissonboltzmann.org/docs/apbs-overview/
     Gcoul : ndarray
         Coulombic free energies, corresponding to Alascan.mutid.
     glen : list
-        List of three integers. Parameter required for APBS. Please see description at: http://www.poissonboltzmann.org/docs/apbs-overview/
+        List of three integers. Parameter required for APBS. Please see
+        description at: http://www.poissonboltzmann.org/docs/apbs-overview/
     Gref : ndarray
         Reference-state free energies, corresponding to Alascan.mutid.
     grid : numeric
-        Distance spacing of grid points. If the grid dimensions are not divisible by three, resolution will be increased (smaller grid spacing) until grid dimensions are divisible by three.
+        Distance spacing of grid points. If the grid dimensions are not
+        divisible by three, resolution will be increased (smaller grid
+        spacing) until grid dimensions are divisible by three.
     Gsolv : ndarray
         Solvated-state free energies, corresponding to Alascan.mutid.
     ion : numeric
         Ionic strength to be used in the solvated-state APBS calculations.
     jobdir : str
-        [Optional] Path to folder containing results. If not specified, a directory will be generated.
+        [Optional] Path to folder containing results. If not specified, a
+        directory will be generated.
     jobname : str
         [Optional] Name for current job, will be used to create the jobdir.
     list_chids : list
@@ -999,32 +1098,49 @@ class DirectedMutagenesis:
     list_resnums : list
         Residue numbers where mutation was made. Corresponds to Alascan.mutic.
     logs_apbs_dir : str
-        Folder in jobdir containing output from APBS (logs, input files, dx files)
+        Folder in jobdir containing output from APBS (logs, input files, dx
+        files)
     mask_by_sel : ndarray
-        Matrix containing selection masks. The first column corresponds to the selection string for the parent and each column thereafter corresponds to an element of the selection string (selstr) in the same order.
+        Matrix containing selection masks. The first column corresponds to
+        the selection string for the parent and each column thereafter
+        corresponds to an element of the selection string (selstr)
+        in the same order.
     mutation : list
-        Identity of amino acid for mutation of corresponding target. Must be the same length as target and each residue must use the standard 3-letter amino acid code.
+        Identity of amino acid for mutation of corresponding target.
+        Must be the same length as target and each residue must use the
+        standard 3-letter amino acid code.
     mutid : list
-        List of mutant IDs. The first element corresponds to the parent. Subsequent elements correspond to each element of the selection string list (selstr). Please use Alascan.getMutids() to get vectorized version.
+        List of mutant IDs. The first element corresponds to the parent.
+        Subsequent elements correspond to each element of the selection
+        string list (selstr). Please use Alascan.getMutids() to get
+        vectorized version.
     pdb : str
-        Path to PDB file with atomic coordinates. Must follow formatting conventions of the Protein Databank.
+        Path to PDB file with atomic coordinates. Must follow formatting
+        conventions of the Protein Databank.
     pdb2pqr : str
         Full path to PDB2PQR executable.
     pdb_complex_dir : str
-        Folder name in the job directory that contains the PDB file(s) of the complex structures.
+        Folder name in the job directory that contains the PDB file(s)
+        of the complex structures.
     pdie : numeric
         Protein dielectric constant to be used in APBS.
     pqr_complex_dir : str
-        Folder name in the job directory containing PQR files for each protein complex.
+        Folder name in the job directory containing PQR files for each
+        protein complex.
     pqr_sel_dir : list
-        List of folder names in the job directory that contain PQR files for selection strings (selstr). Each element of pqr_sel_dir corresponds to the same element of selstr.
+        List of folder names in the job directory that contain PQR files
+        for selection strings (selstr). Each element of pqr_sel_dir
+        corresponds to the same element of selstr.
     sdie : numeric
         Solvent dielectric constant to be used in APBS.
     selstr : list
-        List of selection strings. Typically each selection string will correspond to a chain in a protein complex. We advise users to specify two or more selection strings. (Ex: ['chain A', 'chain B'])
+        List of selection strings. Typically each selection string will
+        correspond to a chain in a protein complex. We advise users to
+        specify two or more selection strings. (Ex: ['chain A', 'chain B'])
     target : list
-        List of residue numbers to mutate. Must correspond element-wise to mutation attribute.
-    
+        List of residue numbers to mutate. Must correspond element-wise
+        to mutation attribute.
+
     Deleted Attributes
     ------------------
     dirs : int
@@ -1036,7 +1152,7 @@ class DirectedMutagenesis:
     def __init__(self, pdb, target, mutation, pdb2pqr_exe='pdb2pqr', apbs_exe='apbs', coulomb_exe='coulomb', selstr=['protein'], jobname=None,
                  grid=1, ion=0.150, pdie=20.0, sdie=78.54, ff='parse', cfac=1.5, dx=False):
         """Summary
-        
+
         Parameters
         ----------
         pdb : str
@@ -1044,7 +1160,9 @@ class DirectedMutagenesis:
         target : list
             List of residue numbers to mutate. Must correspond element-wise to mutation attribute.
         mutation : list
-            Identity of amino acid for mutation of corresponding target. Must be the same length as target and each residue must use the standard 3-letter amino acid code.
+            Identity of amino acid for mutation of corresponding target.
+            Must be the same length as target and each residue must use the
+            standard 3-letter amino acid code.
         pdb2pqr_exe : str
             Path to executable for PDB2PQR.
         apbs_exe : str
@@ -1052,11 +1170,18 @@ class DirectedMutagenesis:
         coulomb_exe : str, optional
             Path to executable for Coulomb from the APBS toolbox.
         selstr : list, optional
-            List of selection strings. Typically each selection string will correspond to a chain in a protein complex. We advise users to specify two or more selection strings. The default selection will only investigate solvation free energies as there will be no binding event. (Ex: ['chain A', 'chain B'])
+            List of selection strings. Typically each selection string will
+            correspond to a chain in a protein complex. We advise users to
+            specify two or more selection strings. The default selection will
+            only investigate solvation free energies as there will be no
+            binding event. (Ex: ['chain A', 'chain B'])
         jobname : str, optional
-            A string representing the full path to the directory where results will be stored.
+            A string representing the full path to the directory where
+            results will be stored.
         grid : int, optional
-            Desired grid spacing to be used in APBS. Depending on the PDB file, actual grid spacing may be a finer resolution. Defaults to 1 angstrom.
+            Desired grid spacing to be used in APBS.
+            Depending on the PDB file, actual grid spacing may be a finer
+            resolution. Defaults to 1 angstrom.
         ion : float, optional
             Ionic strength (M) to be used in APBS.
         pdie : float, optional
@@ -1064,11 +1189,14 @@ class DirectedMutagenesis:
         sdie : float, optional
             Solvent dielectric constant to be used in APBS>
         ff : str, optional
-            Force field to assign charges to individual atoms. We recommend using PARSE for this analysis, the default value.
+            Force field to assign charges to individual atoms.
+            We recommend using PARSE for this analysis, the default value.
         cfac : float, optional
-            Scaling factor for grid dimension. This generally should not be changed without a reason.
+            Scaling factor for grid dimension.
+            This generally should not be changed without a reason.
         dx : bool, optional
-            Boolean flag stating if potential files should be written to disk (True) or not (False).
+            Boolean flag stating if potential files should be written to
+            disk (True) or not (False).
         """
         self.pdb = pdb
         self.pdb2pqr = pdb2pqr_exe
@@ -1090,8 +1218,8 @@ class DirectedMutagenesis:
         self.sdie = sdie
         if jobname is None:
             self.jobname = '%4d%02d%02d_%02d%02d%02d' % (
-            dt.date.today().year, dt.date.today().month, dt.date.today().day, dt.datetime.now().hour,
-            dt.datetime.now().minute, dt.datetime.now().second)
+                dt.date.today().year, dt.date.today().month, dt.date.today().day, dt.datetime.now().hour,
+                dt.datetime.now().minute, dt.datetime.now().second)
         else:
             self.jobname = jobname
         self.jobdir = jobname
@@ -1111,7 +1239,7 @@ class DirectedMutagenesis:
 
     def getMutids(self):
         """Summary
-        
+
         Returns
         -------
         list
@@ -1122,12 +1250,15 @@ class DirectedMutagenesis:
 
     def genDirs(self):
         """Summary
-        This subroutine will generate all directories needed to contain structural files, logs, etc. In the future we may implement a method to remove such files when outputs are more standardized.
-        
+        This subroutine will generate all directories needed to contain
+        structural files, logs, etc. In the future we may implement a method
+        to remove such files when outputs are more standardized.
+
         Returns
         -------
         None
-            No output, operates on the class and generates folders in the job directory.
+            No output, operates on the class and generates folders in the
+            job directory.
         """
         # Create necessary directories for PDB files
         pdb_complex_dir = 'complex_pdb'
@@ -1155,17 +1286,22 @@ class DirectedMutagenesis:
 
     def genMutid(self):
         """Summary
-        This subroutine reads the input PDB, selects the structure where mutations will occur, and saves all mutant IDs in the class. If region is specified in the constructor, then the constraint will be applied here.
+        This subroutine reads the input PDB, selects the structure where
+        mutations will occur, and saves all mutant IDs in the class.
+        If region is specified in the constructor, then the constraint will
+        be applied here.
 
         Returns
         -------
         None
-            Operates on the class to generate a list of mutant IDs for each selection string. The following class variables will be generated (see class description):
-            	- mutid
-            	- list_chids
-            	- list_resnums
-            	- list_resnames
-            	- mask_by_sel
+            Operates on the class to generate a list of mutant IDs for each
+            selection string. The following class variables will be
+            generated (see class description):
+                - mutid
+                - list_chids
+                - list_resnums
+                - list_resnames
+                - mask_by_sel
         """
         selstr = self.selstr
         target = self.target
@@ -1191,22 +1327,25 @@ class DirectedMutagenesis:
 
         for i, region in zip(xrange(len(selstr)), selstr):
             for j, sel, mut in zip(xrange(len(target)), target, mutation):
-                combined_selection = parent_pdb.select('('+' and '.join([sel, region, 'calpha'])+')')
+                combined_selection = parent_pdb.select(
+                    '(' + ' and '.join([sel, region, 'calpha']) + ')')
 
                 if combined_selection is not None:
                     chids = combined_selection.getChids().tolist()
                     resnums = combined_selection.getResnums().tolist()
                     resnames = combined_selection.getResnames().tolist()
 
-                    label = 'sel%d' % (i+1)
+                    label = 'sel%d' % (i + 1)
                     for resnum, resname in zip(resnums, resnames):
-                        label = '_'.join([label, AA_dict[resname]+str(resnum)+AA_dict[mut]])
+                        label = '_'.join(
+                            [label, AA_dict[resname] + str(resnum) +
+                             AA_dict[mut]])
 
-                    list_mutids[i+1].append(label)
-                    list_chids[i+1].append(chids)
-                    list_resnums[i+1].append(resnums)
-                    list_resnames[i+1].append(resnames)
-                    mask_by_sel[j+1, i+1] = True
+                    list_mutids[i + 1].append(label)
+                    list_chids[i + 1].append(chids)
+                    list_resnums[i + 1].append(resnums)
+                    list_resnames[i + 1].append(resnames)
+                    mask_by_sel[j + 1, i + 1] = True
 
         self.mutid = list_mutids
         self.list_chids = list_chids
@@ -1219,12 +1358,15 @@ class DirectedMutagenesis:
 
     def genParent(self):
         """Summary
-        Reads PDB file specified in the constructor; applies and combines results from the selection strings; and saves the final template structure in the job directory.
-        
+        Reads PDB file specified in the constructor; applies and combines
+        results from the selection strings; and saves the final template
+        structure in the job directory.
+
         Returns
         -------
         None
-            Template pdb written in job directory and location saved in Alascan.file_pdb_template.
+            Template pdb written in job directory and location saved in
+            Alascan.file_pdb_template.
         """
         selstr = self.selstr
         jobdir = self.jobdir
@@ -1234,10 +1376,13 @@ class DirectedMutagenesis:
         parent_pdb = pd.parsePDB(self.pdb)
 
         # list_mutids = [item for sublist in self.mutid for item in sublist]
-        # list_chids = [item for sublist in self.list_chids for item in sublist]
-        # list_resnums = [item for sublist in self.list_resnums for item in sublist]
+        # list_chids = [item for sublist in self.list_chids
+        #               for item in sublist]
+        # list_resnums = [item for sublist in self.list_resnums
+        #               for item in sublist]
 
-        infile = os.path.join(jobdir, pdb_complex_dir, parent_file_prefix + '.pdb')
+        infile = os.path.join(jobdir, pdb_complex_dir,
+                              parent_file_prefix + '.pdb')
         system = parent_pdb.select('((' + ') or ('.join(selstr) + '))')
         # print '(('+') or ('.join(selstr)+'))'
         pd.writePDB(infile, system)
@@ -1264,13 +1409,18 @@ class DirectedMutagenesis:
         max_xyz = pdb.getCoords().max(axis=0)
         min_xyz = pdb.getCoords().min(axis=0)
 
-        # Determine mesh dimensions according to Ron's AESOP protocol in the R source file
+        # Determine mesh dimensions according to Ron's AESOP protocol in the R
+        # source file
         fg = np.ceil(max_xyz - min_xyz)
         fg = np.ceil((fg + 5) * cfac)
         glen = np.vstack((glen, fg)).max(axis=0)
-        dime_list = (32 * np.linspace(1, 100, 100)) + 1  # list of possible dime values
-        dime_ind = np.ceil(glen / (32 * grid)) - 1  # index of dime to use from list, subtract one to be consistent with python indexing!
-        dime = np.array((dime_list[int(dime_ind[0])], dime_list[int(dime_ind[1])], dime_list[int(dime_ind[2])]))
+        dime_list = (32 * np.linspace(1, 100, 100)) + \
+            1  # list of possible dime values
+        # index of dime to use from list, subtract one to be consistent with
+        # python indexing!
+        dime_ind = np.ceil(glen / (32 * grid)) - 1
+        dime = np.array((dime_list[int(dime_ind[0])], dime_list[
+                        int(dime_ind[1])], dime_list[int(dime_ind[2])]))
         ix = 0
         iy = 0
         iz = 0
@@ -1278,22 +1428,33 @@ class DirectedMutagenesis:
         while((dime[0] * dime[1] * dime[2] % 3 != 0) or (counter <= 5)):
             ix += 1
             if(dime[0] * dime[1] * dime[2] % 3 != 0):
-                dime = np.array((dime_list[int(dime_ind[0]+ix)], dime_list[int(dime_ind[1])+iy], dime_list[int(dime_ind[2])+iz]))
+                dime = np.array((dime_list[int(dime_ind[0] + ix)],
+                                 dime_list[int(dime_ind[1]) + iy],
+                                 dime_list[int(dime_ind[2]) + iz]))
             iy += 1
             if(dime[0] * dime[1] * dime[2] % 3 != 0):
-                dime = np.array((dime_list[int(dime_ind[0]+ix)], dime_list[int(dime_ind[1])+iy], dime_list[int(dime_ind[2])+iz]))
+                dime = np.array((dime_list[int(dime_ind[0] + ix)],
+                                 dime_list[int(dime_ind[1]) + iy],
+                                 dime_list[int(dime_ind[2]) + iz]))
             iz += 1
             if(dime[0] * dime[1] * dime[2] % 3 != 0):
-                dime = np.array((dime_list[int(dime_ind[0]+ix)], dime_list[int(dime_ind[1])+iy], dime_list[int(dime_ind[2])+iz]))
+                dime = np.array((dime_list[int(dime_ind[0] + ix)],
+                                 dime_list[int(dime_ind[1]) + iy],
+                                 dime_list[int(dime_ind[2]) + iz]))
             counter += 1
 
-        self.dime = dime #.reshape((1, 3))
-        self.glen = glen #.reshape((1, 3))
+        self.dime = dime  # .reshape((1, 3))
+        self.glen = glen  # .reshape((1, 3))
         self.gcent = pd.calcCenter(pdb).astype(int)
 
     def set_grid(self, dime, glen, gcent):
         """Summary
-        In the case that the user wishes to manually specify grid dimension, this may be accomplished with the set_grid method. Typically, this is used when grid space parameters must be consistent for many analyses. Please see description at: http://www.poissonboltzmann.org/docs/apbs-overview/ for description of parameters.
+        In the case that the user wishes to manually specify grid dimension,
+        this may be accomplished with the set_grid method.
+        Typically, this is used when grid space parameters must be consistent
+        for many analyses. Please see description
+        at: http://www.poissonboltzmann.org/docs/apbs-overview/ for 
+        description of parameters.
 
         Parameters
         ----------
@@ -1303,7 +1464,7 @@ class DirectedMutagenesis:
             List of three integers.
         gcent : list
             List of three integers.
-        
+
         Returns
         -------
         TYPE
@@ -1332,16 +1493,19 @@ class DirectedMutagenesis:
 
         list_mutids = [item for sublist in self.mutid for item in sublist]
         list_chids = [item for sublist in self.list_chids for item in sublist]
-        list_resnums = [item for sublist in self.list_resnums for item in sublist]
+        list_resnums = [
+            item for sublist in self.list_resnums for item in sublist]
 
-        infile = os.path.join(jobdir, pdb_complex_dir, parent_file_prefix + '.pdb')
+        infile = os.path.join(jobdir, pdb_complex_dir,
+                              parent_file_prefix + '.pdb')
         system = parent_pdb.select('(' + ') or ('.join(selstr) + ')')
         pd.writePDB(infile, system)
 
         for mutid, chain, resnum, mut in zip(list_mutids[1:], list_chids[1:], list_resnums[1:], mutation):
             outpath = os.path.join(jobdir, pdb_complex_dir, mutid)
             print '\n%s:\tgenerating PDB for mutant: %s' % (self.jobname, mutid)
-            mutatePDB(pdb=infile, mutid=outpath, resnum=resnum, chain=chain, resid=mut)
+            mutatePDB(pdb=infile, mutid=outpath,
+                      resnum=resnum, chain=chain, resid=mut)
 
     def genPQR(self):
         """Summary
@@ -1350,7 +1514,8 @@ class DirectedMutagenesis:
         Returns
         -------
         None
-            Calls PDB2PQR and writes PQR to expected path according to class attributes.
+            Calls PDB2PQR and writes PQR to expected path according to
+            class attributes.
         """
         selstr = self.selstr
         jobdir = self.jobdir
@@ -1376,8 +1541,9 @@ class DirectedMutagenesis:
 
     def calcAPBS(self):
         """Summary
-        Call apbs to calculate reference-state and solvation-state energies for all structures in library.
-        
+        Call apbs to calculate reference-state and solvation-state energies
+        for all structures in library.
+
         Returns
         -------
         None
@@ -1395,14 +1561,16 @@ class DirectedMutagenesis:
         dim_mutid = len(list_mutids)
         dim_sel = len(selstr) + 1
 
-        mask_by_sel = np.copy(self.mask_by_sel)  # Mask parts that are true will be run with APBS
+        # Mask parts that are true will be run with APBS
+        mask_by_sel = np.copy(self.mask_by_sel)
         mask_by_sel[0, :] = np.ones(dim_sel).astype(bool)
         mask_by_sel[:, 0] = np.ones(dim_mutid).astype(bool)
 
         Gsolv = np.zeros((dim_mutid, dim_sel))
         Gref = np.zeros((dim_mutid, dim_sel))
 
-        complex_pqr = os.path.join(jobdir, pqr_complex_dir, list_mutids[0] + '.pqr')
+        complex_pqr = os.path.join(
+            jobdir, pqr_complex_dir, list_mutids[0] + '.pqr')
         for i, mutid in zip(xrange(dim_mutid), list_mutids):
             print '\n%s:\tcalculating solvation and reference energies for mutant: %s' % (self.jobname, mutid)
             # complex_pqr = os.path.join(jobdir, pqr_complex_dir, mutid+'.pqr')
@@ -1410,8 +1578,8 @@ class DirectedMutagenesis:
                 subunit_pqr = os.path.join(jobdir, seldir, mutid + '.pqr')
                 path_prefix_log = os.path.join(jobdir, logs_apbs_dir, mutid)
                 energies = execAPBS(path_apbs, subunit_pqr, self.dime, self.glen, self.gcent,
-                                        prefix=path_prefix_log, ion=self.ion, pdie=self.pdie, sdie=self.sdie,
-                                        dx=self.dx)
+                                    prefix=path_prefix_log, ion=self.ion, pdie=self.pdie, sdie=self.sdie,
+                                    dx=self.dx)
                 Gsolv[i, j] = energies[0][0]
                 Gref[i, j] = energies[0][1]
                 # if mask_by_sel[i, j]:
@@ -1430,16 +1598,18 @@ class DirectedMutagenesis:
     def calcAPBS_parallel(self, n_workers=None):
         """Summary
         Run APBS on each structure in mutant library, in parallel.
-        
+
         Parameters
         ----------
         n_workers : int
-            Number of processes to run. If None, method will use all available threads.
+            Number of processes to run. If None, method will use all
+            available threads.
 
         Returns
         -------
         None
-            Saves solvated-state and reference-state free energies as class attributes.
+            Saves solvated-state and reference-state free energies
+            as class attributes.
         """
         selstr = self.selstr
         jobdir = self.jobdir
@@ -1453,7 +1623,8 @@ class DirectedMutagenesis:
         dim_mutid = len(list_mutids)
         dim_sel = len(selstr) + 1
 
-        mask_by_sel = np.copy(self.mask_by_sel)  # Mask parts that are true will be run with APBS
+        # Mask parts that are true will be run with APBS
+        mask_by_sel = np.copy(self.mask_by_sel)
         mask_by_sel[0, :] = np.ones(dim_sel).astype(bool)
         mask_by_sel[:, 0] = np.ones(dim_mutid).astype(bool)
 
@@ -1474,17 +1645,20 @@ class DirectedMutagenesis:
         j_list = []
 
         # Find all calculations to be done
-        complex_pqr = os.path.join(jobdir, pqr_complex_dir, list_mutids[0] + '.pqr')
+        complex_pqr = os.path.join(
+            jobdir, pqr_complex_dir, list_mutids[0] + '.pqr')
         for i, mutid in zip(xrange(dim_mutid), list_mutids):
             for j, seldir in zip(xrange(dim_sel), [pqr_complex_dir] + pqr_sel_dir):
                 subunit_pqr = os.path.join(jobdir, seldir, mutid + '.pqr')
-                # if mask_by_sel[i, j]: # NOT NEEDED FOR DIRECTED MUTATIONS: modeller will rearrange structure slightly
+                # if mask_by_sel[i, j]: # NOT NEEDED FOR DIRECTED MUTATIONS:
+                # modeller will rearrange structure slightly
                 path_list.append(path_apbs)
                 pqr_chain_list.append(subunit_pqr)
                 dime_list.append(self.dime)
                 glen_list.append(self.glen)
                 gcent_list.append(self.gcent)
-                prefix_list.append(os.path.join(jobdir, logs_apbs_dir, '%d_%d_' % (i, j)+mutid))  # added to make sure apbs.in file is unique!
+                prefix_list.append(os.path.join(jobdir, logs_apbs_dir, '%d_%d_' % (
+                    i, j) + mutid))  # added to make sure apbs.in file is unique!
                 ion_list.append(self.ion)
                 pdie_list.append(self.pdie)
                 sdie_list.append(self.sdie)
@@ -1514,7 +1688,7 @@ class DirectedMutagenesis:
         apbs_results = np.asarray(apbs_results)
         self.apbs_results = apbs_results
         if self.dx == True:
-            self.dx_files = [x+'.dx' for x in prefix_list]
+            self.dx_files = [x + '.dx' for x in prefix_list]
 
         # # Fill in results that are duplicates # NOT NEEDED FOR DIRECTED MUTATIONS: modeller will rearrange structure slightly
         # for i in xrange(dim_mutid):
@@ -1529,7 +1703,7 @@ class DirectedMutagenesis:
     def calcCoulomb(self):
         """Summary
         Calculates Coulombic free energies with coulomb.exe from the APBS toolbox.
-        
+
         Returns
         -------
         None
@@ -1560,12 +1734,14 @@ class DirectedMutagenesis:
 
     def calcCoulomb_parallel(self, n_workers=None):
         """Summary
-        Calculates Coulombic free energies with coulomb.exe from the APBS toolbox in a parallel manner.
-        
+        Calculates Coulombic free energies with coulomb.exe from the APBS
+        toolbox in a parallel manner.
+
         Parameters
         ----------
         n_workers : int
-            Number of processes to run. If None, method will use all available threads.
+            Number of processes to run. If None, method will use all
+            available threads.
 
         Returns
         -------
@@ -1583,7 +1759,8 @@ class DirectedMutagenesis:
         dim_mutid = len(list_mutids)
         dim_sel = len(selstr) + 1
 
-        mask_by_sel = np.copy(self.mask_by_sel)  # Mask parts that are true will be run with APBS
+        # Mask parts that are true will be run with APBS
+        mask_by_sel = np.copy(self.mask_by_sel)
         mask_by_sel[0, :] = np.ones(dim_sel).astype(bool)
         mask_by_sel[:, 0] = np.ones(dim_mutid).astype(bool)
 
@@ -1599,7 +1776,8 @@ class DirectedMutagenesis:
         for i, mutid in zip(xrange(dim_mutid), list_mutids):
             for j, seldir in zip(xrange(dim_sel), [pqr_complex_dir] + pqr_sel_dir):
                 subunit_pqr = os.path.join(jobdir, seldir, mutid + '.pqr')
-                # if mask_by_sel[i, j]: # NOT NEEDED FOR DIRECTED MUTATIONS: modeller will rearrange structure slightly
+                # if mask_by_sel[i, j]: # NOT NEEDED FOR DIRECTED MUTATIONS:
+                # modeller will rearrange structure slightly
                 path_list.append(path_coulomb)
                 pqr_chain_list.append(subunit_pqr)
                 pdie_list.append(self.pdie)
@@ -1634,12 +1812,14 @@ class DirectedMutagenesis:
 
     def ddGa_rel(self):
         """Summary
-        Calculates and returns the free energy of association relative to the parent free energy of association.
-        
+        Calculates and returns the free energy of association relative
+        to the parent free energy of association.
+
         Returns
         -------
         ndarray
-            Array of free energies corresponding to the mutant IDs from the Alascan.getMutIDs() method.
+            Array of free energies corresponding to the mutant IDs from
+            the Alascan.getMutIDs() method.
         """
         Gsolv = self.Gsolv
         Gref = self.Gref
@@ -1657,12 +1837,14 @@ class DirectedMutagenesis:
 
     def dGsolv_rel(self):
         """Summary
-        Calculates and returns the free energy of a solvation for each mutant relative to the parent free energy of solvation.
-        
+        Calculates and returns the free energy of a solvation for each mutant
+        relative to the parent free energy of solvation.
+
         Returns
         -------
         ndarray
-            Array of solvation free energies corresponding to mutant IDs from the Alascan.getMutIDs() method.
+            Array of solvation free energies corresponding to mutant IDs
+            from the Alascan.getMutIDs() method.
         """
         Gsolv = self.Gsolv
         Gref = self.Gref
@@ -1673,11 +1855,12 @@ class DirectedMutagenesis:
     def run(self):
         """Summary
         Perform a directed mutagenesis scan on the initialized class.
-        
+
         Returns
         -------
         None
-            Outputs text to STDOUT when run is complete, will be made optional in the future.
+            Outputs text to STDOUT when run is complete, will be made optional
+            in the future.
         """
         start = ti.default_timer()
         # self.genDirs()
@@ -1692,17 +1875,20 @@ class DirectedMutagenesis:
 
     def run_parallel(self, n_workers=None):
         """Summary
-        Perform a computational directed mutagenesis scan on the initialized class using multiple processes in parallel.
-        
+        Perform a computational directed mutagenesis scan on the initialized
+        class using multiple processes in parallel.
+
         Parameters
         ----------
         n_workers : int
-            Number of processes to run. If None, method will use all available threads.
+            Number of processes to run. If None, method will use all
+            available threads.
 
         Returns
         -------
         None
-            Outputs text to STDOUT when run is complete, will be made optional in the future.
+            Outputs text to STDOUT when run is complete, will be made
+            optional in the future.
         """
         start = ti.default_timer()
         # self.genDirs()
@@ -1722,12 +1908,15 @@ class DirectedMutagenesis:
         Parameters
         ----------
         filename : str, optional
-            In order to write summary to a text file, supply the filename (full path).
-        
+            In order to write summary to a text file, supply the
+            filename (full path).
+
         Returns
         -------
         None
-            Prints summary of residues and energies relative to the parent structure if no filename is provided. Otherwise, writes to text file.
+            Prints summary of residues and energies relative to the parent
+            structure if no filename is provided.
+            Otherwise, writes to text file.
         """
         selstr = self.selstr
         mutids = self.getMutids()
@@ -1742,13 +1931,16 @@ class DirectedMutagenesis:
         if filename is not None:
             np.savetxt(filename, lines, fmt='%s')
 
-######################################################################################################################################################
+##########################################################################
 # Container for performing ESD analysis on set of PDB files
 #   alascan     -   Alascan class with certain class functions.
-######################################################################################################################################################
-class ElecSimilarity: # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD! Coordinates must be consistent!
+##########################################################################
+
+
+class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
+    # Coordinates must be consistent!
     """Summary
-    
+
     Attributes
     ----------
     apbs : str
@@ -1758,9 +1950,11 @@ class ElecSimilarity: # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD! Coordi
     dim_dx : list
         Dimensions of grid space
     dime : list
-        List of three integers. Parameter required for APBS. Please see description at: http://www.poissonboltzmann.org/docs/apbs-overview/
+        List of three integers. Parameter required for APBS.Please see
+        description at: http://www.poissonboltzmann.org/docs/apbs-overview/
     dx : bool
-        Variable that specifies if potential files should be written to disk. Default is False.
+        Variable that specifies if potential files should be written to disk.
+        Default is False.
     dxdir : str
         Folder in job directory where potential files are stored.
     dxfiles : list
@@ -1772,11 +1966,14 @@ class ElecSimilarity: # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD! Coordi
     ff : str
         Forcefield to use in assigning charges to PDB files.
     gcent : list
-        List of three integers. Parameter required for APBS. Please see description at: http://www.poissonboltzmann.org/docs/apbs-overview/
+        List of three integers. Parameter required for APBS. Please see
+        description at: http://www.poissonboltzmann.org/docs/apbs-overview/
     glen : list
-        List of three integers. Parameter required for APBS. Please see description at: http://www.poissonboltzmann.org/docs/apbs-overview/
+        List of three integers. Parameter required for APBS. Please see
+        description at: http://www.poissonboltzmann.org/docs/apbs-overview/
     grid : int
-        Desired grid spacing in Angstroms. Actual grid spacing may be slightly lower.
+        Desired grid spacing in Angstroms. Actual grid spacing may be
+        slightly lower.
     ids : list
         List of IDs for each structure being compared with the ESD metric.
     ion : numeric
@@ -1800,25 +1997,32 @@ class ElecSimilarity: # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD! Coordi
     sdie : numeric
         Solvent dielectric constant to be used in APBS.
     """
+
     def __init__(self, pdbfiles, pdb2pqr_exe='pdb2pqr', apbs_exe='apbs', selstr=None, jobname=None,
                  grid=1, ion=0.150, pdie=20.0, sdie=78.54, ff='parse', cfac=1.5):
         """Summary
         Constructor for ElecSimilarity class. Responsible for preliminary parameterization.
-        
+
         Parameters
         ----------
         pdbfiles : list
-            List of file names for all PDBs to be compared. Each string should be a full path if not in the current working directory.
+            List of file names for all PDBs to be compared.
+            Each string should be a full path if not in the current
+            working directory.
         pdb2pqr_exe : str
             Full path to PDB2PQR executable.
         apbs_exe : TYPE
             Full path to APBS executable. Must be compatible with OS.
         selstr : list, optional
-            List of selection strings. Each element should correspond element-wise with the PDB from pdbfiles.
+            List of selection strings. Each element should correspond
+            element-wise with the PDB from pdbfiles.
         jobname : None, optional
             [Optional] Name for current job, will be used to create the jobdir.
         grid : int, optional
-            Distance spacing of grid points. If the grid dimensions are not divisible by three, resolution will be increased (smaller grid spacing) until grid dimensions are divisible by three.
+            Distance spacing of grid points. If the grid dimensions are not
+            divisible by three, resolution will be
+            increased (smaller grid spacing) until grid dimensions are
+            divisible by three.
         ion : float, optional
             Ionic strength (M) to be used in APBS.
         pdie : float, optional
@@ -1826,12 +2030,15 @@ class ElecSimilarity: # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD! Coordi
         sdie : float, optional
             Solvent dielectric constant to be used in APBS.
         ff : str, optional
-            Force field to assign charges to individual atoms. We recommend using PARSE for this analysis, the default value.
+            Force field to assign charges to individual atoms.
+            We recommend using PARSE for this analysis, the default value.
         cfac : float, optional
-            Scaling factor for grid dimensions. We suggest to leave this unchanged.
+            Scaling factor for grid dimensions.
+            We suggest to leave this unchanged.
         """
         self.pdbfiles = [os.path.basename(pdbfile) for pdbfile in pdbfiles]
-        self.ids = [os.path.splitext(os.path.basename(pdbfile))[0] for pdbfile in pdbfiles]
+        self.ids = [os.path.splitext(os.path.basename(pdbfile))[
+            0] for pdbfile in pdbfiles]
         self.pdb2pqr = pdb2pqr_exe
         self.apbs = apbs_exe
         self.dx = True
@@ -1858,9 +2065,11 @@ class ElecSimilarity: # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD! Coordi
         for i, pdbfile in zip(xrange(len(pdbfiles)), pdbfiles):
             pdb = pd.parsePDB(pdbfile)
             if selstr is None:
-                pd.writePDB(os.path.join(self.pdbdir, os.path.basename(pdbfile)), pdb)
+                pd.writePDB(os.path.join(
+                    self.pdbdir, os.path.basename(pdbfile)), pdb)
             elif selstr is not None:
-                pd.writePDB(os.path.join(self.pdbdir, os.path.basename(pdbfile)), pdb.select(selstr[i]))
+                pd.writePDB(os.path.join(self.pdbdir, os.path.basename(
+                    pdbfile)), pdb.select(selstr[i]))
 
         self.grid = grid
         self.ion = ion
@@ -1887,8 +2096,10 @@ class ElecSimilarity: # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD! Coordi
 
     def superposePDB(self):
         """Summary
-        Superpose each structure in pdbfiles with first element in pdbfiles list. This method will fail if the number of alpha carbons are not equal in each PDB being compared.
-        
+        Superpose each structure in pdbfiles with first element in
+        pdbfiles list. This method will fail if the number of alpha
+        carbons are not equal in each PDB being compared.
+
         Returns
         -------
         TYPE
@@ -1900,11 +2111,13 @@ class ElecSimilarity: # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD! Coordi
         # Find minimum number of calphas
         num_res = pd.parsePDB(os.path.join(pdbdir, pdbfiles[0])).numResidues()
         for pdbfile in pdbfiles:
-            num_res = min(num_res, pd.parsePDB(os.path.join(pdbdir, pdbfile)).numResidues())
+            num_res = min(num_res, pd.parsePDB(
+                os.path.join(pdbdir, pdbfile)).numResidues())
         print 'Superposing %d PDB files on %d alpha carbons' % (len(pdbfiles), num_res)
 
         # Superpose each structure, overwriting previous PDB file
-        ref = pd.parsePDB(os.path.join(pdbdir, pdbfiles[0]), subset='calpha').getCoords()
+        ref = pd.parsePDB(os.path.join(
+            pdbdir, pdbfiles[0]), subset='calpha').getCoords()
         for pdbfile in pdbfiles:
             pdb = pd.parsePDB(os.path.join(pdbdir, pdbfile))
             coords = pdb.calpha.getCoords()
@@ -1915,7 +2128,7 @@ class ElecSimilarity: # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD! Coordi
     def initializeGrid(self):
         """Summary
         Method to find grid parameters and ensure that the product of dimensions is divisible by three.
-        
+
         Returns
         -------
         None
@@ -1934,16 +2147,23 @@ class ElecSimilarity: # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD! Coordi
         min_xyz = ref.getCoords().min(axis=0)
         for pdbfile in pdbfiles:
             pdb = pd.parsePDB(os.path.join(pdbdir, pdbfile))
-            max_xyz = np.vstack((max_xyz, pdb.getCoords().max(axis=0))).max(axis=0)
-            min_xyz = np.vstack((min_xyz, pdb.getCoords().min(axis=0))).min(axis=0)
+            max_xyz = np.vstack(
+                (max_xyz, pdb.getCoords().max(axis=0))).max(axis=0)
+            min_xyz = np.vstack(
+                (min_xyz, pdb.getCoords().min(axis=0))).min(axis=0)
 
-        # Determine mesh dimensions according to Ron's AESOP protocol in the R source file
+        # Determine mesh dimensions according to Ron's AESOP protocol in the R
+        # source file
         fg = np.ceil(max_xyz - min_xyz)
         fg = np.ceil((fg + 5) * cfac)
         glen = np.vstack((glen, fg)).max(axis=0)
-        dime_list = (32 * np.linspace(1, 100, 100)) + 1  # list of possible dime values
-        dime_ind = np.ceil(glen / (32 * grid)) - 1  # index of dime to use from list, subtract one to be consistent with python indexing!
-        dime = np.array((dime_list[int(dime_ind[0])], dime_list[int(dime_ind[1])], dime_list[int(dime_ind[2])]))
+        dime_list = (32 * np.linspace(1, 100, 100)) + \
+            1  # list of possible dime values
+        # index of dime to use from list, subtract one to be consistent with
+        # python indexing!
+        dime_ind = np.ceil(glen / (32 * grid)) - 1
+        dime = np.array((dime_list[int(dime_ind[0])], dime_list[
+                        int(dime_ind[1])], dime_list[int(dime_ind[2])]))
         ix = 0
         iy = 0
         iz = 0
@@ -1951,23 +2171,26 @@ class ElecSimilarity: # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD! Coordi
         while((dime[0] * dime[1] * dime[2] % 3 != 0) or (counter <= 5)):
             ix += 1
             if(dime[0] * dime[1] * dime[2] % 3 != 0):
-                dime = np.array((dime_list[int(dime_ind[0]+ix)], dime_list[int(dime_ind[1])+iy], dime_list[int(dime_ind[2])+iz]))
+                dime = np.array((dime_list[int(dime_ind[
+                                0] + ix)], dime_list[int(dime_ind[1]) + iy], dime_list[int(dime_ind[2]) + iz]))
             iy += 1
             if(dime[0] * dime[1] * dime[2] % 3 != 0):
-                dime = np.array((dime_list[int(dime_ind[0]+ix)], dime_list[int(dime_ind[1])+iy], dime_list[int(dime_ind[2])+iz]))
+                dime = np.array((dime_list[int(dime_ind[
+                                0] + ix)], dime_list[int(dime_ind[1]) + iy], dime_list[int(dime_ind[2]) + iz]))
             iz += 1
             if(dime[0] * dime[1] * dime[2] % 3 != 0):
-                dime = np.array((dime_list[int(dime_ind[0]+ix)], dime_list[int(dime_ind[1])+iy], dime_list[int(dime_ind[2])+iz]))
+                dime = np.array((dime_list[int(dime_ind[
+                                0] + ix)], dime_list[int(dime_ind[1]) + iy], dime_list[int(dime_ind[2]) + iz]))
             counter += 1
 
-        self.dime = dime #.reshape((1, 3))
-        self.glen = glen #.reshape((1, 3))
+        self.dime = dime  # .reshape((1, 3))
+        self.glen = glen  # .reshape((1, 3))
         self.gcent = pd.calcCenter(ref).astype(int)
 
     def genPQR(self):
         """Summary
         Convert all PDB files to PQR files with charges allocated according to a compatible force-field
-        
+
         Returns
         -------
         None
@@ -1981,7 +2204,8 @@ class ElecSimilarity: # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD! Coordi
 
         for pdbfile in pdbfiles:
             infile = os.path.join(pdbdir, pdbfile)
-            outfile = os.path.join(pqrdir, os.path.splitext(pdbfile)[0]+'.pqr')
+            outfile = os.path.join(
+                pqrdir, os.path.splitext(pdbfile)[0] + '.pqr')
             print 'Converting %s to PQR' % (pdbfile)
             execPDB2PQR(path_pdb2pqr, infile, outfile=outfile, ff=ff)
 
@@ -2007,19 +2231,25 @@ class ElecSimilarity: # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD! Coordi
         gcent = self.gcent
         dime = self.dime
 
-        pqrfiles = [os.path.join(pqrdir, os.path.splitext(pdbfile)[0]+'.pqr') for pdbfile in pdbfiles]
-        apbsfiles = [os.path.join(dxdir, os.path.splitext(pdbfile)[0]) for pdbfile in pdbfiles]
+        pqrfiles = [os.path.join(pqrdir, os.path.splitext(
+            pdbfile)[0] + '.pqr') for pdbfile in pdbfiles]
+        apbsfiles = [os.path.join(dxdir, os.path.splitext(pdbfile)[
+                                  0]) for pdbfile in pdbfiles]
         for pqrfile, apbsfile in zip(pqrfiles, apbsfiles):
-            calcDX(path_apbs, pqrfile, prefix=apbsfile, grid=grid, ion=ion, pdie=pdie, sdie=sdie, cfac=cfac, glen=glen, gcent=gcent, dime=dime)
+            calcDX(path_apbs, pqrfile, prefix=apbsfile, grid=grid, ion=ion,
+                   pdie=pdie, sdie=sdie, cfac=cfac, glen=glen, gcent=gcent, dime=dime)
 
     def genDX_parallel(self, n_workers=None):
         """Summary
-        Generates multiple potential files in parallel by calling APBS multiple times according to how many threads are available/specified.
+        Generates multiple potential files in parallel by calling APBS
+        multiple times according to how many threads are
+        available/specified.
 
         Parameters
         ----------
         n_workers : int
-            Number of processes to run. If None, method will use all available threads.
+            Number of processes to run.
+            If None, method will use all available threads.
 
         Returns
         -------
@@ -2039,11 +2269,13 @@ class ElecSimilarity: # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD! Coordi
         dime = self.dime
 
         if n_workers is None:
-        	n_workers = cpu_count()
+            n_workers = cpu_count()
 
         path_apbs = [self.apbs for pdbfile in pdbfiles]
-        pqrfiles = [os.path.join(pqrdir, os.path.splitext(pdbfile)[0]+'.pqr') for pdbfile in pdbfiles]
-        apbsfiles = [os.path.join(dxdir, os.path.splitext(pdbfile)[0]) for pdbfile in pdbfiles]
+        pqrfiles = [os.path.join(pqrdir, os.path.splitext(
+            pdbfile)[0] + '.pqr') for pdbfile in pdbfiles]
+        apbsfiles = [os.path.join(dxdir, os.path.splitext(pdbfile)[
+                                  0]) for pdbfile in pdbfiles]
         grid = [grid for pdbfile in pdbfiles]
         ion = [ion for pdbfile in pdbfiles]
         pdie = [pdie for pdbfile in pdbfiles]
@@ -2051,8 +2283,9 @@ class ElecSimilarity: # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD! Coordi
         cfac = [cfac for pdbfile in pdbfiles]
         glen = [glen for pdbfile in pdbfiles]
         gcent = [gcent for pdbfile in pdbfiles]
-        dime = [dime  for pdbfile in pdbfiles]
-        kernel = zip(path_apbs, pqrfiles, apbsfiles, grid, ion, pdie, sdie, cfac, glen, gcent, dime)
+        dime = [dime for pdbfile in pdbfiles]
+        kernel = zip(path_apbs, pqrfiles, apbsfiles, grid,
+                     ion, pdie, sdie, cfac, glen, gcent, dime)
 
         p = Pool(n_workers)
         print '%s:\trunning batchCalcDX ....' % (self.jobname)
@@ -2064,13 +2297,15 @@ class ElecSimilarity: # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD! Coordi
 
     def calcESD(self, method='AND'):
         """Summary
-        Compare potential files and calculate the similarity distance. Smaller distances imply similarity.
-        
+        Compare potential files and calculate the similarity distance.
+        Smaller distances imply similarity.
+
         Parameters
         ----------
         method : str, optional
-            This parameter will allow for other metrics to compare grid potentials; however, for now only 'AND' is implemented.
-        
+            This parameter will allow for other metrics to compare
+            grid potentials; however, for now only 'AND' is implemented.
+
         Returns
         -------
         None
@@ -2078,12 +2313,12 @@ class ElecSimilarity: # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD! Coordi
         """
         def symmetrize(a):
             """Summary
-            
+
             Parameters
             ----------
             a : TYPE
                 Description
-            
+
             Returns
             -------
             TYPE
@@ -2094,7 +2329,8 @@ class ElecSimilarity: # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD! Coordi
         pdbfiles = self.pdbfiles
         dxdir = self.dxdir
 
-        self.dxfiles = [os.path.join(dxdir, os.path.splitext(pdbfile)[0]+'.dx') for pdbfile in pdbfiles]
+        self.dxfiles = [os.path.join(dxdir, os.path.splitext(pdbfile)[
+                                     0] + '.dx') for pdbfile in pdbfiles]
         files = self.dxfiles
         ids = self.ids
 
@@ -2103,7 +2339,7 @@ class ElecSimilarity: # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD! Coordi
         self.edges = grid.edges
         self.dim_dx = grid.grid.shape
 
-        dim = self.dim_dx[0]*self.dim_dx[1]*self.dim_dx[2]/3
+        dim = self.dim_dx[0] * self.dim_dx[1] * self.dim_dx[2] / 3
         esd = np.zeros((len(ids), len(ids)))
 
         indices = it.combinations(range(len(ids)), 2)
@@ -2111,36 +2347,37 @@ class ElecSimilarity: # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD! Coordi
             a = gd.Grid(files[i]).grid.reshape((dim, 3))
             b = gd.Grid(files[j]).grid.reshape((dim, 3))
             if method is 'AND':
-                numer = np.linalg.norm(a-b, axis=1)
-                denom = dim * np.max(np.hstack((np.linalg.norm(a, axis=1).reshape((dim, 1)), np.linalg.norm(b, axis=1).reshape((dim, 1)))), axis=1)
+                numer = np.linalg.norm(a - b, axis=1)
+                denom = dim * np.max(np.hstack((np.linalg.norm(a, axis=1).reshape(
+                    (dim, 1)), np.linalg.norm(b, axis=1).reshape((dim, 1)))), axis=1)
                 esd[i, j] = np.divide(numer, denom).sum()
-                print esd[i,j]
+                print esd[i, j]
         esd = symmetrize(esd)
         self.esd = esd
 
-	def run(self, center=False, superpose=False):
-		if center:
-			self.centerPDB()
-		if superpose:
-			self.superposePDB()
-		self.initializeGrid()
-		self.genPQR()
-		self.genDX()
-		self.calcESD()
+        def run(self, center=False, superpose=False):
+            if center:
+                self.centerPDB()
+            if superpose:
+                self.superposePDB()
+            self.initializeGrid()
+            self.genPQR()
+            self.genDX()
+            self.calcESD()
 
-	def run_parallel(self, n_workers=None, center=False, superpose=False):
-		if center:
-			self.centerPDB()
-		if superpose:
-			self.superposePDB()
-		self.initializeGrid()
-		self.genPQR()
-		if n_workers is None:
-			self.genDX_parallel()
-		if n_workers is not None:
-			self.genDX_parallel(n_workers)
-		self.calcESD()
-    	
+        def run_parallel(self, n_workers=None, center=False, superpose=False):
+            if center:
+                self.centerPDB()
+            if superpose:
+                self.superposePDB()
+            self.initializeGrid()
+            self.genPQR()
+            if n_workers is None:
+                self.genDX_parallel()
+            if n_workers is not None:
+                self.genDX_parallel(n_workers)
+            self.calcESD()
+
 
 # ######################################################################################################################################################
 # # Container for performing ESD analysis
@@ -2148,7 +2385,7 @@ class ElecSimilarity: # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD! Coordi
 # ######################################################################################################################################################
 # class ESD:
 #     """Summary
-    
+
 #     Attributes
 #     ----------
 #     dim_dx : TYPE
@@ -2178,7 +2415,7 @@ class ElecSimilarity: # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD! Coordi
 #     """
 #     def __init__(self, alascan):
 #         """Summary
-        
+
 #         Parameters
 #         ----------
 #         alascan : TYPE
@@ -2211,12 +2448,12 @@ class ElecSimilarity: # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD! Coordi
 
 #     def findSurfaceGridPts(self, path_dssp):
 #         """Summary
-        
+
 #         Parameters
 #         ----------
 #         path_dssp : TYPE
 #             Description
-        
+
 #         Returns
 #         -------
 #         TYPE
@@ -2236,16 +2473,14 @@ class ElecSimilarity: # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD! Coordi
 #         # return result
 
 
-
-
 #     def setMask(self, mask):
 #         """Summary
-        
+
 #         Parameters
 #         ----------
 #         mask : TYPE
 #             Description
-        
+
 #         Returns
 #         -------
 #         TYPE
@@ -2254,16 +2489,17 @@ class ElecSimilarity: # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD! Coordi
 #         if len(mask) == len(self.mask):
 #             self.mask = mask
 #         else:
-#             print 'Error: unable to set mask, must be an array of length %d' % (len(self.mask))
+# print 'Error: unable to set mask, must be an array of length %d' %
+# (len(self.mask))
 
 #     def calc(self, method='LD'):
 #         """Summary
-        
+
 #         Parameters
 #         ----------
 #         method : str, optional
 #             Description
-        
+
 #         Returns
 #         -------
 #         TYPE
@@ -2271,12 +2507,12 @@ class ElecSimilarity: # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD! Coordi
 #         """
 #         def symmetrize(a):
 #             """Summary
-            
+
 #             Parameters
 #             ----------
 #             a : TYPE
 #                 Description
-            
+
 #             Returns
 #             -------
 #             TYPE
@@ -2316,12 +2552,12 @@ class ElecSimilarity: # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD! Coordi
 
 #     def calc_batch(self, method='LD'): # NOT WORKING ... DON'T USE!
 #         """Summary
-        
+
 #         Parameters
 #         ----------
 #         method : str, optional
 #             Description
-        
+
 #         Returns
 #         -------
 #         TYPE
@@ -2329,12 +2565,12 @@ class ElecSimilarity: # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD! Coordi
 #         """
 #         def symmetrize(a):
 #             """Summary
-            
+
 #             Parameters
 #             ----------
 #             a : TYPE
 #                 Description
-            
+
 #             Returns
 #             -------
 #             TYPE
@@ -2378,12 +2614,12 @@ class ElecSimilarity: # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD! Coordi
 # ######################################################################################################################################################
 # def f_and(kernel):
 #     """Summary
-    
+
 #     Parameters
 #     ----------
 #     kernel : TYPE
 #         Description
-    
+
 #     Returns
 #     -------
 #     TYPE
@@ -2400,18 +2636,18 @@ class ElecSimilarity: # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD! Coordi
 #     esd = np.divide(numer, denom).sum()
 #     return np.array([i, j, esd])
 
-######################################################################################################################################################
+##########################################################################
 # Function to run commands, recording output
-######################################################################################################################################################
+##########################################################################
 def runProcess(command):
     """Summary
     Simple function intended to capture outputs from processes that write to STDOUT.
-    
+
     Parameters
     ----------
     command : list
         Lists of strings where each element is a part of the entire command. (Ex: ['script','arg1','arg2',...])
-    
+
     Returns
     -------
     tuple
@@ -2423,13 +2659,16 @@ def runProcess(command):
     # print "program output:", out
     return (out, err)
 
-######################################################################################################################################################
+##########################################################################
 # Function to mutate a single residue in a PDB structure, mutates with side-chain truncation
-######################################################################################################################################################
-def mutatePQR(pqrfile, mutid, resnum, chain=None):  # Only use this function with PARSE for now ...
+##########################################################################
+
+
+# Only use this function with PARSE for now ...
+def mutatePQR(pqrfile, mutid, resnum, chain=None):
     """Summary
     Mutate PQR file via side-chain truncation scheme (mutate to Alanine)
-    
+
     Parameters
     ----------
     pqrfile : str
@@ -2440,7 +2679,7 @@ def mutatePQR(pqrfile, mutid, resnum, chain=None):  # Only use this function wit
         Residue number to mutate to alanine.
     chain : str, optional
         Chain where residue that will be mutated is located.
-    
+
     Returns
     -------
     None
@@ -2452,9 +2691,12 @@ def mutatePQR(pqrfile, mutid, resnum, chain=None):  # Only use this function wit
         preceed = parent.select('resnum < %d' % (int(resnum)))
         follow = parent.select('resnum > %d' % (int(resnum)))
     elif chain is not None:
-        residue = parent.select('chain %s and resnum %d' % (str(chain), int(resnum)))
-        preceed = parent.select('chain %s and resnum < %d' % (str(chain), int(resnum)))
-        follow = parent.select('chain %s and resnum > %d' % (str(chain), int(resnum)))
+        residue = parent.select('chain %s and resnum %d' %
+                                (str(chain), int(resnum)))
+        preceed = parent.select('chain %s and resnum < %d' %
+                                (str(chain), int(resnum)))
+        follow = parent.select('chain %s and resnum > %d' %
+                               (str(chain), int(resnum)))
         otherchains = parent.select('not chain %s' % (str(chain)))
     bb = residue.select('not sidechain')
     sc = residue.sidechain
@@ -2473,7 +2715,8 @@ def mutatePQR(pqrfile, mutid, resnum, chain=None):  # Only use this function wit
     cg.setCoords(pos_hb1)
 
     # Compile mutated pdb
-    ala_atoms = ['N', 'H', 'H2', 'H3', 'CA', 'HA', 'CB', 'HB1', 'HB2', 'HB3', 'C', 'O', 'OXT']
+    ala_atoms = ['N', 'H', 'H2', 'H3', 'CA', 'HA',
+                 'CB', 'HB1', 'HB2', 'HB3', 'C', 'O', 'OXT']
     if chain is None:
         if preceed is None:
             mutant = residue.select('name ' + ' '.join(ala_atoms)) + follow
@@ -2482,37 +2725,47 @@ def mutatePQR(pqrfile, mutid, resnum, chain=None):  # Only use this function wit
         if (preceed is None) and (follow is None):
             mutant = residue.select('name ' + ' '.join(ala_atoms))
         if (preceed is not None) and (follow is not None):
-            mutant = preceed + residue.select('name ' + ' '.join(ala_atoms)) + follow
+            mutant = preceed + \
+                residue.select('name ' + ' '.join(ala_atoms)) + follow
     else:
         if otherchains is None:
             if preceed is None:
                 mutant = residue.select('name ' + ' '.join(ala_atoms)) + follow
             if follow is None:
-                mutant = preceed + residue.select('name ' + ' '.join(ala_atoms))
+                mutant = preceed + \
+                    residue.select('name ' + ' '.join(ala_atoms))
             if (preceed is None) and (follow is None):
                 mutant = residue.select('name ' + ' '.join(ala_atoms))
             if (preceed is not None) and (follow is not None):
-                mutant = preceed + residue.select('name ' + ' '.join(ala_atoms)) + follow
+                mutant = preceed + \
+                    residue.select('name ' + ' '.join(ala_atoms)) + follow
         if otherchains is not None:
             if preceed is None:
-                mutant = residue.select('name ' + ' '.join(ala_atoms)) + follow + otherchains
+                mutant = residue.select(
+                    'name ' + ' '.join(ala_atoms)) + follow + otherchains
             if follow is None:
-                mutant = preceed + residue.select('name ' + ' '.join(ala_atoms)) + otherchains
+                mutant = preceed + \
+                    residue.select('name ' + ' '.join(ala_atoms)) + otherchains
             if (preceed is None) and (follow is None):
-                mutant = residue.select('name ' + ' '.join(ala_atoms)) + otherchains
+                mutant = residue.select(
+                    'name ' + ' '.join(ala_atoms)) + otherchains
             if (preceed is not None) and (follow is not None):
-                mutant = preceed + residue.select('name ' + ' '.join(ala_atoms)) + follow + otherchains
+                mutant = preceed + \
+                    residue.select('name ' + ' '.join(ala_atoms)
+                                   ) + follow + otherchains
 
     # Write mutant pqr
     pd.writePQR(mutid + '.pqr', mutant)
 
-######################################################################################################################################################
+##########################################################################
 # Function to mutate a single residue in a PDB structure, mutates with modeller by building internal coordinates of residue
-######################################################################################################################################################
+##########################################################################
+
+
 def mutatePDB(pdb, mutid, resnum, chain=None, resid='ALA'):
     """Summary
     Function to generate a mutant structure given a local PDB file using MODELLER.
-    
+
     Parameters
     ----------
     pdb : str
@@ -2525,7 +2778,7 @@ def mutatePDB(pdb, mutid, resnum, chain=None, resid='ALA'):
         Chain ID where specified residue number is to be mutated. This is necessary to specify if residue numbers are not unique on each chain.
     resid : str, optional
         Three letter amino acid code specifying the type of mutation. Default mutation is to alanine ('ALA').
-    
+
     Returns
     -------
     None
@@ -2540,7 +2793,8 @@ def mutatePDB(pdb, mutid, resnum, chain=None, resid='ALA'):
     try:
         from modeller import environ, model, alignment, selection
     except:
-        print('Failed to load modeller: please ensure module is installed and license key set')
+        print(
+            'Failed to load modeller: please ensure module is installed and license key set')
 
     env = environ()
     env.libs.topology.read(file='$(LIB)/top_heav.lib')
@@ -2561,7 +2815,8 @@ def mutatePDB(pdb, mutid, resnum, chain=None, resid='ALA'):
             if ' ' is chid:
                 sel = selection(mdl.residue_range(int(num) - 1, int(num) - 1))
             else:
-                sel = selection(mdl.residue_range(str(num) + ':' + chid, str(num) + ':' + chid))
+                sel = selection(mdl.residue_range(
+                    str(num) + ':' + chid, str(num) + ':' + chid))
             sel.mutate(residue_type=resid)
 
     aln.append_model(mdl, align_codes='mutant')
@@ -2572,7 +2827,8 @@ def mutatePDB(pdb, mutid, resnum, chain=None, resid='ALA'):
     mdl.build(initialize_xyz=False, build_method='INTERNAL_COORDINATES')
     mdl.write(file=mutid + '.pdb')
 
-    h = model(env, file=mutid + '.pdb')  # Without this section, chainids and resnums from parent won't be retained!
+    # Without this section, chainids and resnums from parent won't be retained!
+    h = model(env, file=mutid + '.pdb')
     m = model(env, file=pdb)
     aln = alignment(env)
     aln.append_model(m, atom_files=pdb, align_codes='parent')
@@ -2580,7 +2836,7 @@ def mutatePDB(pdb, mutid, resnum, chain=None, resid='ALA'):
     h.res_num_from(m, aln)  # Restore old residue numbering and chain indexing
     h.write(file=mutid + '.pdb')
 
-    ## Working Block
+    # Working Block
     # env = environ()
     # env.libs.topology.read(file='$(LIB)/top_heav.lib')
     # env.libs.parameters.read(file='$(LIB)/par.lib')
@@ -2612,14 +2868,16 @@ def mutatePDB(pdb, mutid, resnum, chain=None, resid='ALA'):
     # h.res_num_from(m, aln)  # Restore old residue numbering and chain indexing
     # h.write(file=mutid + '.pdb')
 
-######################################################################################################################################################
+##########################################################################
 # Function to run PDB2PQR.exe - should work on any supported OS
-######################################################################################################################################################
+##########################################################################
+
+
 def execPDB2PQR(path_pdb2pqr_exe, pdbfile, outfile=None, ff='parse'):
     """Summary
     Calls the APBS executable according to:
         <path to pdb2pqr appropriate for OS> --ff=parse --chain inputfile outputfile
-    
+
     Parameters
     ----------
     path_pdb2pqr_exe : str
@@ -2629,13 +2887,15 @@ def execPDB2PQR(path_pdb2pqr_exe, pdbfile, outfile=None, ff='parse'):
     outfile : str, optional
         File name for PQR file that will be generated. May be a full path if desired output is not in current working directory.
     ff : str, optional
-        String instructing PDB2PQR what force field to employ. For more information visit: http://www.poissonboltzmann.org/docs/pdb2pqr-usage/
-    
+        String instructing PDB2PQR what force field to employ. For more
+        information visit: http://www.poissonboltzmann.org/docs/pdb2pqr-usage/
+
     Returns
     -------
     (log, err) : tuple
-        When PDB2PQR runs, outputs that would have been sent to STDOUT are captured. Log contains the run log and err contains errors.
-    
+        When PDB2PQR runs, outputs that would have been sent to STDOUT
+        are captured. Log contains the run log and err contains errors.
+
     Deleted Parameters
     ------------------
     optargs : str, optional
@@ -2644,16 +2904,20 @@ def execPDB2PQR(path_pdb2pqr_exe, pdbfile, outfile=None, ff='parse'):
     if outfile is None:
         outfile = os.path.splitext(pdbfile)[0] + '.pqr'
     # os.system('"{0}" {1} {2} {3}'.format(path_pdb2pqr_exe, optargs, pdbfile, outfile))
-    (log, err) = runProcess([path_pdb2pqr_exe, '--ff=%s' % (ff), '--chain', pdbfile, outfile])
+    (log, err) = runProcess(
+        [path_pdb2pqr_exe, '--ff=%s' % (ff), '--chain', pdbfile, outfile])
     return (log, err)
 
-######################################################################################################################################################
+##########################################################################
 # Function to run APBS.exe - should work on any supported OS
-######################################################################################################################################################
+##########################################################################
+
+
 def execAPBS(path_apbs_exe, pqr_chain, dime, glen, gcent, prefix=None, ion=0.150, pdie=20.0, sdie=78.54, dx=False):
     """Summary
-    Calls the APBS executable after generating the APBS inputfile. Calculates solvation and reference energies.
-    
+    Calls the APBS executable after generating the APBS inputfile.
+    Calculates solvation and reference energies.
+
     Parameters
     ----------
     path_apbs_exe : str
@@ -2661,11 +2925,14 @@ def execAPBS(path_apbs_exe, pqr_chain, dime, glen, gcent, prefix=None, ion=0.150
     pqr_chain : str
         PQR file name containing the segment that will undergo electrostatic calculations.
     dime : list
-        List of three integers. Parameter required for APBS. Please see description at: http://www.poissonboltzmann.org/docs/apbs-overview/
+        List of three integers. Parameter required for APBS. Please see
+        description at: http://www.poissonboltzmann.org/docs/apbs-overview/
     glen : list
-        List of three integers. Parameter required for APBS. Please see description at: http://www.poissonboltzmann.org/docs/apbs-overview/
+        List of three integers. Parameter required for APBS. Please see
+        description at: http://www.poissonboltzmann.org/docs/apbs-overview/
     gcent : list
-        List of three integers. Parameter required for APBS. Please see description at: http://www.poissonboltzmann.org/docs/apbs-overview/
+        List of three integers. Parameter required for APBS. Please see
+        description at: http://www.poissonboltzmann.org/docs/apbs-overview/
     prefix : str, optional
         Phrase to prepend before any file that is generated before writing.
     ion : float, optional
@@ -2676,12 +2943,13 @@ def execAPBS(path_apbs_exe, pqr_chain, dime, glen, gcent, prefix=None, ion=0.150
         Solvent dielectric constant for APBS calculation.
     dx : bool, optional
         If true, potential files are written.
-    
+
     Returns
     -------
     file_apbs_log : str
-        File name for the log file that APBS generates. This file contains results from performed calculations.
-    
+        File name for the log file that APBS generates.
+        This file contains results from performed calculations.
+
     Deleted Parameters
     ------------------
     pqr_complex : STRING
@@ -2691,7 +2959,8 @@ def execAPBS(path_apbs_exe, pqr_chain, dime, glen, gcent, prefix=None, ion=0.150
     """
     # path_apbs_exe -   full path to apbs executable ('C:\\APBS\\apbs.exe')
     # pqr_chain     -   path to file with single chain pqr (mutant or parent)
-    # pqr_complex   -   path to file with complex pqr, contains mutant or parent chain that is used in pqr_chain
+    # pqr_complex   -   path to file with complex pqr, contains mutant or
+    #                   parent chain that is used in pqr_chain
     # prefix        -   string to pre-pend to output files (log file, dx file, energy file)
     # grid          -   grid spacing using in APBS calculation
     # ion           -   ionic strength for calculation
@@ -2781,21 +3050,26 @@ def execAPBS(path_apbs_exe, pqr_chain, dime, glen, gcent, prefix=None, ion=0.150
     # os.system('"{0}" {1} {2}'.format(path_apbs_exe, '--output-file=%s --output-format=flat'%(file_apbs_log), file_apbs_in))
     # os.system('{0} {1}'.format(path_apbs_exe, file_apbs_in))
     # (log, err) = runProcess([path_apbs_exe, file_apbs_in])
-    (log, err) = runProcess([path_apbs_exe, '--output-file=%s' % (file_apbs_log), '--output-format=flat', file_apbs_in])
-    pattern = re.compile('(?<=Global net ELEC energy =)\s+[+\-]?(?:0|[1-9]\d*)(?:\.\d*)?(?:[eE][+\-]?\d+)?')
-    elec = np.asarray([x.split() for x in re.findall(pattern, log)]).astype(np.float)
+    (log, err) = runProcess([path_apbs_exe, '--output-file=%s' %
+                             (file_apbs_log), '--output-format=flat', file_apbs_in])
+    pattern = re.compile(
+        '(?<=Global net ELEC energy =)\s+[+\-]?(?:0|[1-9]\d*)(?:\.\d*)?(?:[eE][+\-]?\d+)?')
+    elec = np.asarray([x.split()
+                       for x in re.findall(pattern, log)]).astype(np.float)
     elec = elec.reshape((1, elec.size))
 
     # return file_apbs_log
     return elec
 
-######################################################################################################################################################
+##########################################################################
 # Function to run APBS.exe to generate a DX file only - should work on any supported OS
-######################################################################################################################################################
+##########################################################################
+
+
 def calcDX(path_apbs_exe, pqrfile, prefix=None, grid=1.0, ion=0.150, pdie=20.0, sdie=78.54, cfac=1.5, glen=None, gcent=np.zeros(3), dime=None):
     """Summary
     Calls the APBS executable after generating the APBS inputfile. Generates a potential file (DX).
-    
+
     Parameters
     ----------
     path_apbs_exe : str
@@ -2820,7 +3094,7 @@ def calcDX(path_apbs_exe, pqrfile, prefix=None, grid=1.0, ion=0.150, pdie=20.0, 
         List of three integers. Parameter required for APBS. Please see description at: http://www.poissonboltzmann.org/docs/apbs-overview/
     dime : None, optional
         List of three integers. Parameter required for APBS. Please see description at: http://www.poissonboltzmann.org/docs/apbs-overview/
-    
+
     Returns
     -------
     (log, err) : tuple
@@ -2829,20 +3103,26 @@ def calcDX(path_apbs_exe, pqrfile, prefix=None, grid=1.0, ion=0.150, pdie=20.0, 
     if prefix is None:
         prefix = os.path.splitext(pqrfile)[0]
 
-    # Determine mesh dimensions according to Ron's AESOP protocol in the R source file
+    # Determine mesh dimensions according to Ron's AESOP protocol in the R
+    # source file
     if (dime is None) | (glen is None):
         pqr = pd.parsePQR(pqrfile)
         coords = pqr.getCoords()
         x = coords[:, 0]
         y = coords[:, 1]
         z = coords[:, 2]
-        fg = np.array((np.ceil(np.max(x) - np.min(x)), np.ceil(np.max(y) - np.min(y)), np.ceil(np.max(z) - np.min(z))))
+        fg = np.array((np.ceil(np.max(x) - np.min(x)),
+                       np.ceil(np.max(y) - np.min(y)), np.ceil(np.max(z) - np.min(z))))
         fg = np.ceil((fg + 5) * cfac)
         glen = np.zeros(3)
         glen = np.vstack((glen, fg)).max(axis=0)
-        dime_list = (32 * np.linspace(1, 100, 100)) + 1  # list of possible dime values
-        dime_ind = np.ceil(fg / (32 * grid)) - 1  # index of dime to use from list, subtract one to be consistent with python indexing!
-        dime = np.array((dime_list[int(dime_ind[0])], dime_list[int(dime_ind[1])], dime_list[int(dime_ind[2])]))
+        dime_list = (32 * np.linspace(1, 100, 100)) + \
+            1  # list of possible dime values
+        # index of dime to use from list, subtract one to be consistent with
+        # python indexing!
+        dime_ind = np.ceil(fg / (32 * grid)) - 1
+        dime = np.array((dime_list[int(dime_ind[0])], dime_list[
+                        int(dime_ind[1])], dime_list[int(dime_ind[2])]))
         ix = 0
         iy = 0
         iz = 0
@@ -2850,18 +3130,21 @@ def calcDX(path_apbs_exe, pqrfile, prefix=None, grid=1.0, ion=0.150, pdie=20.0, 
         while((dime[0] * dime[1] * dime[2] % 3 != 0) or (counter <= 5)):
             ix += 1
             if(dime[0] * dime[1] * dime[2] % 3 != 0):
-                dime = np.array((dime_list[int(dime_ind[0]+ix)], dime_list[int(dime_ind[1])+iy], dime_list[int(dime_ind[2])+iz]))
+                dime = np.array((dime_list[int(dime_ind[
+                                0] + ix)], dime_list[int(dime_ind[1]) + iy], dime_list[int(dime_ind[2]) + iz]))
             iy += 1
             if(dime[0] * dime[1] * dime[2] % 3 != 0):
-                dime = np.array((dime_list[int(dime_ind[0]+ix)], dime_list[int(dime_ind[1])+iy], dime_list[int(dime_ind[2])+iz]))
+                dime = np.array((dime_list[int(dime_ind[
+                                0] + ix)], dime_list[int(dime_ind[1]) + iy], dime_list[int(dime_ind[2]) + iz]))
             iz += 1
             if(dime[0] * dime[1] * dime[2] % 3 != 0):
-                dime = np.array((dime_list[int(dime_ind[0]+ix)], dime_list[int(dime_ind[1])+iy], dime_list[int(dime_ind[2])+iz]))
+                dime = np.array((dime_list[int(dime_ind[
+                                0] + ix)], dime_list[int(dime_ind[1]) + iy], dime_list[int(dime_ind[2]) + iz]))
             counter += 1
         # glen = fg
         # dime = np.array((dime_list[int(dime_ind[0])], dime_list[int(dime_ind[1])], dime_list[int(dime_ind[2])]))
-        dime = dime #.reshape((1, 3))
-        glen = glen #.reshape((1, 3))
+        dime = dime  # .reshape((1, 3))
+        glen = glen  # .reshape((1, 3))
         gcent = pd.calcCenter(pqr).astype(int)
 
     # Format APBS input file
@@ -2903,7 +3186,8 @@ def calcDX(path_apbs_exe, pqrfile, prefix=None, grid=1.0, ion=0.150, pdie=20.0, 
     # os.system('"{0}" {1} {2}'.format(path_apbs_exe, '--output-file=%s --output-format=flat'%(file_apbs_log), file_apbs_in))
     # os.system('{0} {1}'.format(path_apbs_exe, file_apbs_in))
     # (log, err) = runProcess([path_apbs_exe, file_apbs_in])
-    (log, err) = runProcess([path_apbs_exe, '--output-file=%s' % (file_apbs_log), '--output-format=flat', file_apbs_in])
+    (log, err) = runProcess([path_apbs_exe, '--output-file=%s' %
+                             (file_apbs_log), '--output-format=flat', file_apbs_in])
     # print err
     # pattern = re.compile('(?<=Global net ELEC energy =)\s+[+\-]?(?:0|[1-9]\d*)(?:\.\d*)?(?:[eE][+\-]?\d+)?')
     # elec = np.asarray([x.split() for x in re.findall(pattern, log)]).astype(np.float)
@@ -2912,18 +3196,20 @@ def calcDX(path_apbs_exe, pqrfile, prefix=None, grid=1.0, ion=0.150, pdie=20.0, 
     # return file_apbs_log
     # return elec
 
-######################################################################################################################################################
+##########################################################################
 # Function to run multiple APBS processes at once
-######################################################################################################################################################
+##########################################################################
+
+
 def batchAPBS(kernel):
     """Summary
     Function required to run multiple APBS jobs simultaneously. Not intended for general use.
-    
+
     Parameters
     ----------
     kernel : tuple
         Tuple of parameters required for APBS.
-    
+
     Returns
     -------
     ndarray
@@ -2932,22 +3218,26 @@ def batchAPBS(kernel):
     """
     # path, pqr_chain, pqr_complex, prefix, grid, ion, pdie, sdie, cfac, dx, i, j = kernel
     path, pqr_chain, dime, glen, gcent, prefix, ion, pdie, sdie, dx, i, j = kernel
-    # print 'Calculating solvation and reference energies for: %s' % (os.path.basename(pqr_chain).split('.')[0])
-    energies = execAPBS(path, pqr_chain, dime, glen, gcent, prefix=prefix, ion=ion, pdie=pdie, sdie=sdie, dx=dx)
+    # print 'Calculating solvation and reference energies for: %s' %
+    # (os.path.basename(pqr_chain).split('.')[0])
+    energies = execAPBS(path, pqr_chain, dime, glen, gcent,
+                        prefix=prefix, ion=ion, pdie=pdie, sdie=sdie, dx=dx)
     return np.array([i, j, energies[0][0], energies[0][1]])
 
-######################################################################################################################################################
+##########################################################################
 # Function to run multiple APBS processes at once for the purpose of generating only a DX file
-######################################################################################################################################################
+##########################################################################
+
+
 def batchCalcDX(kernel):
     """Summary
     Function required to run multiple APBS jobs simultaneously. Not intended for general use.
-    
+
     Parameters
     ----------
     kernel : tuple
         Tuple of parameters required for APBS.
-    
+
     Returns
     -------
     None
@@ -2955,20 +3245,22 @@ def batchCalcDX(kernel):
     """
     path, pqrfile, prefix, grid, ion, pdie, sdie, cfac, glen, gcent, dime = kernel
     calcDX(path, pqrfile, prefix=prefix, grid=grid, ion=ion, pdie=pdie, sdie=sdie,
-                        cfac=cfac, glen=glen, gcent=gcent, dime=dime)
+           cfac=cfac, glen=glen, gcent=gcent, dime=dime)
 
-######################################################################################################################################################
+##########################################################################
 # Function to run multiple Coulomb processes at once
-######################################################################################################################################################
+##########################################################################
+
+
 def batchCoulomb(kernel):
     """Summary
     Function required to run multiple Coulomb jobs simultaneously. Not intended for general use.
-    
+
     Parameters
     ----------
     kernel : tuple
         Tuple of parameters required for APBS.
-    
+
     Returns
     -------
     ndarray
@@ -2976,25 +3268,28 @@ def batchCoulomb(kernel):
         The last element is the Coulombic energy.
     """
     path, pqr_chain, pdie, i, j = kernel
-    # print 'Calculating coulombic energies for: %s' % (os.path.basename(pqr_chain).split('.')[0])
+    # print 'Calculating coulombic energies for: %s' %
+    # (os.path.basename(pqr_chain).split('.')[0])
     energies = execCoulomb(path, pqr_chain)
     energies = energies / pdie
     return np.array([i, j, energies])
 
-######################################################################################################################################################
+##########################################################################
 # Function to run coulomb.exe - should work on any supported OS
-######################################################################################################################################################
+##########################################################################
+
+
 def execCoulomb(path_coulomb_exe, pqr):
     """Summary
     Call Coulomb from APBS tools to calculate Coulombic energies.
-    
+
     Parameters
     ----------
     path_coulomb_exe : str
         Full path to coulomb executable.
     pqr : TYPE
         Filename for PQR to use for Coulombic energy calculation. Must be full path if not in current path.
-    
+
     Returns
     -------
     float
@@ -3006,19 +3301,19 @@ def execCoulomb(path_coulomb_exe, pqr):
     coul = np.asarray(re.findall(pattern, log)).astype(np.float)
     return coul
 
-######################################################################################################################################################
+##########################################################################
 # Function to run DSSP.exe - should work on any supported OS
-######################################################################################################################################################
+##########################################################################
 # def execDSSP(pdbfile, dssp):
 #     """Summary
-    
+
 #     Parameters
 #     ----------
 #     pdbfile : TYPE
 #         Description
 #     dssp : TYPE
 #         Description
-    
+
 #     Returns
 #     -------
 #     TYPE
@@ -3027,20 +3322,22 @@ def execCoulomb(path_coulomb_exe, pqr):
 #     (log, err) = runProcess([dssp, pdbfile])
 #     return log
 
-######################################################################################################################################################
+##########################################################################
 # Function to plot results of Alascan
-######################################################################################################################################################
+##########################################################################
+
+
 def plotScan(Alascan, filename=None):
     """Summary
     Function to display results from the computational alanine or directed mutagenesis scan.
-    
+
     Parameters
     ----------
     Alascan : scan class
         Alascan or DirectedMutagenesis class after running the complete analysis.
     filename : None, optional
         If the resulting plot should be written to disk, specify a filename. Otherwise, the image will only be saved.
-    
+
     Returns
     -------
     tuple
@@ -3051,33 +3348,47 @@ def plotScan(Alascan, filename=None):
     dpi_val = 300
     if len(Alascan.mutid) > 2:
         for i in xrange(1, len(Alascan.mutid)):
-            axarr[i - 1].set_title(np.unique(np.array([w.split('_') for w in Alascan.mutid[i]])[:, 0])[0] + ' ddGa relative to WT')
+            axarr[i - 1].set_title(np.unique(np.array([w.split('_')
+                                                       for w in Alascan.mutid[i]])[:, 0])[0] + ' ddGa relative to WT')
             axarr[i - 1].set_ylabel('kJ/mol')
-            axarr[i - 1].set_xticks(np.arange(len(Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]])))
+            axarr[
+                i - 1].set_xticks(np.arange(len(Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]])))
             if 100 < len(Alascan.mutid[i]) <= 150:
-                axarr[i - 1].set_xticklabels(np.array([w.split('_') for w in Alascan.mutid[i]])[:, 1], rotation='vertical', ha='left', size=6)
+                axarr[i - 1].set_xticklabels(np.array([w.split('_') for w in Alascan.mutid[i]])[
+                                             :, 1], rotation='vertical', ha='left', size=6)
             elif len(Alascan.mutid[i]) > 150:
-                axarr[i - 1].set_xticklabels(np.array([w.split('_') for w in Alascan.mutid[i]])[:, 1], rotation='vertical', ha='left', size=2)
+                axarr[i - 1].set_xticklabels(np.array([w.split('_') for w in Alascan.mutid[i]])[
+                                             :, 1], rotation='vertical', ha='left', size=2)
                 dpi_val = 600
             else:
-                axarr[i - 1].set_xticklabels(np.array([w.split('_') for w in Alascan.mutid[i]])[:, 1], rotation='vertical', ha='left')
-            axarr[i - 1].bar(np.arange(len(Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]]))[Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]] > 0],Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]][Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]] > 0], color='red')
-            axarr[i - 1].bar(np.arange(len(Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]]))[Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]] < 0],Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]][Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]] < 0], color='blue')
+                axarr[i - 1].set_xticklabels(np.array([w.split('_') for w in Alascan.mutid[i]])[
+                                             :, 1], rotation='vertical', ha='left')
+            axarr[i - 1].bar(np.arange(len(Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]]))[Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]] > 0],
+                             Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]][Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]] > 0], color='red')
+            axarr[i - 1].bar(np.arange(len(Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]]))[Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]] < 0],
+                             Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]][Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]] < 0], color='blue')
             axarr[i - 1].xaxis.set_ticks_position('bottom')
             axarr[i - 1].yaxis.set_ticks_position('left')
     elif len(Alascan.mutid) == 2:
-        axarr.set_title(np.unique(np.array([w.split('_') for w in Alascan.mutid[1]])[:, 0])[0] + ' dGsolv relative to WT')
+        axarr.set_title(np.unique(np.array([w.split('_') for w in Alascan.mutid[1]])[
+                        :, 0])[0] + ' dGsolv relative to WT')
         axarr.set_ylabel('kJ/mol')
-        axarr.set_xticks(np.arange(len(Alascan.dGsolv_rel()[Alascan.mask_by_sel[:, 1]])))
+        axarr.set_xticks(
+            np.arange(len(Alascan.dGsolv_rel()[Alascan.mask_by_sel[:, 1]])))
         if 100 < len(Alascan.mutid[1]) <= 150:
-            axarr.set_xticklabels(np.array([w.split('_') for w in Alascan.mutid[1]])[:, 1], rotation='vertical', ha='left', size=6)
+            axarr.set_xticklabels(np.array([w.split('_') for w in Alascan.mutid[1]])[
+                                  :, 1], rotation='vertical', ha='left', size=6)
         elif len(Alascan.mutid[1]) > 150:
-            axarr.set_xticklabels(np.array([w.split('_') for w in Alascan.mutid[1]])[:, 1], rotation='vertical', ha='left', size=2)
+            axarr.set_xticklabels(np.array([w.split('_') for w in Alascan.mutid[1]])[
+                                  :, 1], rotation='vertical', ha='left', size=2)
             dpi_val = 600
         else:
-            axarr.set_xticklabels(np.array([w.split('_') for w in Alascan.mutid[1]])[:, 1], rotation='vertical', ha='left')
-        axarr.bar(np.arange(len(Alascan.dGsolv_rel()[Alascan.mask_by_sel[:, 1]]))[Alascan.dGsolv_rel()[Alascan.mask_by_sel[:, 1]] > 0],Alascan.dGsolv_rel()[Alascan.mask_by_sel[:, 1]][Alascan.dGsolv_rel()[Alascan.mask_by_sel[:, 1]] > 0], color='red')
-        axarr.bar(np.arange(len(Alascan.dGsolv_rel()[Alascan.mask_by_sel[:, 1]]))[Alascan.dGsolv_rel()[Alascan.mask_by_sel[:, 1]] < 0],Alascan.dGsolv_rel()[Alascan.mask_by_sel[:, 1]][Alascan.dGsolv_rel()[Alascan.mask_by_sel[:, 1]] < 0], color='blue')
+            axarr.set_xticklabels(np.array([w.split('_') for w in Alascan.mutid[1]])[
+                                  :, 1], rotation='vertical', ha='left')
+        axarr.bar(np.arange(len(Alascan.dGsolv_rel()[Alascan.mask_by_sel[:, 1]]))[Alascan.dGsolv_rel()[Alascan.mask_by_sel[
+                  :, 1]] > 0], Alascan.dGsolv_rel()[Alascan.mask_by_sel[:, 1]][Alascan.dGsolv_rel()[Alascan.mask_by_sel[:, 1]] > 0], color='red')
+        axarr.bar(np.arange(len(Alascan.dGsolv_rel()[Alascan.mask_by_sel[:, 1]]))[Alascan.dGsolv_rel()[Alascan.mask_by_sel[
+                  :, 1]] < 0], Alascan.dGsolv_rel()[Alascan.mask_by_sel[:, 1]][Alascan.dGsolv_rel()[Alascan.mask_by_sel[:, 1]] < 0], color='blue')
         axarr.xaxis.set_ticks_position('bottom')
         axarr.yaxis.set_ticks_position('left')
     plt.tight_layout()
@@ -3085,50 +3396,57 @@ def plotScan(Alascan, filename=None):
         figure.savefig(filename, dpi=dpi_val)
     return(figure, axarr)
 
+
 def plotScan_interactive(Alascan, filename=None):
     """Summary
     Function to display results from the computational alanine or directed mutagenesis scan. Figure is more interactive that the standard matplotlib figure.
-    
+
     Parameters
     ----------
     Alascan : scan class
         Alascan or DirectedMutagenesis class after running the complete analysis.
     filename : None, optional
         If the resulting plot should be written to disk, specify a filename. Otherwise, the image will only be saved.
-    
+
     Returns
     -------
     None
         Saves image of figure, if desired.
     """
     subplot_titles = []
-    for i in xrange(1,len(Alascan.mutid)):
-         subplot_titles.append(np.unique(np.array([w.split('_') for w in Alascan.mutid[i]])[:,0])[0]+' ddGa relative to WT')
-    fig = tools.make_subplots(rows=len(Alascan.mutid) - 1, cols=1, vertical_spacing=.5, subplot_titles=subplot_titles)
-    for i in xrange(1,len(Alascan.mutid)):
-        pos_y = np.zeros(len(Alascan.ddGa_rel()[Alascan.mask_by_sel[:,i]]))
-        pos_y[Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]] > 0] = Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]][Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]] > 0]
-        neg_y = np.zeros(len(Alascan.ddGa_rel()[Alascan.mask_by_sel[:,i]]))
-        neg_y[Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]] < 0] = Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]][Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]] < 0]
-        pos_trace= go.Bar(
-            x=np.array([w.split('_') for w in Alascan.mutid[i]])[:,1],
+    for i in xrange(1, len(Alascan.mutid)):
+        subplot_titles.append(np.unique(np.array(
+            [w.split('_') for w in Alascan.mutid[i]])[:, 0])[0] + ' ddGa relative to WT')
+    fig = tools.make_subplots(rows=len(
+        Alascan.mutid) - 1, cols=1, vertical_spacing=.5, subplot_titles=subplot_titles)
+    for i in xrange(1, len(Alascan.mutid)):
+        pos_y = np.zeros(len(Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]]))
+        pos_y[Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]] > 0] = Alascan.ddGa_rel()[
+            Alascan.mask_by_sel[:, i]][Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]] > 0]
+        neg_y = np.zeros(len(Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]]))
+        neg_y[Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]] < 0] = Alascan.ddGa_rel()[
+            Alascan.mask_by_sel[:, i]][Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]] < 0]
+        pos_trace = go.Bar(
+            x=np.array([w.split('_') for w in Alascan.mutid[i]])[:, 1],
             y=pos_y,
-            name = np.unique(np.array([w.split('_') for w in Alascan.mutid[i]])[:,0])[0]+'Loss of binding',
-            marker = dict(
+            name=np.unique(np.array([w.split('_') for w in Alascan.mutid[i]])[:, 0])[
+                0] + 'Loss of binding',
+            marker=dict(
                 color='rgba(0,136,55,1)'
             )
         )
         neg_trace = go.Bar(
-            x=np.array([w.split('_') for w in Alascan.mutid[i]])[:,1],
+            x=np.array([w.split('_') for w in Alascan.mutid[i]])[:, 1],
             y=neg_y,
-            name = np.unique(np.array([w.split('_') for w in Alascan.mutid[i]])[:,0])[0]+'Gain in binding',
-            marker = dict(
+            name=np.unique(np.array([w.split('_') for w in Alascan.mutid[i]])[:, 0])[
+                0] + 'Gain in binding',
+            marker=dict(
                 color='rgba(123,50,148,1)'
             )
         )
         fig.append_trace(pos_trace, i, 1)
         fig.append_trace(neg_trace, i, 1)
-        fig['layout']['yaxis'+str(i)].update(title='kJ/mol')
+        fig['layout']['yaxis' + str(i)].update(title='kJ/mol')
 
     fig['layout'].update(barmode='stack', hovermode='closest')
     plotly_fig = go.Figure(fig)
@@ -3136,13 +3454,15 @@ def plotScan_interactive(Alascan, filename=None):
     if filename is not None:
         py.image.save_as(plotly_fig, filename=filename)
 
-######################################################################################################################################################
+##########################################################################
 # Function to plot results of ESD.calc()
-######################################################################################################################################################
+##########################################################################
+
+
 def plotESD(esd, filename=None, cmap='hot'):
     """Summary
     Function to display an electrostatic similarity heatmap from a previously run ElecSimilarity class.
-    
+
     Parameters
     ----------
     esd : ndarray
@@ -3151,7 +3471,7 @@ def plotESD(esd, filename=None, cmap='hot'):
         If the resulting plot should be written to disk, specify a filename. Otherwise, the image will only be saved.
     cmap : str, optional
         Colormap from matplotlib to use.
-    
+
     Returns
     -------
     None
@@ -3160,31 +3480,34 @@ def plotESD(esd, filename=None, cmap='hot'):
     plt.style.use('seaborn-talk')
     fig, ax = plt.subplots(sharey=True)
     heatmap = ax.pcolor(esd.esd, cmap=cmap, vmin=0, vmax=1)
-    ax.set_xlim(0,esd.esd.shape[0])
-    ax.set_ylim(0,esd.esd.shape[1])
-    ax.set_xticks(np.arange(esd.esd.shape[0])+0.5, minor=False)
-    ax.set_yticks(np.arange(esd.esd.shape[1])+0.5, minor=False)
-    ax.set_xticklabels(esd.ids, rotation=90 )
+    ax.set_xlim(0, esd.esd.shape[0])
+    ax.set_ylim(0, esd.esd.shape[1])
+    ax.set_xticks(np.arange(esd.esd.shape[0]) + 0.5, minor=False)
+    ax.set_yticks(np.arange(esd.esd.shape[1]) + 0.5, minor=False)
+    ax.set_xticklabels(esd.ids, rotation=90)
     ax.set_yticklabels(esd.ids)
     fig.colorbar(heatmap)
     plt.tight_layout()
     if filename is not None:
         fig.savefig(filename)
 
-######################################################################################################################################################
+##########################################################################
 # Function to plot ESD dendrogram
-######################################################################################################################################################
+##########################################################################
+
+
 def plotDend(esd, filename=None):
     """Summary
-    Function to display an electrostatic similarity dendrogram from a previously run ElecSimilarity class.
-    
+    Function to display an electrostatic similarity dendrogram from a
+    previously run ElecSimilarity class.
+
     Parameters
     ----------
     esd : ElecSimilarity class
         ElecSimilarity class containing final esd matrix.
     filename : str, optional
         If the resulting plot should be written to disk, specify a filename. Otherwise, the image will only be saved.
-    
+
     Returns
     -------
     None
@@ -3208,29 +3531,35 @@ def plotDend(esd, filename=None):
     if filename is not None:
         fig.savefig(filename)
 
+
 def plotESD_interactive(esd, filename=None, cmap='YIGnBu'):
     """Summary
-    Function to display an electrostatic similarity heatmap from a previously run ElecSimilarity class. Figure is more interactive that the standard matplotlib figure.
-    
+    Function to display an electrostatic similarity heatmap from a previously
+    run ElecSimilarity class. Figure is more interactive that the standard
+    matplotlib figure.
+
     Parameters
     ----------
     esd : ElecSimilarity class
         ElecSimilarity class containing final esd matrix.
     filename : str, optional
-        If the resulting plot should be written to disk, specify a filename. Otherwise, the image will only be saved.
+        If the resulting plot should be written to disk, specify a filename.
+        Otherwise, the image will only be saved.
     cmap : str, optional
         Colormap from matplotlib to use.
-    
+
     Returns
     -------
     None
         Writes image to disk, if desired.
     """
-    figure = FF.create_dendrogram(esd.esd, orientation='bottom', labels=esd.ids)
+    figure = FF.create_dendrogram(
+        esd.esd, orientation='bottom', labels=esd.ids)
     for i in range(len(figure['data'])):
         figure['data'][i]['yaxis'] = 'y2'
     # Create Side Dendrogram
-    dendro_side = FF.create_dendrogram(esd.esd, orientation='right', labels=esd.ids)
+    dendro_side = FF.create_dendrogram(
+        esd.esd, orientation='right', labels=esd.ids)
     for i in range(len(dendro_side['data'])):
         dendro_side['data'][i]['xaxis'] = 'x2'
     # Add Side Dendrogram Data to Figure
@@ -3243,8 +3572,8 @@ def plotESD_interactive(esd, filename=None, cmap='YIGnBu'):
     dendro_leaves = list(map(int, dendro_leaves))
 
     heat_data = esd.esd
-    heat_data = heat_data[dendro_leaves,:]
-    heat_data = heat_data[:,dendro_leaves]
+    heat_data = heat_data[dendro_leaves, :]
+    heat_data = heat_data[:, dendro_leaves]
 
     heatmap = go.Data([
         go.Heatmap(
@@ -3262,10 +3591,10 @@ def plotESD_interactive(esd, filename=None, cmap='YIGnBu'):
 
     # Edit Layout
     figure['layout'].update({
-                             'showlegend':False, 'hovermode': 'closest',
-                             })
-    figure['layout'].update({'margin':{'b':140,
-                                      't':10}})
+        'showlegend': False, 'hovermode': 'closest',
+    })
+    figure['layout'].update({'margin': {'b': 140,
+                                        't': 10}})
 
     # Edit xaxis
     figure['layout']['xaxis'].update({'domain': [.15, 1],
@@ -3276,12 +3605,12 @@ def plotESD_interactive(esd, filename=None, cmap='YIGnBu'):
                                       'ticks': ""})
     # Edit xaxis2
     figure['layout'].update({'xaxis2': {'domain': [0, .15],
-                                       'mirror': False,
-                                       'showgrid': False,
-                                       'showline': False,
-                                       'zeroline': False,
-                                       'showticklabels': False,
-                                       'ticks': ""}})
+                                        'mirror': False,
+                                        'showgrid': False,
+                                        'showline': False,
+                                        'zeroline': False,
+                                        'showticklabels': False,
+                                        'ticks': ""}})
 
     # Edit yaxis
     figure['layout']['yaxis'].update({'domain': [0, .85],
@@ -3295,13 +3624,13 @@ def plotESD_interactive(esd, filename=None, cmap='YIGnBu'):
                                       'tickvals': dendro_side['layout']['yaxis']['tickvals'],
                                       'ticks': ""})
     # Edit yaxis2
-    figure['layout'].update({'yaxis2':{'domain':[.825, .975],
-                                       'mirror': False,
-                                       'showgrid': False,
-                                       'showline': False,
-                                       'zeroline': False,
-                                       'showticklabels': False,
-                                       'ticks': ""}})
+    figure['layout'].update({'yaxis2': {'domain': [.825, .975],
+                                        'mirror': False,
+                                        'showgrid': False,
+                                        'showline': False,
+                                        'zeroline': False,
+                                        'showticklabels': False,
+                                        'ticks': ""}})
 
     # Plot!
     plotly.offline.plot(figure)
@@ -3313,14 +3642,14 @@ def plotESD_interactive(esd, filename=None, cmap='YIGnBu'):
 # ######################################################################################################################################################
 # def calcRSA(pdbfile, dssp):
 #     """Summary
-    
+
 #     Parameters
 #     ----------
 #     pdbfile : TYPE
 #         Description
 #     dssp : TYPE
 #         Description
-    
+
 #     Returns
 #     -------
 #     TYPE
@@ -3361,16 +3690,17 @@ def plotESD_interactive(esd, filename=None, cmap='YIGnBu'):
 #     rsa = np.asarray(rsa)
 #     return(resid, rsa, rsa>=threshold)
 
-######################################################################################################################################################
+##########################################################################
 # Function to parse APBS log file - REMOVED as it is not required!
-######################################################################################################################################################
+##########################################################################
 # def parseAPBS_totEnergy(path_log):
 #     """Searches for a 'totEnergy' calculation result in the APBS log file
 
 #     Parameters
 #     ----------
 #     path_log : STRING
-#         Full path to APBS log file, EX: 'C:\\Users\\User\\Documents\\AESOP\\apbs.log'
+# Full path to APBS log file, EX:
+# 'C:\\Users\\User\\Documents\\AESOP\\apbs.log'
 
 #     Returns
 #     -------
@@ -3388,9 +3718,9 @@ def plotESD_interactive(esd, filename=None, cmap='YIGnBu'):
 #         data = data.reshape((1,data.size))
 #     return data
 
-######################################################################################################################################################
+##########################################################################
 # Dictionary to convert between 3 letter and 1 letter amino acid codes
-######################################################################################################################################################
+##########################################################################
 """Summary
 
 Attributes
