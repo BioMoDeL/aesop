@@ -6,7 +6,8 @@ Alanine Scan
 Given a PDB structure of atomistic resolution, the alanine scan method iteratively perturbs the native 
 structure by mutating single amino acids to alanine one residue at a time. In this manner, the method 
 can predict those mutations that are predicted to significantly affect the free energy of association for 
-a complex according to the thermodynamic cycle.
+a complex according to the thermodynamic cycle. For reference, please refer to [Kieslich2011-2]_ and 
+[Gorham2011-2]_ as they present published result for the Barnase-Barstar test system.
 
 .. currentmodule:: aesop
 .. autosummary::
@@ -79,4 +80,5 @@ specified for the summary, then the summary is simply printed to STDOUT::
 References
 """"""""""
 
-Cite
+.. [Kieslich2011-2] `Kieslich, C.A., R.D. Gorham, and D. Morikis. 2011. Is the rigid-body assumption reasonable?: Insights into the effects of dynamics on the electrostatic analysis of barnase-barstar. J. Non. Cryst. Solids. 357: 707–716. <https://doi.org/10.1016/j.jnoncrysol.2010.05.087>`_.
+.. [Gorham2011-2] `Gorham, R.D., C.A. Kieslich, A. Nichols, N.U. Sausman, M. Foronda, and D. Morikis. 2011. An evaluation of Poisson-Boltzmann electrostatic free energy calculations through comparison with experimental mutagenesis data. Biopolymers. 95: 746–754. <https://doi.org/10.1002/bip.21644>`_.

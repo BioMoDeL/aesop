@@ -11,6 +11,7 @@ Contents:
 .. toctree::
    :maxdepth: 1
 
+   about
    installation
    elecsimilarity
    alascan
