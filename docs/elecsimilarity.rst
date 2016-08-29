@@ -40,7 +40,7 @@ working directory. The user has the option of naming this folder by specifying a
 
 Next, the method is initialized by::
 
-    family = ElecSimilarity(pdbfiles, pdb2pqr_exe=path_pdb2pqr, apbs_exe=path_apbs, 
+    family = ElecSimilarity(pdbfiles=pdbfiles, pdb2pqr_exe=path_pdb2pqr, apbs_exe=path_apbs, 
                             jobname=jobname)
 
 Finally, we are ready to run the analysis. This will take several minutes, so please be patient::
@@ -59,7 +59,7 @@ You can view results using built-in functions::
 Other modules such as numpy or pandas will allow exporting of the ESD matrix to file::
 
     import numpy as np
-    np.savetxt(fname='esd_matrix.txt', data, fmt='%.4f')
+    np.savetxt('esd_matrix.txt', data, fmt='%.4f')
 
 References
 """"""""""

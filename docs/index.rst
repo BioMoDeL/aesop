@@ -30,11 +30,11 @@ Framework
 - **Examples**
 	- All materials for example cases are provided in the tests folder
 - **Documentation**
-	- HTML documentation provided within the docs folder and online (http://aesop-python.readthedocs.io/en/latest/)
+	- HTML documentation provided online (http://aesop.readthedocs.io)
 - **Dependencies**
 	- APBS and PDB2PQR
-	- Required Python libraries: numpy, scipy, prody, matplotlib, modeller, griddataformats
-	- Optional Python libraries: multiprocessing
+	- Required Python libraries: numpy, scipy, prody, matplotlib, griddataformats
+	- Optional Python libraries: modeller, multiprocessing
 
 Methods
 """""""

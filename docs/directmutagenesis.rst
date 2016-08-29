@@ -37,7 +37,7 @@ scan, jobname will be used to create a folder where files for the method will be
 the PDB file for this example from this link (:download:`download<../data/barnase_barstar.pdb>`). 
 Make sure you place the PDB in your working directory::
 
-    jobname = 'alascan'
+    jobname = 'directedscan'
     pdbfile = 'barnase_barstar.pdb'
 
 The DirectedMutagenesis class will need to know how to define each subunit of the protein complex. To do 
@@ -64,7 +64,7 @@ the mutation. Remember respective elements in target and mutation are linked::
 
 Finally, we may initialize the DirectedMutagenesis scan class::
 
-    mutscan = DirectedMutagenesis(pdbfile=pdbfile, pdb2pqr_exe=path_pdb2pqr,
+    mutscan = DirectedMutagenesis(pdb=pdbfile, pdb2pqr_exe=path_pdb2pqr,
                       apbs_exe=path_apbs, coulomb_exe=path_coulomb,
                       jobname=jobname, selstr=selstr, target=target,
                       mutation=mutation)
