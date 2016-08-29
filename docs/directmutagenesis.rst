@@ -3,8 +3,12 @@
 Directed Mutagenesis Scan
 =========================
 
-For reference, please refer to [Kieslich2011-2]_ and 
-[Gorham2011-2]_ as they present published result for the Barnase-Barstar test system.
+The directed mutagenesis scan is similar to the alanine scan, except it requires specific information 
+about what mutations to perform. Additionally, this method requires an external python library named 
+Modeller. This dependency facilitates more complicated mutations; however, it also requires the method 
+to perform more calculations than for the side-chain truncation method of the alanine scan. For 
+reference, please refer to [Kieslich2011-2]_ and [Gorham2011-2]_ as they present published results 
+for the Barnase-Barstar test system.
 
 .. currentmodule:: aesop
 .. autosummary::

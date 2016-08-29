@@ -7,7 +7,7 @@ Given a PDB structure of atomistic resolution, the alanine scan method iterative
 structure by mutating single amino acids to alanine one residue at a time. In this manner, the method 
 can predict those mutations that are predicted to significantly affect the free energy of association for 
 a complex according to the thermodynamic cycle. For reference, please refer to [Kieslich2011-2]_ and 
-[Gorham2011-2]_ as they present published result for the Barnase-Barstar test system.
+[Gorham2011-2]_ as they present published results for the Barnase-Barstar test system.
 
 .. currentmodule:: aesop
 .. autosummary::
