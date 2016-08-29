@@ -58,13 +58,14 @@ After initialization, you can run the analysis in series::
 
     alascan.run()
 
-... or you can run the analysis in parallel on a certain number of threads::
+... or you can run the analysis in parallel on a certain number of threads (don't pass a number 
+if you wish to use all available threads)::
 
     alascan.run_parallel(6)
 
 Once complete, you can view the results as a barplot::
 
-    plotScan(alascan)
+    plotScan(alascan, filename='alascan.png')
 
 You may also extract the free energies of association and the associated mutation ids::
 

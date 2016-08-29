@@ -43,14 +43,17 @@ Next, the method is initialized by::
     family = ElecSimilarity(pdbfiles=pdbfiles, pdb2pqr_exe=path_pdb2pqr, apbs_exe=path_apbs, 
                             jobname=jobname)
 
-Finally, we are ready to run the analysis. This will take several minutes, so please be patient::
+Finally, we are ready to run the analysis. To superpose structures before running, set superpose 
+to True. To center structures before running, set center to True. Ideally, the end user should 
+ensure that all PDB structures have consistent coordinates. This analysis will take several minutes, 
+so please be patient::
 
-    family.run()
+    family.run(superpose=True)
 
 You can view results using built-in functions::
 
-    plotDend(family)
-    plotESD(family)
+    plotDend(family, filename='dend.png')
+    plotESD(family, filename='esd.png')
 
 ... or you can access the raw ESD matrix::
 

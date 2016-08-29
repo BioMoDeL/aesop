@@ -79,7 +79,7 @@ After initialization, you can run the analysis in series::
 
 Once complete, you can view the results as a barplot::
 
-    plotScan(mutscan)
+    plotScan(mutscan, filename='directedmutagenesis.png')
 
 You may also extract the free energies of association and the associated mutation ids::
 
