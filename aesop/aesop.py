@@ -2355,28 +2355,28 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
         esd = symmetrize(esd)
         self.esd = esd
 
-        def run(self, center=False, superpose=False):
-            if center:
-                self.centerPDB()
-            if superpose:
-                self.superposePDB()
-            self.initializeGrid()
-            self.genPQR()
-            self.genDX()
-            self.calcESD()
+    def run(self, center=False, superpose=False):
+        if center:
+            self.centerPDB()
+        if superpose:
+            self.superposePDB()
+        self.initializeGrid()
+        self.genPQR()
+        self.genDX()
+        self.calcESD()
 
-        def run_parallel(self, n_workers=None, center=False, superpose=False):
-            if center:
-                self.centerPDB()
-            if superpose:
-                self.superposePDB()
-            self.initializeGrid()
-            self.genPQR()
-            if n_workers is None:
-                self.genDX_parallel()
-            if n_workers is not None:
-                self.genDX_parallel(n_workers)
-            self.calcESD()
+    def run_parallel(self, n_workers=None, center=False, superpose=False):
+        if center:
+            self.centerPDB()
+        if superpose:
+            self.superposePDB()
+        self.initializeGrid()
+        self.genPQR()
+        if n_workers is None:
+            self.genDX_parallel()
+        if n_workers is not None:
+            self.genDX_parallel(n_workers)
+        self.calcESD()
 
 
 # ######################################################################################################################################################
