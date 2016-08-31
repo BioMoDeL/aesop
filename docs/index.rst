@@ -13,6 +13,7 @@ Contents:
 
    about
    installation
+   selections
    elecsimilarity
    alascan
    directmutagenesis
