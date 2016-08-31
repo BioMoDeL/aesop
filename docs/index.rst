@@ -1,44 +1,46 @@
+.. _index::
 
 **AESOP**
 =========
 
-(A)nalysis of (E)lectrostatic (S)tructures (o)f (P)roteins
+A python library for studying electrostatics in proteins
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
-**Authors**: Reed Harrison, Rohith Mohan, and Dimitrios Morikis
+AESOP is developed and maintained by members of the Biomolecular Modeling and Design Lab at the 
+University of California, Riverside, including: Reed Harrison, Rohith Mohan, and Dimitrios Morikis.
 
-Contents:
+.. image:: biomodel.png
+   :scale: 50 %
+   :alt: alternate text
+   :align: right
+   :target: http://biomodel.engr.ucr.edu
 
-.. toctree::
-   :maxdepth: 1
+**Indices and tables**
 
-   about
-   installation
-   selections
-   elecsimilarity
-   alascan
-   directmutagenesis
-   aesop
-
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
 
 Project summary
 ===============
 
-Framework
-"""""""""
-- AESOP is a computational framework to explore electrostatic structures within proteins. The library depends on external tools including: APBS, PDB2PQR, Modeller, and ProDy
-- **Atomic Selections**
-	- All selection strings must be made according to the style of ProDy (http://prody.csb.pitt.edu/manual/reference/atomic/select.html)
-- **Examples**
-	- All materials for example cases are provided in the tests folder
-- **Documentation**
-	- HTML documentation provided online (http://aesop.readthedocs.io)
-- **Dependencies**
-	- APBS and PDB2PQR
-	- Required Python libraries: numpy, scipy, prody, matplotlib, griddataformats
-	- Optional Python libraries: modeller, multiprocessing
+For many proteins complexes, long range electrostatic interactions play a pivotal role in the formation 
+of the encounter complex. Charge-charge interactions can also serve to thermodynamically stabilize any 
+resulting complex. In many cases, however, optimization of a protein associating with its binding partner 
+is sufficient to incrase protein activity as many protein systems are diffusion limited. The AESOP 
+framework provides a tool to investigate the electrostatic nature of protein interactions both across
+protein families as well as within indivdiual proteins in terms of individual amino acid contributions.
+
+AESOP is implemented in Python 2.7 and depends on a number of computational tools including: APBS, 
+PDB2PQR, ProDy, Modeller, and gridDataFormats. Documentation can be found at `aesop.readthedocs.io 
+<aesop.rtfd.io>`_. We welcome questions and collaboration on the GitHub page for AESOP at 
+`https://github.com/rohithmohan/aesop <https://github.com/rohithmohan/aesop>`_.
 
 Methods
 """""""
+
+AESOP currently supports three computational methods:
+
 - **Alascan**
 	- Perform a computational alanine scan on a provided protein structure using a side-chain truncation scheme
 	- Association free energies for mutatants (relative to the parent) may be predicted if 2 or more selection strings are provided
@@ -55,6 +57,11 @@ Methods
 
 General Utilities
 """""""""""""""""
+
+In addition to the three main computational methods, AESOP provides a total of three functions capable 
+of displaying results as figures during interactive Python sessions or saving results as figures during 
+any Python script:
+
 - aesop.plotScan()
 	- Show bargraph summary of results from computational mutagenesis methods (Alascan, DirectedMutagenesis)
 - aesop.plotESD()
@@ -67,10 +74,16 @@ Notes
 - We recommend using Anaconda to aid in installation of Python scientific libraries
 - Depending on your platform, ProDy may need to be installed with an executable
 
+Contents
+""""""""
 
-Indices and tables
-==================
+.. toctree::
+   :maxdepth: 1
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+   about
+   installation
+   selections
+   elecsimilarity
+   alascan
+   directmutagenesis
+   aesop
