@@ -3479,7 +3479,7 @@ def plotESD(esd, filename=None, cmap='hot'):
     """
     plt.style.use('seaborn-talk')
     fig, ax = plt.subplots(sharey=True)
-    heatmap = ax.pcolor(esd.esd, cmap=cmap, vmin=0, vmax=1)
+    heatmap = ax.pcolor(esd.esd, cmap=cmap, vmin=0, vmax=2)
     ax.set_xlim(0, esd.esd.shape[0])
     ax.set_ylim(0, esd.esd.shape[1])
     ax.set_xticks(np.arange(esd.esd.shape[0]) + 0.5, minor=False)
