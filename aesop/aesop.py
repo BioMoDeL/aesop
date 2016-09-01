@@ -3515,7 +3515,8 @@ def plotDend(esd, filename=None):
     """
     plt.style.use('seaborn-talk')
     fig, ax = plt.subplots(sharey=True)
-    Z = cluster.linkage(esd.esd, 'ward')
+    # Z = cluster.linkage(esd.esd, 'ward')
+    Z = cluster.linkage(esd.esd)
     cluster.dendrogram(
         Z,
         labels=esd.ids,
