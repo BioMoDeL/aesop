@@ -16,7 +16,7 @@ Acknowledgements
 AESOP is developed in the Biomolecular Modeling and design Lab (`BioMoDeL <http://biomodel.engr.ucr.edu>`_) under the supervision of Professor 
 Dimitrios Morikis.  The python library of AESOP is developed by Reed Harrison and Rohith Mohan [Harrison2016]_, and 
 is based on the original AESOP framework, written in R, that was developed and parametrized by Chris Kieslich 
-and Ronald Gorham [Kieslich2011-1]_[Gorham2011-1]_[Gorham2011-2]_[Kieslich2011-2]_. A preliminary computational protocol for electrostatic similarities that preceded 
+and Ronald Gorham [Kieslich2011-1]_ [Gorham2011-1]_ [Gorham2011-2]_ [Kieslich2011-2]_. A preliminary computational protocol for electrostatic similarities that preceded 
 AESOP was developed by Jianfeng Yang.
 
 The AESOP acronym stands for Analysis of Electrostatic Structures Of Proteins.
