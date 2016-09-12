@@ -53,6 +53,8 @@ Finally, we may initialize the Alanine scan class::
     alascan = Alascan(pdb=pdbfile, pdb2pqr_exe=path_pdb2pqr,
                       apbs_exe=path_apbs, coulomb_exe=path_coulomb,
                       jobname=jobname, selstr=selstr)
+    #If paths to apbs, coulomb and pdb2pqr are already added to environment then you may initialize as follows:
+    alascan = Alascan(pdbfile=pdbfile, jobname=jobname, selstr=selstr)
 
 After initialization, you can run the analysis in series::
 
