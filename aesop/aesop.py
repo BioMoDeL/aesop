@@ -3418,7 +3418,7 @@ def plotScan_interactive(Alascan, filename=None):
         subplot_titles.append(np.unique(np.array(
             [w.split('_') for w in Alascan.mutid[i]])[:, 0])[0] + ' ddGa relative to WT')
     fig = tools.make_subplots(rows=len(
-        Alascan.mutid) - 1, cols=1, vertical_spacing=.5, subplot_titles=subplot_titles)
+        Alascan.mutid) - 1, cols=1, subplot_titles=subplot_titles)
     for i in xrange(1, len(Alascan.mutid)):
         pos_y = np.zeros(len(Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]]))
         pos_y[Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]] > 0] = Alascan.ddGa_rel()[
