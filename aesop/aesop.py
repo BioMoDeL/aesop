@@ -3394,10 +3394,6 @@ def plotScan(Alascan, filename=None):
 
 
 def plotScan_interactive(Alascan, filename=None):
-    import plotly.plotly as py
-    import plotly.graph_objs as go
-    from plotly.offline import download_plotlyjs, init_notebook_mode, iplot
-    from plotly.tools import FigureFactory as FF
     """Summary
     Function to display results from the computational alanine or directed mutagenesis scan. Figure is more interactive that the standard matplotlib figure.
 
@@ -3413,40 +3409,77 @@ def plotScan_interactive(Alascan, filename=None):
     None
         Saves image of figure, if desired.
     """
+    import plotly.plotly as py
+    import plotly.graph_objs as go
+    from plotly.offline import download_plotlyjs, init_notebook_mode, iplot
+    from plotly import tools
+    
     subplot_titles = []
     for i in range(1, len(Alascan.mutid)):
         subplot_titles.append(np.unique(np.array(
             [w.split('_') for w in Alascan.mutid[i]])[:, 0])[0] + ' ddGa relative to WT')
     fig = tools.make_subplots(rows=len(
         Alascan.mutid) - 1, cols=1, subplot_titles=subplot_titles)
-    for i in range(len(Alascan.mutid)-1,0,-1):
-        pos_y = np.zeros(len(Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]]))
-        pos_y[Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]] > 0] = Alascan.ddGa_rel()[
-            Alascan.mask_by_sel[:, i]][Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]] > 0]
-        neg_y = np.zeros(len(Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]]))
-        neg_y[Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]] < 0] = Alascan.ddGa_rel()[
-            Alascan.mask_by_sel[:, i]][Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]] < 0]
+    if len(Alascan.mutid) > 2:
+        for i in range(len(Alascan.mutid) - 1, 0, -1):
+            pos_y = np.zeros(
+                len(Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]]))
+            pos_y[Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]] > 0] = Alascan.ddGa_rel()[
+                Alascan.mask_by_sel[:, i]][Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]] > 0]
+            neg_y = np.zeros(
+                len(Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]]))
+            neg_y[Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]] < 0] = Alascan.ddGa_rel()[
+                Alascan.mask_by_sel[:, i]][Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]] < 0]
+            pos_trace = go.Bar(
+                x=np.array([w.split('_') for w in Alascan.mutid[i]])[:, 1],
+                y=pos_y,
+                name=np.unique(np.array([w.split('_') for w in Alascan.mutid[i]])[:, 0])[
+                    0] + 'Loss of binding',
+                marker=dict(
+                    color='rgba(0,136,55,1)'
+                )
+            )
+            neg_trace = go.Bar(
+                x=np.array([w.split('_') for w in Alascan.mutid[i]])[:, 1],
+                y=neg_y,
+                name=np.unique(np.array([w.split('_') for w in Alascan.mutid[i]])[:, 0])[
+                    0] + 'Gain in binding',
+                marker=dict(
+                    color='rgba(123,50,148,1)'
+                )
+            )
+            fig.append_trace(pos_trace, i, 1)
+            fig.append_trace(neg_trace, i, 1)
+            fig['layout']['yaxis' + str(i)].update(title='kJ/mol')
+
+    if len(Alascan.mutid) == 2:
+        pos_y = np.zeros(len(Alascan.dGsolv_rel()[Alascan.mask_by_sel[:, 1]]))
+        pos_y[Alascan.dGsolv_rel()[Alascan.mask_by_sel[:, 1]] > 0] = Alascan.dGsolv_rel(
+        )[Alascan.mask_by_sel[:, 1]][Alascan.dGsolv_rel()[Alascan.mask_by_sel[:, 1]] > 0]
+        neg_y = np.zeros(len(Alascan.dGsolv_rel()[Alascan.mask_by_sel[:, 1]]))
+        neg_y[Alascan.dGsolv_rel()[Alascan.mask_by_sel[:, 1]] < 0] = Alascan.dGsolv_rel(
+        )[Alascan.mask_by_sel[:, 1]][Alascan.dGsolv_rel()[Alascan.mask_by_sel[:, 1]] < 0]
         pos_trace = go.Bar(
-            x=np.array([w.split('_') for w in Alascan.mutid[i]])[:, 1],
+            x=np.array([w.split('_') for w in Alascan.mutid[1]])[:, 1],
             y=pos_y,
-            name=np.unique(np.array([w.split('_') for w in Alascan.mutid[i]])[:, 0])[
+            name=np.unique(np.array([w.split('_') for w in Alascan.mutid[1]])[:, 0])[
                 0] + 'Loss of binding',
             marker=dict(
                 color='rgba(0,136,55,1)'
             )
         )
         neg_trace = go.Bar(
-            x=np.array([w.split('_') for w in Alascan.mutid[i]])[:, 1],
+            x=np.array([w.split('_') for w in Alascan.mutid[1]])[:, 1],
             y=neg_y,
-            name=np.unique(np.array([w.split('_') for w in Alascan.mutid[i]])[:, 0])[
+            name=np.unique(np.array([w.split('_') for w in Alascan.mutid[1]])[:, 0])[
                 0] + 'Gain in binding',
             marker=dict(
                 color='rgba(123,50,148,1)'
             )
         )
-        fig.append_trace(pos_trace, i, 1)
-        fig.append_trace(neg_trace, i, 1)
-        fig['layout']['yaxis' + str(i)].update(title='kJ/mol')
+        fig.append_trace(pos_trace, 1, 1)
+        fig.append_trace(neg_trace, 1, 1)
+        fig['layout']['yaxis' + str(1)].update(title='kJ/mol')
 
     fig['layout'].update(barmode='stack', hovermode='closest')
     plotly_fig = go.Figure(fig)
