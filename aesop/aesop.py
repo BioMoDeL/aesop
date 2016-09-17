@@ -3410,10 +3410,11 @@ def plotScan_interactive(Alascan, filename=None):
         Saves image of figure, if desired.
     """
     import plotly.plotly as py
+    import plotly
     import plotly.graph_objs as go
     from plotly.offline import download_plotlyjs, init_notebook_mode, iplot
     from plotly import tools
-    
+
     subplot_titles = []
     for i in range(1, len(Alascan.mutid)):
         subplot_titles.append(np.unique(np.array(
@@ -3587,6 +3588,12 @@ def plotESD_interactive(esd, filename=None, cmap='YIGnBu'):
     None
         Writes image to disk, if desired.
     """
+    import plotly.plotly as py
+    import plotly
+    import plotly.graph_objs as go
+    from plotly.offline import download_plotlyjs, init_notebook_mode, iplot
+    from plotly.tools import FigureFactory as FF
+
     figure = FF.create_dendrogram(
         esd.esd, orientation='bottom', labels=esd.ids)
     for i in range(len(figure['data'])):
