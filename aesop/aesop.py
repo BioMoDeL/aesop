@@ -14,10 +14,6 @@ import matplotlib.pyplot as plt
 from multiprocessing import Pool, cpu_count  # , freeze_support
 import gridData as gd
 import itertools as it
-# import plotly.plotly as py
-# import plotly.graph_objs as go
-# from plotly.offline import download_plotlyjs, init_notebook_mode, iplot
-# from plotly.tools import FigureFactory as FF
 
 # Print Licencse on startup
 print("""
@@ -3398,6 +3394,10 @@ def plotScan(Alascan, filename=None):
 
 
 def plotScan_interactive(Alascan, filename=None):
+    import plotly.plotly as py
+    import plotly.graph_objs as go
+    from plotly.offline import download_plotlyjs, init_notebook_mode, iplot
+    from plotly.tools import FigureFactory as FF
     """Summary
     Function to display results from the computational alanine or directed mutagenesis scan. Figure is more interactive that the standard matplotlib figure.
 
