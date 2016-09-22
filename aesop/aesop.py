@@ -393,7 +393,7 @@ class Alascan:
         for i, sel, reg in zip(index, selstr, region):
             # print ' and '.join([sel, reg, 'charged', 'calpha'])
             combined_selection = parent_pdb.select(
-                ' and '.join([sel, reg, 'charged', 'calpha']))
+                ' and '.join(['('+sel+')', '('+reg+')', 'charged', 'calpha']))
             # if sel is not reg:
             #     combined_selection = parent_pdb.select(''.join(['(', ') and ('.join((sel, reg, 'charged', 'calpha')), ')']))
             # elif sel is reg:
