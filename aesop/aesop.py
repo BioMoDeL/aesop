@@ -3339,32 +3339,33 @@ def plotScan(Alascan, filename=None):
     tuple
         Handles to generated figure.
     """
-    plt.style.use('seaborn-talk')
+    #plt.style.use('seaborn-talk')
     figure, axarr = plt.subplots(len(Alascan.mutid) - 1, sharey=True)
     dpi_val = 300
     if len(Alascan.mutid) > 2:
         for i in xrange(1, len(Alascan.mutid)):
-            axarr[i - 1].set_title(np.unique(np.array([w.split('_')
-                                                       for w in Alascan.mutid[i]])[:, 0])[0] + ' ddGa relative to WT')
-            axarr[i - 1].set_ylabel('kJ/mol')
-            axarr[
-                i - 1].set_xticks(np.arange(len(Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]])))
-            if 100 < len(Alascan.mutid[i]) <= 150:
-                axarr[i - 1].set_xticklabels(np.array([w.split('_') for w in Alascan.mutid[i]])[
-                                             :, 1], rotation='vertical', ha='left', size=6)
-            elif len(Alascan.mutid[i]) > 150:
-                axarr[i - 1].set_xticklabels(np.array([w.split('_') for w in Alascan.mutid[i]])[
-                                             :, 1], rotation='vertical', ha='left', size=2)
-                dpi_val = 600
-            else:
-                axarr[i - 1].set_xticklabels(np.array([w.split('_') for w in Alascan.mutid[i]])[
-                                             :, 1], rotation='vertical', ha='left')
-            axarr[i - 1].bar(np.arange(len(Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]]))[Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]] > 0],
-                             Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]][Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]] > 0], color='red')
-            axarr[i - 1].bar(np.arange(len(Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]]))[Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]] < 0],
-                             Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]][Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]] < 0], color='blue')
-            axarr[i - 1].xaxis.set_ticks_position('bottom')
-            axarr[i - 1].yaxis.set_ticks_position('left')
+            if len(Alascan.mutid[i]) is not 0:
+                axarr[i - 1].set_title(np.unique(np.array([w.split('_')
+                                                           for w in Alascan.mutid[i]])[:, 0])[0] + ' ddGa relative to WT')
+                axarr[i - 1].set_ylabel('kJ/mol')
+                axarr[
+                    i - 1].set_xticks(np.arange(len(Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]])))
+                if 100 < len(Alascan.mutid[i]) <= 150:
+                    axarr[i - 1].set_xticklabels(np.array([w.split('_') for w in Alascan.mutid[i]])[
+                                                 :, 1], rotation='vertical', ha='left', size=6)
+                elif len(Alascan.mutid[i]) > 150:
+                    axarr[i - 1].set_xticklabels(np.array([w.split('_') for w in Alascan.mutid[i]])[
+                                                 :, 1], rotation='vertical', ha='left', size=2)
+                    dpi_val = 600
+                else:
+                    axarr[i - 1].set_xticklabels(np.array([w.split('_') for w in Alascan.mutid[i]])[
+                                                 :, 1], rotation='vertical', ha='left')
+                axarr[i - 1].bar(np.arange(len(Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]]))[Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]] > 0],
+                                 Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]][Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]] > 0], color='red')
+                axarr[i - 1].bar(np.arange(len(Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]]))[Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]] < 0],
+                                 Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]][Alascan.ddGa_rel()[Alascan.mask_by_sel[:, i]] < 0], color='blue')
+                axarr[i - 1].xaxis.set_ticks_position('bottom')
+                axarr[i - 1].yaxis.set_ticks_position('left')
     elif len(Alascan.mutid) == 2:
         axarr.set_title(np.unique(np.array([w.split('_') for w in Alascan.mutid[1]])[
                         :, 0])[0] + ' dGsolv relative to WT')
@@ -3511,7 +3512,7 @@ def plotESD(esd, filename=None, cmap='hot'):
     None
         Writes image to disk, if desired.
     """
-    plt.style.use('seaborn-talk')
+    #plt.style.use('seaborn-talk')
     fig, ax = plt.subplots(sharey=True)
     heatmap = ax.pcolor(esd.esd, cmap=cmap, vmin=0, vmax=2)
     ax.set_xlim(0, esd.esd.shape[0])
@@ -3547,7 +3548,7 @@ def plotDend(esd, filename=None):
     None
         Writes image to disk, if desired.
     """
-    plt.style.use('seaborn-talk')
+    #plt.style.use('seaborn-talk')
     fig, ax = plt.subplots(sharey=True)
     # Z = cluster.linkage(esd.esd, 'ward')
     Z = cluster.linkage(esd.esd)
