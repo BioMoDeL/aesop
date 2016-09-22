@@ -3,11 +3,13 @@
 Installation
 ============
 
+AESOP is a Python 2.7 library, and is not compatible with Python 3.
+
 Anaconda installation
 """""""""""""""""""""
 
 We recommend installing the Anaconda Python Distribution as it comes with several packages used by AESOP pre-installed.
-Anaconda can be downloaded from `here <https://www.continuum.io/downloads>`_.
+Anaconda can be downloaded from `here <https://www.continuum.io/downloads>`_. If you choose this route, install Anaconda2. Anaconda3 is not compatible with AESOP.
 
 .. caution::
 
@@ -33,6 +35,16 @@ Modeller::
 
 	conda config --add channels salilab
 	conda install modeller
+
+.. note::
+
+	Modeller will require users to have a license key. 
+	Registration is located at the `Sali Lab Website <https://salilab.org/modeller/>`_.
+	The Modeller license key will be used in the following manner:
+	
+	Edit //anaconda/lib/modeller-9.17/modlib/modeller/config.py
+	and replace XXXX with your Modeller license key 
+	(or set the KEY_MODELLER environment variable before running 'conda install').
 
 GridDataFormats::
 

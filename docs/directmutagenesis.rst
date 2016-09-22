@@ -40,6 +40,11 @@ Make sure you place the PDB in your working directory::
     jobname = 'directedscan'
     pdbfile = 'barnase_barstar.pdb'
 
+.. warning::
+
+    If you are using your own PDB, make sure the PDB contains no missing heavy atoms. Consider also removing non-standard
+    amino acids. PDBFixer is one option for cleaning PDB files in preparation for AESOP.
+
 The DirectedMutagenesis class will need to know how to define each subunit of the protein complex. To do 
 this, the user should specify a list of selection strings. Each element of the list should be a stand-alone 
 selection string that fully describes how to select the associated subunit. If the selection string 

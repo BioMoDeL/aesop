@@ -39,6 +39,11 @@ Make sure you place the PDB in your working directory::
     jobname = 'alascan'
     pdbfile = 'barnase_barstar.pdb'
 
+.. warning::
+
+    If you are using your own PDB, make sure the PDB contains no missing heavy atoms. Consider also removing non-standard
+    amino acids. PDBFixer is one option for cleaning PDB files in preparation for AESOP.
+
 The Alascan class will need to know how to define each subunit of the protein complex. To do this, 
 the user should specify a list of selection strings. Each element of the list should be a stand-alone 
 selection string that fully describes how to select the associated subunit. If the selection string 
@@ -54,7 +59,7 @@ Finally, we may initialize the Alanine scan class::
                       apbs_exe=path_apbs, coulomb_exe=path_coulomb,
                       jobname=jobname, selstr=selstr)
     #If paths to apbs, coulomb and pdb2pqr are already added to environment then you may initialize as follows:
-    alascan = Alascan(pdbfile=pdbfile, jobname=jobname, selstr=selstr)
+    alascan = Alascan(pdb=pdbfile, jobname=jobname, selstr=selstr)
 
 After initialization, you can run the analysis in series::
 

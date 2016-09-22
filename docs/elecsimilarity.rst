@@ -33,6 +33,11 @@ them in the current working directory::
 
     pdbfiles = ['1MZL.pdb', 'SCA1.pdb', 'SCA3.pdb']
 
+.. warning::
+
+    If you are using your own PDB, make sure the PDB contains no missing heavy atoms. Consider also removing non-standard
+    amino acids. PDBFixer is one option for cleaning PDB files in preparation for AESOP.
+
 When the method is run, intermediate files will be generated and stored in a folder of the current 
 working directory. The user has the option of naming this folder by specifying a job name::
 
