@@ -1324,7 +1324,7 @@ class DirectedMutagenesis:
         for i, region in zip(xrange(len(selstr)), selstr):
             for j, sel, mut in zip(xrange(len(target)), target, mutation):
                 combined_selection = parent_pdb.select(
-                    '(' + ' and '.join([sel, region, 'calpha']) + ')')
+                    '(' + ' and '.join(['('+sel+')', '('+region+')', 'calpha']) + ')')
 
                 if combined_selection is not None:
                     chids = combined_selection.getChids().tolist()
