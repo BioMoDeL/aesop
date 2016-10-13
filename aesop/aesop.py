@@ -12,7 +12,7 @@ import scipy.cluster.hierarchy as cluster
 import matplotlib.pyplot as plt
 # from modeller import environ, model, alignment, selection
 from multiprocessing import Pool, cpu_count  # , freeze_support
-import gridData as gd
+# import gridData as gd
 import itertools as it
 
 # Print Licencse on startup
@@ -2265,8 +2265,7 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
         # Find minimum number of calphas
         num_res = pd.parsePDB(os.path.join(pdbdir, pdbfiles[0])).numResidues()
         for pdbfile in pdbfiles:
-            num_res = min(num_res, pd.parsePDB(
-                os.path.join(pdbdir, pdbfile)).numResidues())
+            num_res = min(num_res, pd.parsePDB(os.path.join(pdbdir, pdbfile)).numResidues())
         print 'Superposing %d PDB files on %d alpha carbons' % (len(pdbfiles), num_res)
 
         # Superpose each structure, overwriting previous PDB file
@@ -2487,21 +2486,21 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
         files = self.dxfiles
         ids = self.ids
 
-        grid = gd.Grid(files[0])
-        self.midpoints = grid.midpoints
-        self.edges = grid.edges
-        self.dim_dx = grid.grid.shape
+        grid = Grid(files[0])
+        # self.midpoints = grid.midpoints
+        # self.edges = grid.edges
+        self.dim_dx = grid.pot.size
 
         # dim = self.dim_dx[0] * self.dim_dx[1] * self.dim_dx[2] / 3
-        dim = self.dim_dx[0] * self.dim_dx[1] * self.dim_dx[2]
+        dim = self.dim_dx #self.dim_dx[0] * self.dim_dx[1] * self.dim_dx[2]
         esd = np.zeros((len(ids), len(ids)))
 
         indices = it.combinations(range(len(ids)), 2)
         for i, j in indices:
             # a = gd.Grid(files[i]).grid.reshape((dim, 3))
             # b = gd.Grid(files[j]).grid.reshape((dim, 3))
-            a = gd.Grid(files[i]).grid.reshape((dim, ))
-            b = gd.Grid(files[j]).grid.reshape((dim, ))
+            a = Grid(files[i]).pot.reshape((dim, ))
+            b = Grid(files[j]).pot.reshape((dim, ))
             if method is 'AND':
                 diff = np.abs(a - b)
                 maxpot = np.abs(np.vstack((a, b))).max(axis=0)
@@ -2612,11 +2611,11 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
             ref.writeDX(filename)
             esifiles.append(filename)
             esilist.append(esi)
-        esilist = np.vstack(esifiles)
+        esilist = np.vstack(esilist)
         self.esifiles = esifiles
         self.esi = esilist
 
-    def run(self, center=False, superpose=False):
+    def run(self, center=False, superpose=False, esi=True, esd=False, idx=0):
         if center:
             self.centerPDB()
         if superpose:
@@ -2624,7 +2623,10 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
         self.initializeGrid()
         self.genPQR()
         self.genDX()
-        self.calcESD()
+        if esd:
+            self.calcESD()
+        if esi:
+            self.calcESI(idx=idx)
 
     def run_parallel(self, n_workers=None, center=False, superpose=False):
         if center:
