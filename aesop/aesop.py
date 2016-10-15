@@ -12,7 +12,7 @@ import scipy.cluster.hierarchy as cluster
 import matplotlib.pyplot as plt
 # from modeller import environ, model, alignment, selection
 from multiprocessing import Pool, cpu_count  # , freeze_support
-import gridData as gd
+# import gridData as gd
 import itertools as it
 
 # Print Licencse on startup
@@ -40,6 +40,164 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """)
 
+class Grid:
+    """Summary
+
+    The grid class facilitates parsing and writing of OpenDX file formats. In the current state, the class 
+    is quite rudimentary and only supports changing vectors for the grid data.
+
+    Attributes
+    ----------
+
+    filename : string
+        DX file to import
+    pot : ndarray
+        Vectors at each grid point. For AESOP, these will typically be electrostatic potentials or an electrostatic
+        similarity index.
+    header : list
+        List of grid parameters from the OpenDX format prior to vectors.
+    footer : list
+        List of grid parameters from the OpenDX format subsequent to the vectors.
+    """
+    import re as re
+    def __init__(self, filename=None):
+        self.filename = filename
+        if filename is not None:
+            self.readDX()
+
+    def readDX(self, filename=None):
+        """Summary
+
+        Method to parse a DX file
+
+        Parameters
+        ----------
+
+        filename : string
+            Name for the OpenDX file to be imported. If unspecified, this parameter defaults to the class
+            attribute.
+        """
+        if filename is None:
+            try:
+                filename = self.filename
+                f = open(filename, 'r')
+                lines = f.readlines()
+                f.close()
+            except:
+                print '\nError: No DX file provided\n'
+        else:
+            try:
+                f = open(filename, 'r')
+                lines = f.readlines()
+                f.close()
+            except:
+                print '\nError: Can\'t open DX file\n'
+        
+        # f       = open(fn, 'r')
+        # lines   = f.readlines()
+        p_vec = '[+\-]?(?:0|[1-9]\d*)(?:\.\d*)?(?:[eE][+\-]?\d+)?'
+        # p_count
+        # p_delta
+        # p_rank
+        # p_g
+
+        # comment = []
+        # obj     = []
+        # origin  = []
+        # delta   = []
+        # attr    = []
+        # comp    = []
+        # pot     = []
+
+        header = []
+        footer = []
+        pot    = []
+
+        found_pot = False
+        for line in lines:
+            if len(re.findall('^#', line)) != 0:
+                # comment.append(line)
+                if found_pot:
+                    footer.append(line)
+                elif not found_pot:
+                    header.append(line)
+                continue
+            if len(re.findall('^object', line)) != 0:
+                # obj.append(line)
+                if found_pot:
+                    footer.append(line)
+                elif not found_pot:
+                    header.append(line)
+                continue
+            if len(re.findall('^origin', line)) != 0:
+                # origin.append(line)
+                if found_pot:
+                    footer.append(line)
+                elif not found_pot:
+                    header.append(line)
+                continue
+            if len(re.findall('^delta', line)) != 0:
+                # delta.append(line)
+                if found_pot:
+                    footer.append(line)
+                elif not found_pot:
+                    header.append(line)
+                continue
+            if len(re.findall('^attribute', line)) != 0:
+                # attr.append(line)
+                if found_pot:
+                    footer.append(line)
+                elif not found_pot:
+                    header.append(line)
+                continue
+            if len(re.findall('^component', line)) != 0:
+                # comp.append(line)
+                if found_pot:
+                    footer.append(line)
+                elif not found_pot:
+                    header.append(line)
+                continue
+            if len(re.findall(p_vec, line)) != 0:
+                found_pot = True
+                x = re.findall(p_vec, line)
+                pot.append(np.asarray(x).astype(float))
+                continue
+            # else:
+            #     if found_pot:
+            #         footer.append(line)
+            #     elif not found_pot:
+            #         header.append(line)
+        # f.close()
+        # return np.vstack(pot)
+
+        self.pot    = np.vstack(pot)
+        self.header = header
+        self.footer = footer
+
+    def writeDX(self, filename=None):
+        """Summary
+
+        Function to write OpenDX files
+
+        Parameters
+        ----------
+        filename : string
+            Name for OpenDX file that will be written. This should be a full path if you wish to place
+            the file somewhere other than the current working directory.
+        """
+        if filename is None:
+            filename = os.path.splitext(os.path.basename(self.filename))[0] + '.modified.dx'
+
+        header = self.header
+        try:
+            pot    = [' '.join([format(x, '7.6e') for x in v])+'\n' for v in self.pot.tolist()]
+        except:
+            pot    = [format(v, '7.6e')+'\n' for v in self.pot.tolist()]
+        footer = self.footer
+
+        f = open(filename, 'w')
+        f.writelines(header+pot+footer)
+        f.close()
 
 ##########################################################################
 # Container for performing an Alanine Scan with AESOP
@@ -2107,8 +2265,7 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
         # Find minimum number of calphas
         num_res = pd.parsePDB(os.path.join(pdbdir, pdbfiles[0])).numResidues()
         for pdbfile in pdbfiles:
-            num_res = min(num_res, pd.parsePDB(
-                os.path.join(pdbdir, pdbfile)).numResidues())
+            num_res = min(num_res, pd.parsePDB(os.path.join(pdbdir, pdbfile)).numResidues())
         print 'Superposing %d PDB files on %d alpha carbons' % (len(pdbfiles), num_res)
 
         # Superpose each structure, overwriting previous PDB file
@@ -2325,33 +2482,140 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
         pdbfiles = self.pdbfiles
         dxdir = self.dxdir
 
-        self.dxfiles = [os.path.join(dxdir, os.path.splitext(pdbfile)[
-                                     0] + '.dx') for pdbfile in pdbfiles]
+        self.dxfiles = [os.path.join(dxdir, os.path.splitext(os.path.basename(pdbfile))[0] + '.dx') for pdbfile in pdbfiles]
         files = self.dxfiles
         ids = self.ids
 
-        grid = gd.Grid(files[0])
-        self.midpoints = grid.midpoints
-        self.edges = grid.edges
-        self.dim_dx = grid.grid.shape
+        grid = Grid(files[0])
+        # self.midpoints = grid.midpoints
+        # self.edges = grid.edges
+        self.dim_dx = grid.pot.size
 
-        dim = self.dim_dx[0] * self.dim_dx[1] * self.dim_dx[2] / 3
+        # dim = self.dim_dx[0] * self.dim_dx[1] * self.dim_dx[2] / 3
+        dim = self.dim_dx #self.dim_dx[0] * self.dim_dx[1] * self.dim_dx[2]
         esd = np.zeros((len(ids), len(ids)))
 
         indices = it.combinations(range(len(ids)), 2)
         for i, j in indices:
-            a = gd.Grid(files[i]).grid.reshape((dim, 3))
-            b = gd.Grid(files[j]).grid.reshape((dim, 3))
+            # a = gd.Grid(files[i]).grid.reshape((dim, 3))
+            # b = gd.Grid(files[j]).grid.reshape((dim, 3))
+            a = Grid(files[i]).pot.reshape((dim, ))
+            b = Grid(files[j]).pot.reshape((dim, ))
             if method is 'AND':
-                numer = np.linalg.norm(a - b, axis=1)
-                denom = dim * np.max(np.hstack((np.linalg.norm(a, axis=1).reshape(
-                    (dim, 1)), np.linalg.norm(b, axis=1).reshape((dim, 1)))), axis=1)
-                esd[i, j] = np.divide(numer, denom).sum()
-                print esd[i, j]
+                diff = np.abs(a - b)
+                maxpot = np.abs(np.vstack((a, b))).max(axis=0)
+                esd[i, j] = np.divide(diff, maxpot).sum() / dim
+                # numer = np.linalg.norm(a - b, axis=1)
+                # denom = dim * np.max(np.hstack((np.linalg.norm(a, axis=1).reshape(
+                #     (dim, 1)), np.linalg.norm(b, axis=1).reshape((dim, 1)))), axis=1)
+                # esd[i, j] = np.divide(numer, denom).sum()
+                # print esd[i, j]
         esd = symmetrize(esd)
         self.esd = esd
 
-    def run(self, center=False, superpose=False):
+    def calcESI(self, method='AND', idx=0):
+        """Summary
+
+        Compare potential files and calculate the similarity index.
+        Values closer to 1 imply similarity while values closer to zero imply dissimilarity.
+
+        Parameters
+        ----------
+        method : str, optional
+            This parameter will allow for other metrics to compare
+            grid potentials; however, for now only 'AND' is implemented.
+        idx : int
+            Index of original PDB files supplied containing reference structure.
+            Set to None to perform all pairwise comparisons.
+
+        Returns
+        -------
+        None
+            Writes esi files to the esi_files directory within the job directory.
+        """
+        pdbfiles = self.pdbfiles
+        dxdir = self.dxdir
+
+        esidir = os.path.join(self.jobdir, 'esi_files')
+        self.esidir = esidir
+        if not os.path.exists(os.path.join(self.esidir)):
+            os.makedirs(os.path.join(self.esidir))
+
+        self.dxfiles = [os.path.join(dxdir, os.path.splitext(os.path.basename(pdbfile))[0] 
+                        + '.dx') for pdbfile in pdbfiles]
+        files = self.dxfiles
+        ids = self.ids
+
+        n = len(files)-1
+        if idx is None:
+            idx = range(n)
+        elif isinstance( idx, ( int, long ) ):
+            idx = [idx]
+
+        esifiles = []
+        esilist = []
+        for i in idx:
+            ref_name = ids[i]
+            ref = Grid(files[i])
+            dim = ref.pot.size
+
+            # esi = np.zeros((dim, ref.pot.shape[1]))
+            esi = []
+            filename = os.path.join(esidir, ref_name+'.dx')
+            for j in xrange(n):
+                dat_name = ids[j]
+
+                if (method is 'AND') and (i!=j):
+                    dat = Grid(files[j])
+                    a = ref.pot.astype(float).reshape((dim,))
+                    b = dat.pot.astype(float).reshape((dim,))
+
+                    diff = np.abs(a - b)
+                    maxpot = np.abs(np.vstack((a, b))).max(axis=0)
+                    val = np.divide(diff, maxpot)
+
+                    # ab = a - b
+                    # norm_a  = np.linalg.norm(a, axis=1)
+                    # norm_b  = np.linalg.norm(b, axis=1)
+                    # norm_ab = np.vstack([norm_a, norm_b]).max(axis=0)
+                    # diff    = np.linalg.norm(ab, axis=1)
+                    # val     = np.divide(diff, norm_ab)
+                    esi.append(val) 
+
+                    # def div(a, b):
+                    #     return np.divide(a, b)
+                    # def sweep(a, b, kernel=div):
+                    #     dim_a = a.shape
+                    #     dim_b = b.shape
+                    #     c = np.empty(dim_a)
+                    #     for i in xrange(dim_a[1]):
+                    #         c[:,i] = kernel(a[:,i], b)
+                    #     return c
+                    # c = np.abs(a - b)
+                    # c = sweep(c, numer, div)
+                    # c = sweep(c, denom, div)
+                    # c = (np.ones(c.shape) - c) / n
+
+                    # esi = esi + c
+                    # esi.append(c)
+            esi = np.vstack(esi)
+            esi = np.ones(esi.shape) - esi
+            esi = np.sum(esi, axis=0)/n #.reshape((dim, 3))
+            # RH 2016-10-6: since I don't know how to convert the grid space specifications for the OpenDX format
+            #   from vectors with 3 dims to vectors with 1 dim, for now I am cheating. Dimensionality will be the
+            #   same as the input file (3) but the true ESI is the norm (magnitude) at each grid point.
+            # ref.pot[:,0] = esi*np.sqrt(float(1)/float(3))
+            # ref.pot[:,1] = esi*np.sqrt(float(1)/float(3))
+            # ref.pot[:,2] = esi*np.sqrt(float(1)/float(3))
+            ref.pot = esi.reshape((dim/3, 3))
+            ref.writeDX(filename)
+            esifiles.append(filename)
+            esilist.append(esi)
+        esilist = np.vstack(esilist)
+        self.esifiles = esifiles
+        self.esi = esilist
+
+    def run(self, center=False, superpose=False, esi=True, esd=False, idx=0):
         if center:
             self.centerPDB()
         if superpose:
@@ -2359,7 +2623,10 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
         self.initializeGrid()
         self.genPQR()
         self.genDX()
-        self.calcESD()
+        if esd:
+            self.calcESD()
+        if esi:
+            self.calcESI(idx=idx)
 
     def run_parallel(self, n_workers=None, center=False, superpose=False):
         if center:
