@@ -52,7 +52,7 @@ AESOP currently supports three computational methods:
 	- Mutations must be specified
 
 - **ElecSimilarity**
-	- Compare electrostatic potential vector fields between multiple protein structures
+	- Compare electrostatic potentials of multiple protein structures
 	- If structures are very dissimilar, the user should superpose coordinates for each protein structure according to their desired method
 
 General Utilities
