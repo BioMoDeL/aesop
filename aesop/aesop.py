@@ -77,6 +77,7 @@ class Grid:
             Name for the OpenDX file to be imported. If unspecified, this parameter defaults to the class
             attribute.
         """
+        lines = []
         if filename is None:
             try:
                 filename = self.filename
@@ -409,6 +410,7 @@ class Alascan:
         self.ff = ff
         self.cfac = cfac
         self.dx = dx
+        self.status = 0 # 0 = alascan not run, 1 = alascan previously ran
 
         self.genDirs()
         self.genMutid()
@@ -1113,21 +1115,103 @@ class Alascan:
         dGsolv = dGsolv - dGsolv[0, 0]
         return dGsolv[:, 0]
 
-    def run(self):
+    def calcESI(self, idx=-1):
         """Summary
-        Perform a compuational alanine scan on the initialized Alascan class.
+
+        Compare potential files and calculate the similarity index.
+        Values closer to 1 imply similarity while values closer to zero imply dissimilarity.
+
+        Parameters
+        ----------
+        method : str, optional
+            This parameter will allow for other metrics to compare
+            grid potentials; however, for now only 'AND' is implemented.
+        idx : int
+            Index of original PDB files supplied containing reference structure.
+            Set to None to perform all pairwise comparisons.
 
         Returns
         -------
         None
-            Outputs text to STDOUT when run is complete, will be made optional in the future.
+            Writes esi files to the esi_files directory within the job directory.
         """
-        start = ti.default_timer()
-        self.genTruncatedPQR()
-        self.calcAPBS()
-        self.calcCoulomb()
-        stop = ti.default_timer()
-        print '%s:\tAESOP alanine scan completed in %.2f seconds' % (self.jobname, stop - start)
+
+
+        # If dx = true, use previously calculated DX files, else 
+
+        safe = True
+        if self.dx == False:
+            print('Error: please set the dx argument to true when initializing the alanine scan class, then re-run the analysis')
+            safe = False
+        if self.status == 0:
+            print('Error: please run the alanine scan before attempting to calculate ESIs')
+            safe = False
+
+        if safe:
+            n_seg = len(self.selstr)
+            ind_seg = [x+1 for x in range(n_seg)]
+
+            file_by_ref = []
+            for ind in ind_seg:
+                files = [x for x in self.dx_files if int(os.path.basename(x).split('_')[1]) == ind]
+                file_by_ref.append(files)
+
+            ids = ['selection %d' % x for x in ind_seg]
+
+            esidir = os.path.join(self.jobdir, 'esi_files')
+            self.esidir = esidir
+            if not os.path.exists(os.path.join(self.esidir)):
+                os.makedirs(os.path.join(self.esidir))
+
+            esifiles = []
+            esilist = []
+            for i in ind_seg:
+                ref_name = ids[i-1]
+                ref = Grid(file_by_ref[i-1][0])
+                dim = ref.pot.size
+                n   = len(self.mutid[i])
+
+                esi = []
+                filename = os.path.join(esidir, ref_name+'.dx')
+                for j in xrange(n):
+                    # print file_by_ref[i-1][j+1]
+                    dat = Grid(file_by_ref[i-1][j+1])
+                    a = ref.pot.astype(float).reshape((dim,))
+                    b = dat.pot.astype(float).reshape((dim,))
+
+                    diff = np.abs(a - b)
+                    maxpot = np.abs(np.vstack((a, b))).max(axis=0)
+                    val = np.divide(diff, maxpot)
+
+                    esi.append(val) 
+
+                esi = np.vstack(esi)
+                # esi = np.ones(esi.shape) - esi
+                esi = np.sum(esi, axis=0)/n
+                ref.pot = esi.reshape((dim/3, 3))
+                ref.writeDX(filename)
+                esifiles.append(filename)
+                esilist.append(esi)
+            esilist = np.vstack(esilist)
+            self.esifiles = esifiles
+            self.esi = esilist
+
+        def run(self):
+            """Summary
+            Perform a compuational alanine scan on the initialized Alascan class.
+
+            Returns
+            -------
+            None
+                Outputs text to STDOUT when run is complete, will be made optional in the future.
+            """
+            start = ti.default_timer()
+            self.genTruncatedPQR()
+            self.calcAPBS()
+            self.calcCoulomb()
+            self.status = 1
+            stop = ti.default_timer()
+            print '%s:\tAESOP alanine scan completed in %.2f seconds' % (self.jobname, stop - start)
 
     def run_parallel(self, n_workers=None):
         """Summary
@@ -1147,6 +1231,7 @@ class Alascan:
         self.genTruncatedPQR()
         self.calcAPBS_parallel(n_workers)
         self.calcCoulomb_parallel(n_workers)
+        self.status = 1
         stop = ti.default_timer()
         print '%s:\tAESOP alanine scan completed in %.2f seconds' % (self.jobname, stop - start)
 
@@ -2615,7 +2700,7 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
         self.esifiles = esifiles
         self.esi = esilist
 
-    def run(self, center=False, superpose=False, esi=True, esd=False, idx=0):
+    def run(self, center=False, superpose=False, esi=False, esd=True, idx=0):
         if center:
             self.centerPDB()
         if superpose:
@@ -2628,7 +2713,7 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
         if esi:
             self.calcESI(idx=idx)
 
-    def run_parallel(self, n_workers=None, center=False, superpose=False):
+    def run_parallel(self, n_workers=None, center=False, superpose=False, esi=False, esd=True, idx=0):
         if center:
             self.centerPDB()
         if superpose:
@@ -2639,7 +2724,10 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
             self.genDX_parallel()
         if n_workers is not None:
             self.genDX_parallel(n_workers)
-        self.calcESD()
+        if esd:
+            self.calcESD()
+        if esi:
+            self.calcESI(idx=idx)
 
 
 # ######################################################################################################################################################
