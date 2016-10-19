@@ -10,7 +10,7 @@ criteria that describe the portion of the protein structure file to select. For 
 explanations concerning selection strings please see the `ProDy webpage for atomic selections 
 <http://prody.csb.pitt.edu/manual/reference/atomic/select.html>`_.
 
-Examples:
+Examples
 """""""""
 
 Selection string for chain A of a PDB file::

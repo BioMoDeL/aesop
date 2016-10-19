@@ -24,6 +24,12 @@ Please download and install the appropriate version of `PDB2PQR <https://sourcef
 
 	pdb2pqr
 
+.. note::
+
+	Mac users: If you are using the APBS binary/executable to install (as opposed to compiling from source), you may need to add the following line to your path::
+
+		export PATH=$PATH:`dirname '/Applications/APBS.app/Contents/MacOS/apbs_term'`
+
 Install other dependencies
 """"""""""""""""""""""""""
 

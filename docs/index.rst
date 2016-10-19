@@ -27,7 +27,7 @@ Project summary
 For many proteins complexes, long range electrostatic interactions play a pivotal role in the formation 
 of the encounter complex. Charge-charge interactions can also serve to thermodynamically stabilize any 
 resulting complex. In many cases, however, optimization of a protein associating with its binding partner 
-is sufficient to incrase protein activity as many protein systems are diffusion limited. The AESOP 
+is sufficient to increase protein activity as many protein systems are diffusion limited. The AESOP 
 framework provides a tool to investigate the electrostatic nature of protein interactions both across
 protein families as well as within indivdiual proteins in terms of individual amino acid contributions.
 
@@ -52,7 +52,7 @@ AESOP currently supports three computational methods:
 	- Mutations must be specified
 
 - **ElecSimilarity**
-	- Compare electrostatic potential vector fields between multiple protein structures
+	- Compare electrostatic potentials of multiple protein structures
 	- If structures are very dissimilar, the user should superpose coordinates for each protein structure according to their desired method
 
 General Utilities
