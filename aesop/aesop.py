@@ -3036,8 +3036,9 @@ def mutatePQR(pqrfile, mutid, resnum, chain=None):
     None
         Writes mutated PQR to file specified by the prefix mutid.
     """
+    chain = chain.replace(' ','')
     parent = pd.parsePQR(pqrfile)
-    if chain is None:
+    if (chain is None) or (chain is ''):
         residue = parent.select('resnum %d' % (int(resnum)))
         preceed = parent.select('resnum < %d' % (int(resnum)))
         follow = parent.select('resnum > %d' % (int(resnum)))
