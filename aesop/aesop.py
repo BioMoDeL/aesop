@@ -1196,22 +1196,22 @@ class Alascan:
             self.esifiles = esifiles
             self.esi = esilist
 
-        def run(self):
-            """Summary
-            Perform a compuational alanine scan on the initialized Alascan class.
+    def run(self):
+        """Summary
+        Perform a compuational alanine scan on the initialized Alascan class.
 
-            Returns
-            -------
-            None
-                Outputs text to STDOUT when run is complete, will be made optional in the future.
-            """
-            start = ti.default_timer()
-            self.genTruncatedPQR()
-            self.calcAPBS()
-            self.calcCoulomb()
-            self.status = 1
-            stop = ti.default_timer()
-            print '%s:\tAESOP alanine scan completed in %.2f seconds' % (self.jobname, stop - start)
+        Returns
+        -------
+        None
+            Outputs text to STDOUT when run is complete, will be made optional in the future.
+        """
+        start = ti.default_timer()
+        self.genTruncatedPQR()
+        self.calcAPBS()
+        self.calcCoulomb()
+        self.status = 1
+        stop = ti.default_timer()
+        print '%s:\tAESOP alanine scan completed in %.2f seconds' % (self.jobname, stop - start)
 
     def run_parallel(self, n_workers=None):
         """Summary
