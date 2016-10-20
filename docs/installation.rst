@@ -55,6 +55,11 @@ Modeller::
 GridDataFormats::
 
 	pip install GridDataFormats
+	
+.. note::
+
+	GridDataFormats is no longer a required dependency. This will be removed from the website with
+	a subsequent release.
 
 Multiprocessing (optional)::
 
