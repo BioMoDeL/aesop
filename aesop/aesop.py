@@ -3069,7 +3069,7 @@ def mutatePQR(pqrfile, mutid, resnum, chain=None):
     # Compile mutated pdb
     ala_atoms = ['N', 'H', 'H2', 'H3', 'CA', 'HA',
                  'CB', 'HB1', 'HB2', 'HB3', 'C', 'O', 'OXT']
-    if chain is None:
+    if (chain is None) or (chain is ''):
         if preceed is None:
             mutant = residue.select('name ' + ' '.join(ala_atoms)) + follow
         if follow is None:
