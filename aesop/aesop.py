@@ -24,7 +24,7 @@ University of California, Riverside; Department of Bioengineering
 
 Correspondence should be directed to Prof. Dimitrios Morikis at dmorikis@ucr.edu  
 
-Copyright (C) 2016  Reed E. S. Harrison, Rohith R. Mohan, Dimitrios Morikis
+Copyright (C) 2016  Reed E. S. Harrison, Rohith R. Mohan, Ronald D. Gorham Jr., Chris A. Kieslich, Dimitrios Morikis
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

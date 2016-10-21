@@ -52,15 +52,6 @@ Modeller::
 	and replace XXXX with your Modeller license key 
 	(or set the KEY_MODELLER environment variable before running 'conda install').
 
-GridDataFormats::
-
-	pip install GridDataFormats
-	
-.. note::
-
-	GridDataFormats is no longer a required dependency. This will be removed from the website with
-	a subsequent release.
-
 Multiprocessing (optional)::
 
 	pip install multiprocessing

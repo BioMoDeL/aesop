@@ -32,7 +32,7 @@ framework provides a tool to investigate the electrostatic nature of protein int
 protein families as well as within indivdiual proteins in terms of individual amino acid contributions.
 
 AESOP is implemented in Python 2.7 and depends on a number of computational tools including: APBS, 
-PDB2PQR, ProDy, Modeller, and gridDataFormats. Documentation can be found at `aesop.readthedocs.io 
+PDB2PQR, ProDy, and Modeller. Documentation can be found at `aesop.readthedocs.io 
 <aesop.rtfd.io>`_. We welcome questions and collaboration on the GitHub page for AESOP at 
 `https://github.com/rohithmohan/aesop <https://github.com/rohithmohan/aesop>`_.
 

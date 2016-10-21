@@ -60,11 +60,29 @@ You can view results using built-in functions::
     plotDend(family, filename='dend.png')
     plotESD(family, filename='esd.png')
 
-... or you can access the raw ESD matrix::
+plotDend should produce a dendrogram similar to the following figure.
+
+.. image:: dend.png
+   :scale: 100 %
+   :alt: alternate text
+   :align: center
+
+Proteins that cluster together at lower ESD in the dendrogram are expected to be electrostatically similar.
+
+plotESD should produce a heatmap similar to the following figure.
+
+.. image:: esd.png
+   :scale: 100 %
+   :alt: alternate text
+   :align: center
+   
+This heatmap compares all protein pairs in terms of ESD. Lower values once again indicate electrostatic similarity.
+   
+If you prefer to export the raw data, you can access the ESD matrix::
 
     data = family.esd
 
-Other modules such as numpy or pandas will allow exporting of the ESD matrix to file::
+Other modules such as numpy (example below) or pandas will allow exporting of the ESD matrix to file::
 
     import numpy as np
     np.savetxt('esd_matrix.txt', data, fmt='%.4f')
