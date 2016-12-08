@@ -1,5 +1,5 @@
 import os as os
-# import sys as sys
+import sys as sys
 import subprocess as sp
 import datetime as dt
 import timeit as ti
@@ -3006,7 +3006,11 @@ def runProcess(command):
     """
     proc = sp.Popen(command, stdout=sp.PIPE, stderr=sp.PIPE)
     # proc = sp.Popen(command, stdout=sp.PIPE, shell=True)
-    (out, err) = proc.communicate()
+    try:
+        (out, err) = proc.communicate()
+    except:
+        print 'Unable to execute command - please verify syntax:\n\n\t%s' % (command)
+        sys.exit(1)
     # print "program output:", out
     return (out, err)
 
@@ -3256,8 +3260,15 @@ def execPDB2PQR(path_pdb2pqr_exe, pdbfile, outfile=None, ff='parse'):
     if outfile is None:
         outfile = os.path.splitext(pdbfile)[0] + '.pqr'
     # os.system('"{0}" {1} {2} {3}'.format(path_pdb2pqr_exe, optargs, pdbfile, outfile))
-    (log, err) = runProcess(
-        [path_pdb2pqr_exe, '--ff=%s' % (ff), '--chain', pdbfile, outfile])
+    (log, err) = runProcess([path_pdb2pqr_exe, '--ff=%s' % (ff), '--chain', pdbfile, outfile])
+    try:
+        pdb = pd.parsePQR(outfile)
+        # pattern = re.compile('Error')
+        # hits    = re.findall(pattern, log)
+    except:
+        print '\nPDB2PQR failed for: %s' % (pdbfile)
+        print log
+        sys.exit(1)
     return (log, err)
 
 ##########################################################################
@@ -3402,13 +3413,21 @@ def execAPBS(path_apbs_exe, pqr_chain, dime, glen, gcent, prefix=None, ion=0.150
     # os.system('"{0}" {1} {2}'.format(path_apbs_exe, '--output-file=%s --output-format=flat'%(file_apbs_log), file_apbs_in))
     # os.system('{0} {1}'.format(path_apbs_exe, file_apbs_in))
     # (log, err) = runProcess([path_apbs_exe, file_apbs_in])
-    (log, err) = runProcess([path_apbs_exe, '--output-file=%s' %
-                             (file_apbs_log), '--output-format=flat', file_apbs_in])
-    pattern = re.compile(
-        '(?<=Global net ELEC energy =)\s+[+\-]?(?:0|[1-9]\d*)(?:\.\d*)?(?:[eE][+\-]?\d+)?')
-    elec = np.asarray([x.split()
-                       for x in re.findall(pattern, log)]).astype(np.float)
+    (log, err) = runProcess([path_apbs_exe, '--output-file=%s' % (file_apbs_log), '--output-format=flat', file_apbs_in])
+    pattern = re.compile('(?<=Global net ELEC energy =)\s+[+\-]?(?:0|[1-9]\d*)(?:\.\d*)?(?:[eE][+\-]?\d+)?')
+    elec = np.asarray([x.split() for x in re.findall(pattern, log)]).astype(np.float)
     elec = elec.reshape((1, elec.size))
+    if len(elec[0]) != 2:
+        print '\nAPBS failed for: %s' % (file_apbs_in)
+        perror = re.compile('[E][Rr][Rr][Oo][Rr]')
+        status = 0
+        for l in log.split('\n'):
+            m = re.findall(perror, l)
+            if len(m) > 0:
+                status = 1
+            if status == 1:
+                print l
+        sys.exit(1)
 
     # return file_apbs_log
     return elec
@@ -3677,7 +3696,35 @@ def execCoulomb(path_coulomb_exe, pqr):
 ##########################################################################
 # Function to plot results of Alascan
 ##########################################################################
+def writePDB(alascan, filename=None):
+    """Summary
+    Function to write free energies of association/solvation into B-factor column of PDB
+    for easy visualization of results.
 
+    Parameters
+    ----------
+    alascan : scan class
+        Alascan or DirectedMutagenesis class after running the complete analysis.
+    filename : str, optional
+        Full path to file where PDB file will be written. Defaults to job directory.
+    """
+    jobdir   = alascan.jobdir
+    pdbfile  = os.path.join(jobdir, alascan.pdb_complex_dir, 'wt.pdb')
+    resnums  = [item for sublist in alascan.list_resnums for item in sublist][1:]
+    chids    = [item for sublist in alascan.list_chids for item in sublist][1:]
+    if len(alascan.selstr) > 1:
+        ddG  = alascan.ddGa_rel()[1:]
+    else:
+        ddG  = alascan. dGsolv_rel()[1:]
+    pdb      = pd.parsePDB(pdbfile)
+    pdb.setBetas(np.zeros((pdb.numAtoms())))
+    pdb.setOccupancies(np.zeros((pdb.numAtoms())))
+    for chid, resnum, g in zip(chids, resnums, ddG):
+        atom = pdb.select('chain %s and resnum %s' % (chid, resnum))
+        atom.setBetas(g)
+    if filename is None:
+        filename = os.path.join(jobdir, 'wt.ddG.pdb')
+    pd.writePDB(filename, pdb)
 
 def plotScan(Alascan, filename=None):
     """Summary
