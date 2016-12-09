@@ -3274,7 +3274,7 @@ def execPDB2PQR(path_pdb2pqr_exe, pdbfile, outfile=None, ff='parse'):
     if outfile is None:
         outfile = os.path.splitext(pdbfile)[0] + '.pqr'
     # os.system('"{0}" {1} {2} {3}'.format(path_pdb2pqr_exe, optargs, pdbfile, outfile))
-    (log, err) = runProcess([path_pdb2pqr_exe, '--ff=%s' % (ff), '--chain', pdbfile, outfile])
+    (log, err) = runProcess([path_pdb2pqr_exe, '-v', '--ff=%s' % (ff), '--chain', pdbfile, outfile])
     try:
         pdb = pd.parsePQR(outfile)
         # pattern = re.compile('Error')
