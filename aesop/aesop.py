@@ -748,7 +748,12 @@ class Alascan:
         outfile = os.path.join(jobdir, pqr_complex_dir,
                                list_mutids[0] + '.pqr')
         print '\n%s:\tgenerating PQR for parent: %s' % (self.jobname, list_mutids[0])
-        execPDB2PQR(path_pdb2pqr, infile, outfile=outfile, ff=ff)
+        (pqr_log, pqr_errs) =execPDB2PQR(path_pdb2pqr, infile, outfile=outfile, ff=ff)
+        logfile = os.path.join(jobdir, pqr_complex_dir,
+                               list_mutids[0] + '_log.txt')
+        f_log = open(logfile, 'w')
+        f_log.write(pqr_log)
+        f_log.close
         complex_pqr = pd.parsePQR(outfile)
         for sel, seldir in zip(selstr, pqr_sel_dir):
             selfile = os.path.join(jobdir, seldir, list_mutids[0] + '.pqr')
