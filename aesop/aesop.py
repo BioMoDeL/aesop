@@ -754,7 +754,7 @@ class Alascan:
         f_log.write(pqr_log)
         f_log.close
         if 'WARNING:' in open(outfile).read():
-            print "Warnings detected in PQR generation, please check PDB2PQR logs and the PQR file for more information"
+            print "Warning detected in " + outfile + ", please check PDB2PQR logs and the PQR file for more information"
         complex_pqr = pd.parsePQR(outfile)
         for sel, seldir in zip(selstr, pqr_sel_dir):
             selfile = os.path.join(jobdir, seldir, list_mutids[0] + '.pqr')
@@ -1783,7 +1783,7 @@ class DirectedMutagenesis:
             f_log.write(pqr_log)
             f_log.close
             if 'WARNING:' in open(outfile).read():
-                print "Warnings detected in PQR generation, please check PDB2PQR logs and the PQR file for more information"
+                print "Warning detected in " + outfile + ", please check PDB2PQR logs and the PQR file for more information"
             complex_pqr = pd.parsePQR(outfile)
             for sel, seldir in zip(selstr, pqr_sel_dir):
                 selfile = os.path.join(jobdir, seldir, mutid + '.pqr')
