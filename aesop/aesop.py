@@ -748,7 +748,13 @@ class Alascan:
         outfile = os.path.join(jobdir, pqr_complex_dir,
                                list_mutids[0] + '.pqr')
         print '\n%s:\tgenerating PQR for parent: %s' % (self.jobname, list_mutids[0])
-        execPDB2PQR(path_pdb2pqr, infile, outfile=outfile, ff=ff)
+        (pqr_log, pqr_errs) =execPDB2PQR(path_pdb2pqr, infile, outfile=outfile, ff=ff)
+        logfile = os.path.join(jobdir, 'pdb2pqr_log.txt')
+        f_log = open(logfile, 'w')
+        f_log.write(pqr_log)
+        f_log.close
+        if 'WARNING:' in open(outfile).read():
+            print "Warnings detected in PQR generation, please check PDB2PQR logs and the PQR file for more information"
         complex_pqr = pd.parsePQR(outfile)
         for sel, seldir in zip(selstr, pqr_sel_dir):
             selfile = os.path.join(jobdir, seldir, list_mutids[0] + '.pqr')
@@ -1771,7 +1777,13 @@ class DirectedMutagenesis:
             print '\n%s:\tgenerating PQR for mutant: %s' % (self.jobname, mutid)
             infile = os.path.join(jobdir, pdb_complex_dir, mutid + '.pdb')
             outfile = os.path.join(jobdir, pqr_complex_dir, mutid + '.pqr')
-            execPDB2PQR(path_pdb2pqr, infile, outfile=outfile, ff=ff)
+            (pqr_log, pqr_errs) =execPDB2PQR(path_pdb2pqr, infile, outfile=outfile, ff=ff)
+            logfile = os.path.join(jobdir, pqr_complex_dir, mutid + '_pdb2pqr_log.txt')
+            f_log = open(logfile, 'w')
+            f_log.write(pqr_log)
+            f_log.close
+            if 'WARNING:' in open(outfile).read():
+                print "Warnings detected in PQR generation, please check PDB2PQR logs and the PQR file for more information"
             complex_pqr = pd.parsePQR(outfile)
             for sel, seldir in zip(selstr, pqr_sel_dir):
                 selfile = os.path.join(jobdir, seldir, mutid + '.pqr')
@@ -2445,7 +2457,13 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
             outfile = os.path.join(
                 pqrdir, os.path.splitext(pdbfile)[0] + '.pqr')
             print 'Converting %s to PQR' % (pdbfile)
-            execPDB2PQR(path_pdb2pqr, infile, outfile=outfile, ff=ff)
+            (pqr_log, pqr_errs) =execPDB2PQR(path_pdb2pqr, infile, outfile=outfile, ff=ff)
+            logfile = os.path.join(pqrdir, os.path.splitext(pdbfile)[0] + '_pdb2pqr_log.txt')
+            f_log = open(logfile, 'w')
+            f_log.write(pqr_log)
+            f_log.close
+            if 'WARNING:' in open(outfile).read():
+                print "Warnings detected in PQR generation, please check PDB2PQR logs and the PQR file for more information"
 
     def genDX(self):
         """Summary
@@ -3260,7 +3278,7 @@ def execPDB2PQR(path_pdb2pqr_exe, pdbfile, outfile=None, ff='parse'):
     if outfile is None:
         outfile = os.path.splitext(pdbfile)[0] + '.pqr'
     # os.system('"{0}" {1} {2} {3}'.format(path_pdb2pqr_exe, optargs, pdbfile, outfile))
-    (log, err) = runProcess([path_pdb2pqr_exe, '--ff=%s' % (ff), '--chain', pdbfile, outfile])
+    (log, err) = runProcess([path_pdb2pqr_exe, '-v', '--ff=%s' % (ff), '--chain', pdbfile, outfile])
     try:
         pdb = pd.parsePQR(outfile)
         # pattern = re.compile('Error')
