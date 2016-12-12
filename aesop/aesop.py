@@ -2463,7 +2463,7 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
             f_log.write(pqr_log)
             f_log.close
             if 'WARNING:' in open(outfile).read():
-                print "Warnings detected in PQR generation, please check PDB2PQR logs and the PQR file for more information"
+                print "Warning detected in " + outfile + ", please check PDB2PQR logs and the PQR file for more information"
 
     def genDX(self):
         """Summary
