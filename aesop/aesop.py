@@ -3761,6 +3761,10 @@ def plotScan(Alascan, filename=None):
         Handles to generated figure.
     """
     #plt.style.use('seaborn-talk')
+    if filename is not None:
+        plt.switch_backend('agg')
+    elif os.environ.get('DISPLAY','') == '':
+        print('No display variable found. Supply a filename to generate plot using non-interactive Agg backend')
     figure, axarr = plt.subplots(len(Alascan.mutid) - 1, sharey=True)
     dpi_val = 300
     if len(Alascan.mutid) > 2:
