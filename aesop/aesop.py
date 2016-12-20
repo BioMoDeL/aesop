@@ -331,7 +331,7 @@ class Alascan:
     """
 
     def __init__(self, pdb, pdb2pqr_exe='pdb2pqr', apbs_exe='apbs', coulomb_exe='coulomb', selstr=['protein'], jobname=None, region=None,
-                 grid=1, ion=0.150, pdie=20.0, sdie=78.54, ff='parse', cfac=1.5, dx=False):
+                 grid=1, ion=0.150, pdie=20.0, sdie=78.54, ff='parse', cfac=1.5, dx=False, minim=False):
         """Summary
         Constructor for the Alascan class.
 
@@ -416,6 +416,13 @@ class Alascan:
         self.genMutid()
         self.genParent()
         self.find_grid()
+
+        self.minim = minim
+        self.disu = True
+        self.min_atom_shift=0.1
+        self.max_iter = 1000
+        # self.report_iter = 10
+        self.output = 'NO_REPORT'
 
     # def getPDB(self):
     #     """Summary
@@ -730,6 +737,11 @@ class Alascan:
         None
             Write library of mutant structures to disk for subsequent analysis.
         """
+        def minimize_pqr(self, pqrfile):
+            minimize_cg(pqrfile, dest=pqrfile, disu=self.disu, min_atom_shift=self.min_atom_shift, max_iter=self.max_iter, output=self.output)
+            (pqr_log, pqr_errs) =execPDB2PQR(self.pdb2pqr, pqrfile, outfile=pqrfile, ff=self.ff)
+
+
         selstr = self.selstr
         jobdir = self.jobdir
         pdb_complex_dir = self.pdb_complex_dir
@@ -755,11 +767,15 @@ class Alascan:
         f_log.close
         if 'WARNING:' in open(outfile).read():
             print "Warning detected in " + outfile + ", please check PDB2PQR logs and the PQR file for more information"
+        if self.minim == True:
+            minimize_pqr(self, outfile)
         complex_pqr = pd.parsePQR(outfile)
         for sel, seldir in zip(selstr, pqr_sel_dir):
             selfile = os.path.join(jobdir, seldir, list_mutids[0] + '.pqr')
             pqr = complex_pqr.select(sel)
             pd.writePQR(selfile, pqr)
+            if self.minim == True:
+                minimize_pqr(self, selfile)
 
         for mutid, chain, resnum in zip(list_mutids[1:], list_chids[1:], list_resnums[1:]):
             outpath = os.path.join(jobdir, pqr_complex_dir, mutid)
@@ -773,6 +789,8 @@ class Alascan:
                 # print selfile
                 pqr = complex_pqr.select(sel)
                 pd.writePQR(selfile, pqr)
+                if self.minim == True:
+                    minimize_pqr(self, selfile)
 
     # def genPQR(self):
     #     """Summary
@@ -1395,7 +1413,7 @@ class DirectedMutagenesis:
     """
 
     def __init__(self, pdb, target, mutation, pdb2pqr_exe='pdb2pqr', apbs_exe='apbs', coulomb_exe='coulomb', selstr=['protein'], jobname=None,
-                 grid=1, ion=0.150, pdie=20.0, sdie=78.54, ff='parse', cfac=1.5, dx=False):
+                 grid=1, ion=0.150, pdie=20.0, sdie=78.54, ff='parse', cfac=1.5, dx=False, minim=True):
         """Summary
 
         Parameters
@@ -1481,6 +1499,13 @@ class DirectedMutagenesis:
         self.genMutid()
         self.genParent()
         self.find_grid()
+
+        self.minim = minim
+        self.disu = True
+        self.min_atom_shift=0.1
+        self.max_iter = 1000
+        # self.report_iter = 10
+        self.output = 'NO_REPORT'
 
     def getMutids(self):
         """Summary
@@ -1719,7 +1744,7 @@ class DirectedMutagenesis:
         self.glen = glen
         self.gcent = gcent
 
-    def genPDB(self):
+    def genPDB(self, minim=True):
         """Summary
         Generates mutations by calling function to mutate PDB with modeller
 
@@ -1746,11 +1771,14 @@ class DirectedMutagenesis:
         system = parent_pdb.select('(' + ') or ('.join(selstr) + ')')
         pd.writePDB(infile, system)
 
+        if self.minim == True:
+            minimize_cg(infile, dest=infile, disu=self.disu, min_atom_shift=self.min_atom_shift, max_iter=self.max_iter, output=self.output)
         for mutid, chain, resnum, mut in zip(list_mutids[1:], list_chids[1:], list_resnums[1:], mutation):
             outpath = os.path.join(jobdir, pdb_complex_dir, mutid)
             print '\n%s:\tgenerating PDB for mutant: %s' % (self.jobname, mutid)
-            mutatePDB(pdb=infile, mutid=outpath,
-                      resnum=resnum, chain=chain, resid=mut)
+            mutatePDB(pdb=infile, mutid=outpath, resnum=resnum, chain=chain, resid=mut)
+            if self.minim == True:
+                minimize_cg(outpath+'.pdb', dest=outpath+'.pdb', disu=self.disu, min_atom_shift=self.min_atom_shift, max_iter=self.max_iter, output=self.output)
 
     def genPQR(self):
         """Summary
@@ -3134,7 +3162,72 @@ def mutatePQR(pqrfile, mutid, resnum, chain=None):
 ##########################################################################
 # Function to mutate a single residue in a PDB structure, mutates with modeller by building internal coordinates of residue
 ##########################################################################
+def minimize_cg(struct, dest=None, disu=True, min_atom_shift=0.1, max_iter=1000, output='NO_REPORT', log=None, report_iter=10):
+    """Summary
+    Function to perform conjugate gradient descent minimization in Modeller on a user-provided structural file (PDB).
 
+    Parameters
+    ----------
+    struct : str
+        String for path to PDB file
+    dest : str
+        String for path to location where minimized structure will be written
+    disu : bool
+        If true, positions of disulfide bridges will be automatically detected
+    min_atom_shift : float
+        If the max atomic shift between minimization steps is less than this value, then convergence is reached
+        and minimization is terminated
+    max_iter : int
+        Maximum number of calls of objective function before minimization is terminated
+    output : str
+        Valid options are 'NO_REPORT' and 'REPORT'. If set to 'REPORT', then a log file during minimation will be printed to screen
+    log : str or None
+        String for path to location where minimization report will be saved. If None, no report will be saved. Report contains only
+        values of objective function at after each report interval.
+    report_iter : int
+        Integer that describes the number of minimization steps to perform before reporting the objective function.
+
+    Returns
+    -------
+    mdl : Model object from Modeller
+        If dest is None, the function will return the minimized model. If dest is specified, then no model will be returned but
+        the minimized model will be written to file.
+    """
+    from modeller import environ, model, selection
+    from modeller.scripts import complete_pdb
+    from modeller.optimizers import conjugate_gradients, actions
+
+    if log is not None:
+        trcfil = open(log, 'w')
+
+    env = environ()
+    env.io.atom_files_directory = ['../atom_files']
+    env.edat.dynamic_sphere = True
+    env.libs.topology.read(file='$(LIB)/top_heav.lib')
+    env.libs.parameters.read(file='$(LIB)/par.lib')
+
+    mdl = complete_pdb(env, struct, transfer_res_num=True)
+
+    basename, ext = os.path.splitext(struct)
+    if disu is True:
+        mdl.patch_ss()
+
+    atmsel = selection(mdl)
+    mdl.restraints.make(atmsel, restraint_type='STEREO', spline_on_site=False)
+    mpdf = atmsel.energy()
+
+    cg = conjugate_gradients(output=output)
+    if log is not None:
+        cg.optimize(atmsel, max_iterations=max_iter, min_atom_shift=min_atom_shift, actions=actions.trace(report, trcfil))
+        trcfil.close()
+    else:
+        cg.optimize(atmsel, max_iterations=max_iter, min_atom_shift=min_atom_shift)
+    
+    if dest is not None:
+        mdl.write(file=dest)
+    if dest is None:
+        # dest = basename+'_cgmin.pdb'
+        return mdl
 
 def mutatePDB(pdb, mutid, resnum, chain=None, resid='ALA'):
     """Summary
