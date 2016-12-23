@@ -233,6 +233,10 @@ class Alascan:
         List of three integers. Parameter required for APBS.
         Please see description at:
         http://www.poissonboltzmann.org/docs/apbs-overview/
+    disu : bool, optional
+        If True, Modeller will guess the patches for disulfide bridges 
+        within the provided protein structures. Only relevant if minim 
+        is set to Trueself.
     dx : bool
         Variable that specifies if potential files should be written to disk.
         Default is False.
@@ -287,11 +291,29 @@ class Alascan:
         to the selection string for the parent and each column
         thereafter corresponds to an element of the selection
         string (selstr) in the same order.
+    max_iter : integer, optional
+        If minimization is to be performed, this parameter limits the 
+        maximum number of calls to the objective function before 
+        minimization is terminated. Default is 1000 iterations.
+    min_atom_shift : float, optional
+        If minimization is to be performed, this parameter will determine 
+        the convergence criteria. If the maximum atomic shift for all atoms 
+        between minimization steps is less than this value, then 
+        minimization is terminated. Default value is 0.1 angstroms.
+    minim : bool, optional
+        If True, minimization will be performed with Modeller's conjugate 
+        gradient descent algorithm. Default is False for the Alanine scan 
+        class as no clashes should result from mutations.
     mutid : list
         List of mutant IDs. The first element corresponds to the parent.
         Subsequent elements correspond to each element of the
         selection string list (selstr). Please use Alascan.getMutids()
         to get vectorized version.
+    output : string, optional
+        If minimization is performed, this parameter deterimines what 
+        output to STDOUT Modeller will use. 'NO_REPORT' results in a 
+        minimal output to STDOUT, while 'REPORT' results in a more 
+        verbose output to STDOUT.
     pdb : str
         Path to PDB file with atomic coordinates. Must follow formatting
         conventions of the Protein Databank.
@@ -377,6 +399,11 @@ class Alascan:
         dx : bool, optional
             Boolean flag stating if potential files should be written to
             disk (True) or not (False).
+        minim : bool, optional
+            If TRUE, energy minimization of protein structures will be 
+            performed with Modeller's conjugate gradient descent 
+            algorithm. Default is False for the Alanine Scan class as 
+            mutations should not result in atomic clashes.
         """
         self.pdb = pdb
         self.pdb2pqr = pdb2pqr_exe
@@ -1317,6 +1344,9 @@ class DirectedMutagenesis:
     dime : list
         List of three integers. Parameter required for APBS. Please see
         description at: http://www.poissonboltzmann.org/docs/apbs-overview/
+    disu : bool, optional
+        If true, Modeller will guess patches for disulfide bridges. Only
+        relevant if minim is set to True.
     dx : bool
         Variable that specifies if potential files should be written to disk.
         Default is False.
@@ -1324,13 +1354,13 @@ class DirectedMutagenesis:
         If written to disk, list of potential files written to disk.
         The folder containing these files is given by Alascan.apbs_results.
     E_ref : ndarray
-        Description
+        Reference state energy values for each structure from APBS.
     E_solv : ndarray
-        Description
-    ff : str
+        Solvated state energy values for each structure from APBS.
+    ff : string
         Force-field to use for PDB2PQR
-    file_pdb_template : TYPE
-        Description
+    file_pdb_template : string
+        Full path to template PDB file.
     gcent : list
         List of three integers. Parameter required for APBS. Please see
         description at: http://www.poissonboltzmann.org/docs/apbs-overview/
@@ -1368,6 +1398,17 @@ class DirectedMutagenesis:
         the selection string for the parent and each column thereafter
         corresponds to an element of the selection string (selstr)
         in the same order.
+    max_iter : integer, optional
+        Maximum number of calls to the objective function. If this value 
+        is reached, then minimization is terminated. Default value is 
+        1000 iterations.
+    min_atom_shift : float, optional
+        If the maximimum atomic shift between minimization steps is less 
+        thant this value, convergence is reached and minimization is 
+        terminated. Default value is 0.1 angstroms.
+    minim : bool, optional
+        If true, structures will be minimzed with Modeller's conjugate 
+        gradient descent algorithm.
     mutation : list
         Identity of amino acid for mutation of corresponding target.
         Must be the same length as target and each residue must use the
@@ -1377,6 +1418,10 @@ class DirectedMutagenesis:
         Subsequent elements correspond to each element of the selection
         string list (selstr). Please use Alascan.getMutids() to get
         vectorized version.
+    output : string, optional
+        Modeller option specifying whether to print verbose output to 
+        STDOUT ('REPORT'), or to print minimal output to STDOUT ('NO_
+        REPORT')
     pdb : str
         Path to PDB file with atomic coordinates. Must follow formatting
         conventions of the Protein Databank.
@@ -1403,13 +1448,6 @@ class DirectedMutagenesis:
     target : list
         List of residue numbers to mutate. Must correspond element-wise
         to mutation attribute.
-
-    Deleted Attributes
-    ------------------
-    dirs : int
-        Description
-    prefix : TYPE
-        Description
     """
 
     def __init__(self, pdb, target, mutation, pdb2pqr_exe='pdb2pqr', apbs_exe='apbs', coulomb_exe='coulomb', selstr=['protein'], jobname=None,
@@ -1460,6 +1498,11 @@ class DirectedMutagenesis:
         dx : bool, optional
             Boolean flag stating if potential files should be written to
             disk (True) or not (False).
+        minim : bool, optional
+            If true, structures will be minimized with Modeller's conjugate 
+            gradient descent algorithm. Default is True for the 
+            DirectedMutagenesis class as mutations may result in 
+            unfavorable conformations.
         """
         self.pdb = pdb
         self.pdb2pqr = pdb2pqr_exe
@@ -1763,11 +1806,9 @@ class DirectedMutagenesis:
 
         list_mutids = [item for sublist in self.mutid for item in sublist]
         list_chids = [item for sublist in self.list_chids for item in sublist]
-        list_resnums = [
-            item for sublist in self.list_resnums for item in sublist]
+        list_resnums = [item for sublist in self.list_resnums for item in sublist]
 
-        infile = os.path.join(jobdir, pdb_complex_dir,
-                              parent_file_prefix + '.pdb')
+        infile = os.path.join(jobdir, pdb_complex_dir, parent_file_prefix + '.pdb')
         system = parent_pdb.select('(' + ') or ('.join(selstr) + ')')
         pd.writePDB(infile, system)
 
