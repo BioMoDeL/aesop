@@ -283,6 +283,9 @@ class Alascan:
         Residue names where mutation was made. Corresponds to Alascan.mutid.
     list_resnums : list
         Residue numbers where mutation was made. Corresponds to Alascan.mutic.
+    logs : list
+        List of strings that represent the log files from every executable
+        called (namely, PDB2PQR and APBS)
     logs_apbs_dir : str
         Folder in jobdir containing output from
         APBS (logs, input files, dx files)
@@ -450,6 +453,7 @@ class Alascan:
         self.max_iter = 1000
         # self.report_iter = 10
         self.output = 'NO_REPORT'
+        self.logs = []
 
     # def getPDB(self):
     #     """Summary
@@ -767,6 +771,7 @@ class Alascan:
         def minimize_pqr(self, pqrfile):
             minimize_cg(pqrfile, dest=pqrfile, disu=self.disu, min_atom_shift=self.min_atom_shift, max_iter=self.max_iter, output=self.output)
             (pqr_log, pqr_errs) =execPDB2PQR(self.pdb2pqr, pqrfile, outfile=pqrfile, ff=self.ff)
+            self.logs.append(pqr_log)
 
 
         selstr = self.selstr
@@ -788,6 +793,7 @@ class Alascan:
                                list_mutids[0] + '.pqr')
         print '\n%s:\tgenerating PQR for parent: %s' % (self.jobname, list_mutids[0])
         (pqr_log, pqr_errs) =execPDB2PQR(path_pdb2pqr, infile, outfile=outfile, ff=ff)
+        self.logs.append(pqr_log)
         logfile = os.path.join(jobdir, 'pdb2pqr_log.txt')
         f_log = open(logfile, 'w')
         f_log.write(pqr_log)
@@ -886,9 +892,10 @@ class Alascan:
                 path_prefix_log = os.path.join(jobdir, logs_apbs_dir, mutid)
                 if mask_by_sel[i, j]:
                     # path, pqr_chain, dime, glen, gcent, prefix, ion, pdie, sdie, dx, i, j = kernel
-                    energies = execAPBS(path_apbs, subunit_pqr, self.dime, self.glen, self.gcent,
+                    energies, log = execAPBS(path_apbs, subunit_pqr, self.dime, self.glen, self.gcent,
                                         prefix=path_prefix_log, ion=self.ion, pdie=self.pdie, sdie=self.sdie,
                                         dx=self.dx)
+                    self.logs.append(log)
                     # print energies[0][0]
                     # print energies[0][1]
                     Gsolv[i, j] = energies[0][0]
@@ -974,7 +981,7 @@ class Alascan:
         kernel = zip(path_list, pqr_chain_list, dime_list, glen_list, gcent_list, prefix_list, ion_list, pdie_list,
                      sdie_list, dx_list, i_list, j_list)
 
-        apbs_results = []
+        # apbs_results = []
         p = Pool()
         print '%s:\trunning batchAPBS ....' % (self.jobname)
         counter = 0
@@ -982,16 +989,18 @@ class Alascan:
         for result in p.imap_unordered(batchAPBS, kernel):
             counter += 1
             print '.... %s:\tbatch APBS %d percent complete ....' % (self.jobname, int(counter * 100 / max_count))
-            i = int(result[0])
-            j = int(result[1])
-            solv = result[2]
-            ref = result[3]
+            data, log = result
+            i = int(data[0])
+            j = int(data[1])
+            solv = data[2]
+            ref = data[3]
+            self.logs.append(log)
             # print '%d, %d, %f, %f'%(i, j, solv, ref)
-            apbs_results.append([i, j, solv, ref])
+            # apbs_results.append([i, j, solv, ref])
             Gsolv[i, j] = solv
             Gref[i, j] = ref
-        apbs_results = np.asarray(apbs_results)
-        self.apbs_results = apbs_results
+        # apbs_results = np.asarray(apbs_results)
+        # self.apbs_results = apbs_results
         if self.dx == True:
             self.dx_files = [x + '.dx' for x in prefix_list]
 
@@ -1039,7 +1048,8 @@ class Alascan:
             for j, seldir in zip(xrange(dim_sel), [pqr_complex_dir] + pqr_sel_dir):
                 if mask_by_sel[i, j]:
                     subunit_pqr = os.path.join(jobdir, seldir, mutid + '.pqr')
-                    energies = execCoulomb(path_coulomb, subunit_pqr)
+                    energies, log = execCoulomb(path_coulomb, subunit_pqr)
+                    self.logs.append(log)
                     Gcoul[i, j] = energies / pdie
 
         # Fill in results that are duplicates
@@ -1113,11 +1123,13 @@ class Alascan:
         for result in p.imap_unordered(batchCoulomb, kernel):
             counter += 1
             print '.... %s:\tbatch coulomb %d percent complete ....' % (self.jobname, int(counter * 100 / max_count))
-            i = int(result[0])
-            j = int(result[1])
-            coul = result[2]
+            data, log = result
+            i = int(data[0])
+            j = int(data[1])
+            coul = data[2]
             coulomb_results.append([i, j, coul])
             Gcoul[i, j] = coul
+            self.logs.append(log)
         coulomb_results = np.asarray(coulomb_results)
         self.coulomb_results = coulomb_results
 
@@ -1257,6 +1269,7 @@ class Alascan:
             Outputs text to STDOUT when run is complete, will be made optional in the future.
         """
         start = ti.default_timer()
+        self.logs = []
         self.genTruncatedPQR()
         self.calcAPBS()
         self.calcCoulomb()
@@ -1279,6 +1292,7 @@ class Alascan:
             Outputs text to STDOUT when run is complete, will be made optional in the future.
         """
         start = ti.default_timer()
+        self.logs = []
         self.genTruncatedPQR()
         self.calcAPBS_parallel(n_workers)
         self.calcCoulomb_parallel(n_workers)
@@ -1307,11 +1321,27 @@ class Alascan:
             energies = self.ddGa_rel()
         elif len(selstr) == 1:
             energies = self.dGsolv_rel()
+        # chids = [item for sublist in self.list_chids[1:] for item in sublist]
         lines = ['%s, %f' % (lbl, val) for lbl, val in zip(mutids, energies)]
+        lines.append('\nKey\n---\n')
+        for i, seg in enumerate(selstr):
+            lines.append('sel%d = %s' % (int(i+1), str(seg)))
         if filename is None:
             print(lines)
         if filename is not None:
-            np.savetxt(filename, lines, fmt='%s')
+            np.savetxt(filename, lines, fmt='%s')    
+
+    def writeLogs(self, filename=None):
+        if filename is None:
+            filename = os.path.join(self.jobdir, 'AESOP_logs.txt')
+        with open(filename, 'w') as f:
+            logs = '\n==== Log Instance ====\n'.join(self.logs)
+            f.write(logs)
+
+    def viewLogs(self):
+        logs = '\n==== Log Instance ====\n'.join(self.logs)
+        print logs
+
 
 ##########################################################################
 # Container for performing an Directed Mutagenesis Scan with AESOP
@@ -1390,6 +1420,9 @@ class DirectedMutagenesis:
         Residue names where mutation was made. Corresponds to Alascan.mutid.
     list_resnums : list
         Residue numbers where mutation was made. Corresponds to Alascan.mutic.
+    logs : list
+        List of strings that represent the log files from every executable
+        called (namely, PDB2PQR and APBS)
     logs_apbs_dir : str
         Folder in jobdir containing output from APBS (logs, input files, dx
         files)
@@ -1549,6 +1582,7 @@ class DirectedMutagenesis:
         self.max_iter = 1000
         # self.report_iter = 10
         self.output = 'NO_REPORT'
+        self.logs = []
 
     def getMutids(self):
         """Summary
@@ -1634,9 +1668,9 @@ class DirectedMutagenesis:
         mask_by_sel[0, 0] = True
 
         list_mutids[0] = [parent_file_prefix]
-        list_chids[0] = ['']
+        list_chids[0] = list([''])
         list_resnums[0] = [np.zeros(0).tolist()]
-        list_resnames[0] = ['']
+        list_resnames[0] = list([''])
 
         for i, region in zip(xrange(len(selstr)), selstr):
             for j, sel, mut in zip(xrange(len(target)), target, mutation):
@@ -1847,6 +1881,7 @@ class DirectedMutagenesis:
             infile = os.path.join(jobdir, pdb_complex_dir, mutid + '.pdb')
             outfile = os.path.join(jobdir, pqr_complex_dir, mutid + '.pqr')
             (pqr_log, pqr_errs) =execPDB2PQR(path_pdb2pqr, infile, outfile=outfile, ff=ff)
+            self.logs.append(pqr_log)
             logfile = os.path.join(jobdir, pqr_complex_dir, mutid + '_pdb2pqr_log.txt')
             f_log = open(logfile, 'w')
             f_log.write(pqr_log)
@@ -1897,9 +1932,10 @@ class DirectedMutagenesis:
             for j, seldir in zip(xrange(dim_sel), [pqr_complex_dir] + pqr_sel_dir):
                 subunit_pqr = os.path.join(jobdir, seldir, mutid + '.pqr')
                 path_prefix_log = os.path.join(jobdir, logs_apbs_dir, mutid)
-                energies = execAPBS(path_apbs, subunit_pqr, self.dime, self.glen, self.gcent,
+                energies, log = execAPBS(path_apbs, subunit_pqr, self.dime, self.glen, self.gcent,
                                     prefix=path_prefix_log, ion=self.ion, pdie=self.pdie, sdie=self.sdie,
                                     dx=self.dx)
+                self.logs.append(log)
                 Gsolv[i, j] = energies[0][0]
                 Gref[i, j] = energies[0][1]
                 # if mask_by_sel[i, j]:
@@ -1989,7 +2025,7 @@ class DirectedMutagenesis:
         # Organize kernel and run batch process
         kernel = zip(path_list, pqr_chain_list, dime_list, glen_list, gcent_list, prefix_list, ion_list, pdie_list,
                      sdie_list, dx_list, i_list, j_list)
-        apbs_results = []
+        # apbs_results = []
         p = Pool(n_workers)
         print '%s:\trunning batchAPBS ....' % (self.jobname)
         counter = 0
@@ -1997,16 +2033,18 @@ class DirectedMutagenesis:
         for result in p.imap_unordered(batchAPBS, kernel):
             counter += 1
             print '.... %s:\tbatch APBS %d percent complete ....' % (self.jobname, int(counter * 100 / max_count))
-            i = int(result[0])
-            j = int(result[1])
-            solv = result[2]
-            ref = result[3]
+            data, log = result
+            i = int(data[0])
+            j = int(data[1])
+            solv = data[2]
+            ref = data[3]
             # print '%d, %d, %f, %f'%(i, j, solv, ref)
-            apbs_results.append([i, j, solv, ref])
+            # apbs_results.append([i, j, solv, ref])
             Gsolv[i, j] = solv
             Gref[i, j] = ref
-        apbs_results = np.asarray(apbs_results)
-        self.apbs_results = apbs_results
+            self.logs.append(log)
+        # apbs_results = np.asarray(apbs_results)
+        # self.apbs_results = apbs_results
         if self.dx == True:
             self.dx_files = [x + '.dx' for x in prefix_list]
 
@@ -2047,7 +2085,8 @@ class DirectedMutagenesis:
             print '\n%s:\tcalculating coulombic energies for mutant: %s' % (self.jobname, mutid)
             for j, seldir in zip(xrange(dim_sel), [pqr_complex_dir] + pqr_sel_dir):
                 subunit_pqr = os.path.join(jobdir, seldir, mutid + '.pqr')
-                energies = execCoulomb(path_coulomb, subunit_pqr)
+                energies, log = execCoulomb(path_coulomb, subunit_pqr)
+                self.logs.append(log)
                 Gcoul[i, j] = energies / pdie
 
         self.Gcoul = Gcoul
@@ -2106,7 +2145,7 @@ class DirectedMutagenesis:
 
         # Organize kernel and run batch process
         kernel = zip(path_list, pqr_chain_list, pdie_list, i_list, j_list)
-        coulomb_results = []
+        # coulomb_results = []
         p = Pool(n_workers)
         print '%s:\trunning batchCoulomb ....' % (self.jobname)
         counter = 0
@@ -2114,13 +2153,15 @@ class DirectedMutagenesis:
         for result in p.imap_unordered(batchCoulomb, kernel):
             counter += 1
             print '.... %s:\tbatch coulomb %d percent complete ....' % (self.jobname, int(counter * 100 / max_count))
-            i = int(result[0])
-            j = int(result[1])
-            coul = result[2]
-            coulomb_results.append([i, j, coul])
+            data, log = result
+            self.logs.append(log)
+            i = int(data[0])
+            j = int(data[1])
+            coul = data[2]
+            # coulomb_results.append([i, j, coul])
             Gcoul[i, j] = coul
-        coulomb_results = np.asarray(coulomb_results)
-        self.coulomb_results = coulomb_results
+        # coulomb_results = np.asarray(coulomb_results)
+        # self.coulomb_results = coulomb_results
 
         # Fill in results that are duplicates # NOT NEEDED FOR DIRECTED MUTATIONS: modeller will rearrange structure slightly
         # for i in xrange(dim_mutid):
@@ -2183,6 +2224,7 @@ class DirectedMutagenesis:
             in the future.
         """
         start = ti.default_timer()
+        self.logs = []
         # self.genDirs()
         # self.genMutid()
         # self.genParent()
@@ -2211,6 +2253,7 @@ class DirectedMutagenesis:
             optional in the future.
         """
         start = ti.default_timer()
+        self.logs = []
         # self.genDirs()
         # self.genMutid()  # contains warning: FutureWarning: elementwise comparison failed; returning scalar instead, but in the future will perform elementwise comparison if tokens[0] == 'and' or tokens[-1] == 'and':
         # self.genParent()
@@ -2245,11 +2288,26 @@ class DirectedMutagenesis:
             energies = self.ddGa_rel()
         elif len(selstr) == 1:
             energies = self.dGsolv_rel()
+        # chids = [item for sublist in self.list_chids[1:] for item in sublist]
         lines = ['%s, %f' % (lbl, val) for lbl, val in zip(mutids, energies)]
+        lines.append('\nKey\n---\n')
+        for i, seg in enumerate(selstr):
+            lines.append('sel%d = %s' % (int(i+1), str(seg)))
         if filename is None:
             print(lines)
         if filename is not None:
-            np.savetxt(filename, lines, fmt='%s')
+            np.savetxt(filename, lines, fmt='%s')    
+
+    def writeLogs(self, filename=None):
+        if filename is None:
+            filename = os.path.join(self.jobdir, 'AESOP_logs.txt')
+        with open(filename, 'w') as f:
+            logs = '\n==== Log Instance ====\n'.join(self.logs)
+            f.write(logs)
+
+    def viewLogs(self):
+        logs = '\n==== Log Instance ====\n'.join(self.logs)
+        print logs
 
 ##########################################################################
 # Container for performing ESD analysis on set of PDB files
@@ -2302,6 +2360,9 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
         Description
     jobname : str
         [Optional] Name for current job, will be used to create the jobdir.
+    logs : list
+        List of strings that represent the log files from every executable
+        called (namely, PDB2PQR and APBS)
     midpoints : ndarray
         Midpoints of grid space
     pdb2pqr : str
@@ -2397,6 +2458,7 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
         self.sdie = sdie
         self.ff = ff
         self.cfac = cfac
+        self.logs = []
 
     def centerPDB(self):
         """Summary
@@ -2527,6 +2589,7 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
                 pqrdir, os.path.splitext(pdbfile)[0] + '.pqr')
             print 'Converting %s to PQR' % (pdbfile)
             (pqr_log, pqr_errs) =execPDB2PQR(path_pdb2pqr, infile, outfile=outfile, ff=ff)
+            self.logs.append(pqr_log)
             logfile = os.path.join(pqrdir, os.path.splitext(pdbfile)[0] + '_pdb2pqr_log.txt')
             f_log = open(logfile, 'w')
             f_log.write(pqr_log)
@@ -2556,13 +2619,12 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
         gcent = self.gcent
         dime = self.dime
 
-        pqrfiles = [os.path.join(pqrdir, os.path.splitext(
-            pdbfile)[0] + '.pqr') for pdbfile in pdbfiles]
-        apbsfiles = [os.path.join(dxdir, os.path.splitext(pdbfile)[
-                                  0]) for pdbfile in pdbfiles]
+        pqrfiles = [os.path.join(pqrdir, os.path.splitext(pdbfile)[0] + '.pqr') for pdbfile in pdbfiles]
+        apbsfiles = [os.path.join(dxdir, os.path.splitext(pdbfile)[0]) for pdbfile in pdbfiles]
         for pqrfile, apbsfile in zip(pqrfiles, apbsfiles):
-            calcDX(path_apbs, pqrfile, prefix=apbsfile, grid=grid, ion=ion,
+            log = calcDX(path_apbs, pqrfile, prefix=apbsfile, grid=grid, ion=ion,
                    pdie=pdie, sdie=sdie, cfac=cfac, glen=glen, gcent=gcent, dime=dime)
+            self.logs.append(log)
 
     def genDX_parallel(self, n_workers=None):
         """Summary
@@ -2619,6 +2681,7 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
         for result in p.imap_unordered(batchCalcDX, kernel):
             counter += 1
             print '.... %s:\tbatch coulomb %d percent complete ....' % (self.jobname, int(counter * 100 / max_count))
+            self.logs.append(result)
 
     def calcESD(self, method='AND'):
         """Summary
@@ -2788,6 +2851,8 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
         self.esi = esilist
 
     def run(self, center=False, superpose=False, esi=False, esd=True, idx=0):
+        start = ti.default_timer()
+        self.logs = []
         if center:
             self.centerPDB()
         if superpose:
@@ -2799,8 +2864,12 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
             self.calcESD()
         if esi:
             self.calcESI(idx=idx)
+        stop = ti.default_timer()
+        print '%s:\tAESOP electrostatic similarity comparison completed in %.2f seconds' % (self.jobname, stop - start)
 
     def run_parallel(self, n_workers=None, center=False, superpose=False, esi=False, esd=True, idx=0):
+        start = ti.default_timer()
+        self.logs = []
         if center:
             self.centerPDB()
         if superpose:
@@ -2815,7 +2884,19 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
             self.calcESD()
         if esi:
             self.calcESI(idx=idx)
+        stop = ti.default_timer()
+        print '%s:\tAESOP electrostatic similarity comparison completed in %.2f seconds' % (self.jobname, stop - start)
 
+    def writeLogs(self, filename=None):
+        if filename is None:
+            filename = os.path.join(self.jobdir, 'AESOP_logs.txt')
+        with open(filename, 'w') as f:
+            logs = '\n==== Log Instance ====\n'.join(self.logs)
+            f.write(logs)
+
+    def viewLogs(self):
+        logs = '\n==== Log Instance ====\n'.join(self.logs)
+        print logs
 
 # ######################################################################################################################################################
 # # Container for performing ESD analysis
@@ -3238,37 +3319,41 @@ def minimize_cg(struct, dest=None, disu=True, min_atom_shift=0.1, max_iter=1000,
     from modeller.scripts import complete_pdb
     from modeller.optimizers import conjugate_gradients, actions
 
-    if log is not None:
-        trcfil = open(log, 'w')
+    try:
+        if log is not None:
+            trcfil = open(log, 'w')
 
-    env = environ()
-    env.io.atom_files_directory = ['../atom_files']
-    env.edat.dynamic_sphere = True
-    env.libs.topology.read(file='$(LIB)/top_heav.lib')
-    env.libs.parameters.read(file='$(LIB)/par.lib')
+        env = environ()
+        env.io.atom_files_directory = ['../atom_files']
+        env.edat.dynamic_sphere = True
+        env.libs.topology.read(file='$(LIB)/top_heav.lib')
+        env.libs.parameters.read(file='$(LIB)/par.lib')
 
-    mdl = complete_pdb(env, struct, transfer_res_num=True)
+        mdl = complete_pdb(env, struct, transfer_res_num=True)
 
-    basename, ext = os.path.splitext(struct)
-    if disu is True:
-        mdl.patch_ss()
+        basename, ext = os.path.splitext(struct)
+        if disu is True:
+            mdl.patch_ss()
 
-    atmsel = selection(mdl)
-    mdl.restraints.make(atmsel, restraint_type='STEREO', spline_on_site=False)
-    mpdf = atmsel.energy()
+        atmsel = selection(mdl)
+        mdl.restraints.make(atmsel, restraint_type='STEREO', spline_on_site=False)
+        mpdf = atmsel.energy()
 
-    cg = conjugate_gradients(output=output)
-    if log is not None:
-        cg.optimize(atmsel, max_iterations=max_iter, min_atom_shift=min_atom_shift, actions=actions.trace(report, trcfil))
-        trcfil.close()
-    else:
-        cg.optimize(atmsel, max_iterations=max_iter, min_atom_shift=min_atom_shift)
-    
-    if dest is not None:
-        mdl.write(file=dest)
-    if dest is None:
-        # dest = basename+'_cgmin.pdb'
-        return mdl
+        cg = conjugate_gradients(output=output)
+        if log is not None:
+            cg.optimize(atmsel, max_iterations=max_iter, min_atom_shift=min_atom_shift, actions=actions.trace(report, trcfil))
+            trcfil.close()
+        else:
+            cg.optimize(atmsel, max_iterations=max_iter, min_atom_shift=min_atom_shift)
+        
+        if dest is not None:
+            mdl.write(file=dest)
+        if dest is None:
+            # dest = basename+'_cgmin.pdb'
+            return mdl
+    except:
+        print 'CG Minimization failed for: %s' % (struct)
+        sys.exit(1)
 
 def mutatePDB(pdb, mutid, resnum, chain=None, resid='ALA'):
     """Summary
@@ -3582,7 +3667,7 @@ def execAPBS(path_apbs_exe, pqr_chain, dime, glen, gcent, prefix=None, ion=0.150
         sys.exit(1)
 
     # return file_apbs_log
-    return elec
+    return (elec, log)
 
 ##########################################################################
 # Function to run APBS.exe to generate a DX file only - should work on any supported OS
@@ -3718,6 +3803,7 @@ def calcDX(path_apbs_exe, pqrfile, prefix=None, grid=1.0, ion=0.150, pdie=20.0, 
 
     # return file_apbs_log
     # return elec
+    return log
 
 ##########################################################################
 # Function to run multiple APBS processes at once
@@ -3743,9 +3829,9 @@ def batchAPBS(kernel):
     path, pqr_chain, dime, glen, gcent, prefix, ion, pdie, sdie, dx, i, j = kernel
     # print 'Calculating solvation and reference energies for: %s' %
     # (os.path.basename(pqr_chain).split('.')[0])
-    energies = execAPBS(path, pqr_chain, dime, glen, gcent,
+    energies, log = execAPBS(path, pqr_chain, dime, glen, gcent,
                         prefix=prefix, ion=ion, pdie=pdie, sdie=sdie, dx=dx)
-    return np.array([i, j, energies[0][0], energies[0][1]])
+    return (np.array([i, j, energies[0][0], energies[0][1]]), log)
 
 ##########################################################################
 # Function to run multiple APBS processes at once for the purpose of generating only a DX file
@@ -3767,8 +3853,9 @@ def batchCalcDX(kernel):
         Writes files according to calcDX function.
     """
     path, pqrfile, prefix, grid, ion, pdie, sdie, cfac, glen, gcent, dime = kernel
-    calcDX(path, pqrfile, prefix=prefix, grid=grid, ion=ion, pdie=pdie, sdie=sdie,
+    log = calcDX(path, pqrfile, prefix=prefix, grid=grid, ion=ion, pdie=pdie, sdie=sdie,
            cfac=cfac, glen=glen, gcent=gcent, dime=dime)
+    return log
 
 ##########################################################################
 # Function to run multiple Coulomb processes at once
@@ -3793,9 +3880,9 @@ def batchCoulomb(kernel):
     path, pqr_chain, pdie, i, j = kernel
     # print 'Calculating coulombic energies for: %s' %
     # (os.path.basename(pqr_chain).split('.')[0])
-    energies = execCoulomb(path, pqr_chain)
+    energies, log = execCoulomb(path, pqr_chain)
     energies = energies / pdie
-    return np.array([i, j, energies])
+    return (np.array([i, j, energies]), log)
 
 ##########################################################################
 # Function to run coulomb.exe - should work on any supported OS
@@ -3822,7 +3909,7 @@ def execCoulomb(path_coulomb_exe, pqr):
     pattern = re.compile(
         '(?<=Total energy =)\s+[+\-]?(?:0|[1-9]\d*)(?:\.\d*)?(?:[eE][+\-]?\d+)?')  # May need to update regex
     coul = np.asarray(re.findall(pattern, log)).astype(np.float)
-    return coul
+    return (coul, log)
 
 ##########################################################################
 # Function to run DSSP.exe - should work on any supported OS
