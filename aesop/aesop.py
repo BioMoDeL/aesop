@@ -1276,6 +1276,12 @@ class Alascan:
         self.status = 1
         stop = ti.default_timer()
         print '%s:\tAESOP alanine scan completed in %.2f seconds' % (self.jobname, stop - start)
+        warn = self.checkwarnings()
+        err  = self.checkerrors()
+        if warn != 0:
+            print 'WARNINGS detected, please view log files!'
+        if err != 0:
+            print 'ERRORS detected, please view log files!'
 
     def run_parallel(self, n_workers=None):
         """Summary
@@ -1299,6 +1305,12 @@ class Alascan:
         self.status = 1
         stop = ti.default_timer()
         print '%s:\tAESOP alanine scan completed in %.2f seconds' % (self.jobname, stop - start)
+        warn = self.checkwarnings()
+        err  = self.checkerrors()
+        if warn != 0:
+            print 'WARNINGS detected, please view log files!'
+        if err != 0:
+            print 'ERRORS detected, please view log files!'
 
     def summary(self, filename=None):
         """Summary
@@ -1341,6 +1353,25 @@ class Alascan:
     def viewLogs(self):
         logs = '\n==== Log Instance ====\n'.join(self.logs)
         print logs
+
+    def checkwarnings(self):
+        lines = ''.join(self.logs)
+        matches = re.findall('[W][Aa][Rr][Nn][Ii][Nn][Gg]', lines)
+        if len(matches) > 0:
+            return 1
+        elif len(matches) == 0:
+            return 0
+        else:
+            return -1
+    def checkerrors(self):
+        lines = ''.join(self.logs)
+        matches = re.findall('[E][Rr][Rr][Oo][Rr]', lines)
+        if len(matches) > 0:
+            return 1
+        elif len(matches) == 0:
+            return 0
+        else:
+            return -1
 
 
 ##########################################################################
@@ -2234,6 +2265,12 @@ class DirectedMutagenesis:
         self.calcCoulomb()
         stop = ti.default_timer()
         print '%s:\tAESOP directed mutagenesis scan completed in %.2f seconds' % (self.jobname, stop - start)
+        warn = self.checkwarnings()
+        err  = self.checkerrors()
+        if warn != 0:
+            print 'WARNINGS detected, please view log files!'
+        if err != 0:
+            print 'ERRORS detected, please view log files!'
 
     def run_parallel(self, n_workers=None):
         """Summary
@@ -2263,6 +2300,12 @@ class DirectedMutagenesis:
         self.calcCoulomb_parallel()
         stop = ti.default_timer()
         print '%s:\tAESOP directed mutagenesis scan completed in %.2f seconds' % (self.jobname, stop - start)
+        warn = self.checkwarnings()
+        err  = self.checkerrors()
+        if warn != 0:
+            print 'WARNINGS detected, please view log files!'
+        if err != 0:
+            print 'ERRORS detected, please view log files!'
 
     def summary(self, filename=None):
         """Summary
@@ -2308,6 +2351,25 @@ class DirectedMutagenesis:
     def viewLogs(self):
         logs = '\n==== Log Instance ====\n'.join(self.logs)
         print logs
+
+    def checkwarnings(self):
+        lines = ''.join(self.logs)
+        matches = re.findall('[W][Aa][Rr][Nn][Ii][Nn][Gg]', lines)
+        if len(matches) > 0:
+            return 1
+        elif len(matches) == 0:
+            return 0
+        else:
+            return -1
+    def checkerrors(self):
+        lines = ''.join(self.logs)
+        matches = re.findall('[E][Rr][Rr][Oo][Rr]', lines)
+        if len(matches) > 0:
+            return 1
+        elif len(matches) == 0:
+            return 0
+        else:
+            return -1
 
 ##########################################################################
 # Container for performing ESD analysis on set of PDB files
@@ -2866,6 +2928,12 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
             self.calcESI(idx=idx)
         stop = ti.default_timer()
         print '%s:\tAESOP electrostatic similarity comparison completed in %.2f seconds' % (self.jobname, stop - start)
+        warn = self.checkwarnings()
+        err  = self.checkerrors()
+        if warn != 0:
+            print 'WARNINGS detected, please view log files!'
+        if err != 0:
+            print 'ERRORS detected, please view log files!'
 
     def run_parallel(self, n_workers=None, center=False, superpose=False, esi=False, esd=True, idx=0):
         start = ti.default_timer()
@@ -2886,6 +2954,12 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
             self.calcESI(idx=idx)
         stop = ti.default_timer()
         print '%s:\tAESOP electrostatic similarity comparison completed in %.2f seconds' % (self.jobname, stop - start)
+        warn = self.checkwarnings()
+        err  = self.checkerrors()
+        if warn != 0:
+            print 'WARNINGS detected, please view log files!'
+        if err != 0:
+            print 'ERRORS detected, please view log files!'
 
     def writeLogs(self, filename=None):
         if filename is None:
@@ -2897,6 +2971,25 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
     def viewLogs(self):
         logs = '\n==== Log Instance ====\n'.join(self.logs)
         print logs
+
+    def checkwarnings(self):
+        lines = ''.join(self.logs)
+        matches = re.findall('[W][Aa][Rr][Nn][Ii][Nn][Gg]', lines)
+        if len(matches) > 0:
+            return 1
+        elif len(matches) == 0:
+            return 0
+        else:
+            return -1
+    def checkerrors(self):
+        lines = ''.join(self.logs)
+        matches = re.findall('[E][Rr][Rr][Oo][Rr]', lines)
+        if len(matches) > 0:
+            return 1
+        elif len(matches) == 0:
+            return 0
+        else:
+            return -1
 
 # ######################################################################################################################################################
 # # Container for performing ESD analysis
