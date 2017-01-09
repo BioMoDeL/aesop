@@ -55,6 +55,12 @@ so please be patient::
 
     family.run(superpose=True)
 
+.. warning::
+
+    Currently, superpositioning will fail for structures with an unequal number of alpha carbon atoms. For more complicated 
+    schemes, we suggest the user superposition all structures before running AESOP. For instance, the user may be want to 
+    superpose by domain.
+    
 You can view results using built-in functions::
 
     plotDend(family, filename='dend.png')
