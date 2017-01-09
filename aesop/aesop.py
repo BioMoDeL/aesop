@@ -2541,8 +2541,7 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
     def superposePDB(self):
         """Summary
         Superpose each structure in pdbfiles with first element in
-        pdbfiles list. This method will fail if the number of alpha
-        carbons are not equal in each PDB being compared.
+        pdbfiles list. This uses Modeller to perform the superpositioning.
 
         Returns
         -------
@@ -2552,21 +2551,26 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
         pdbdir = self.pdbdir
         pdbfiles = self.pdbfiles
 
-        # Find minimum number of calphas
-        num_res = pd.parsePDB(os.path.join(pdbdir, pdbfiles[0])).numResidues()
-        for pdbfile in pdbfiles:
-            num_res = min(num_res, pd.parsePDB(os.path.join(pdbdir, pdbfile)).numResidues())
-        print 'Superposing %d PDB files on %d alpha carbons' % (len(pdbfiles), num_res)
+        reffile = pdbfiles[0]
+        for pdbfile in pdbfiles[1:]:
+            ref = os.path.join(pdbdir, reffile)
+            pdb = os.path.join(pdbdir, pdbfile)
+            superpose(ref=ref, pdb=pdb, atype='CA', output=None)
 
-        # Superpose each structure, overwriting previous PDB file
-        ref = pd.parsePDB(os.path.join(
-            pdbdir, pdbfiles[0]), subset='calpha').getCoords()
-        for pdbfile in pdbfiles:
-            pdb = pd.parsePDB(os.path.join(pdbdir, pdbfile))
-            coords = pdb.calpha.getCoords()
-            T = pd.calcTransformation(coords[:num_res], ref[:num_res])
-            pdb = pd.applyTransformation(T, pdb)
-            pd.writePDB(os.path.join(pdbdir, pdbfile), pdb)
+        # # Find minimum number of calphas
+        # num_res = pd.parsePDB(os.path.join(pdbdir, pdbfiles[0])).numResidues()
+        # for pdbfile in pdbfiles:
+        #     num_res = min(num_res, pd.parsePDB(os.path.join(pdbdir, pdbfile)).numResidues())
+        # print 'Superposing %d PDB files on %d alpha carbons' % (len(pdbfiles), num_res)
+
+        # # Superpose each structure, overwriting previous PDB file
+        # ref = pd.parsePDB(os.path.join(pdbdir, pdbfiles[0]), subset='calpha').getCoords()
+        # for pdbfile in pdbfiles:
+        #     pdb = pd.parsePDB(os.path.join(pdbdir, pdbfile))
+        #     coords = pdb.calpha.getCoords()
+        #     T = pd.calcTransformation(coords[:num_res], ref[:num_res])
+        #     pdb = pd.applyTransformation(T, pdb)
+        #     pd.writePDB(os.path.join(pdbdir, pdbfile), pdb)
 
     def initializeGrid(self):
         """Summary
@@ -3479,8 +3483,7 @@ def mutatePDB(pdb, mutid, resnum, chain=None, resid='ALA'):
     try:
         from modeller import environ, model, alignment, selection
     except:
-        print(
-            'Failed to load modeller: please ensure module is installed and license key set')
+        print('Failed to load modeller: please ensure module is installed and license key set')
 
     env = environ()
     env.libs.topology.read(file='$(LIB)/top_heav.lib')
@@ -3553,6 +3556,54 @@ def mutatePDB(pdb, mutid, resnum, chain=None, resid='ALA'):
     # aln.append_model(h, atom_files=mutid + '.pdb', align_codes='mutant')
     # h.res_num_from(m, aln)  # Restore old residue numbering and chain indexing
     # h.write(file=mutid + '.pdb')
+
+def superpose(ref, pdb, atype='CA', output=None):
+    """Summary
+    Uses Modeller to superpose a PDB file (pdb) to a reference PDB (ref).
+
+    Parameters
+    ----------
+    ref : str
+        Full path to PDB file (or name of file in working directory) that will be used a the reference
+        for superpositioning.
+    pdb : str
+        Full path to PDB file (or name of file in working directory) that will be used a the mobile structure
+        for superpositioning.
+    atype : str
+        Modeller-compatible string selection for atoms to be used in superpositioning. We suggest using 'CA'.
+    output : str or None
+        If output is None, the file specified by pdb will be updated with the superposed structure. If specified,
+        output should be a full path where the superposed structure will be saved.
+    """
+    try:
+        from modeller import environ, model, alignment, selection
+        from modeller.scripts import complete_pdb
+    except:
+        print('Failed to load modeller: please ensure module is installed and license key set')
+
+    env = environ()
+    env.io.atom_files_directory = '../atom_files'
+    env.libs.topology.read(file='$(LIB)/top_heav.lib')
+    env.libs.parameters.read(file='$(LIB)/par.lib')
+
+    mdl1 = complete_pdb(env, ref, transfer_res_num=True)
+    mdl2 = complete_pdb(env, pdb, transfer_res_num=True)
+
+    aln  = alignment(env)
+    aln.append_model(mdl1, atom_files=ref, align_codes='ref')
+    aln.append_model(mdl2, atom_files=pdb, align_codes='pdb')
+
+    aln.malign(gap_penalties_1d=(-600, -400))
+    aln.malign3d(gap_penalties_3d=(0, 2.0), write_fit=False, write_whole_pdb=False)
+
+    atmsel = selection(mdl1).only_atom_types(atype)
+    r      = atmsel.superpose(mdl2, aln, superpose_refine=True)
+
+    if output is None:
+        output = pdb
+
+    mdl2.write(file=output)
+
 
 ##########################################################################
 # Function to run PDB2PQR.exe - should work on any supported OS
