@@ -2437,6 +2437,8 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
         Protein dielectric constant to be used in APBS.
     pqrdir : str
         Folder in job directory containing PQR files.
+    pqrfiles : list
+        List of PQR files in pqrdir
     sdie : numeric
         Solvent dielectric constant to be used in APBS.
     """
@@ -2521,6 +2523,7 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
         self.ff = ff
         self.cfac = cfac
         self.logs = []
+        self.pqrfiles = []
 
     def centerPDB(self):
         """Summary
@@ -2649,10 +2652,11 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
         path_pdb2pqr = self.pdb2pqr
         ff = self.ff
 
+        self.pqrfiles = []
         for pdbfile in pdbfiles:
             infile = os.path.join(pdbdir, pdbfile)
-            outfile = os.path.join(
-                pqrdir, os.path.splitext(pdbfile)[0] + '.pqr')
+            pqrname = os.path.splitext(pdbfile)[0] + '.pqr'
+            outfile = os.path.join(pqrdir, pqrname)
             print 'Converting %s to PQR' % (pdbfile)
             (pqr_log, pqr_errs) =execPDB2PQR(path_pdb2pqr, infile, outfile=outfile, ff=ff)
             self.logs.append(pqr_log)
@@ -2662,6 +2666,39 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
             f_log.close
             if 'WARNING:' in open(outfile).read():
                 print "Warning detected in " + outfile + ", please check PDB2PQR logs and the PQR file for more information"
+            self.pqrfiles.append(pqrname)
+
+    def mutatePQR(self, selstr=['protein']):
+        """Summary
+        Mutate all PQR files, optional method
+
+        Returns
+        -------
+        None
+            Generates PQR files in the pqrdir
+        """
+        pqrdir      = self.pqrdir
+        pqrfiles    = self.pqrfiles
+        sel         = ' or '.join(selstr)
+        sel         = ' and '.join(['('+sel+')', 'charged', 'calpha'])
+
+        mutantpqrs = []
+        for pqrfile in pqrfiles:
+            infile  = os.path.join(pqrdir, pqrfile)
+            pqr     = pd.parsePQR(infile)
+            pqrsel  = pqr.select(sel)
+
+            resnums  = pqrsel.getResnums().tolist()
+            resnames = [AA_dict[x] for x in pqrsel.getResnames().tolist()]
+            chains   = pqrsel.getChids().tolist()
+
+            for resnum, chain, resname in zip(resnums, chains, resnames):
+                mutid = os.path.splitext(os.path.basename(infile))[0]+'_%s_%s%sA' % (str(chain), str(resname) ,str(resnum))
+                mutantpqrs.append(mutid+'.pqr')
+                print 'Generating mutant: %s' % (mutid)
+                mutatePQR(pqrfile=infile, mutid=os.path.join(pqrdir, mutid), resnum=resnum, chain=chain)
+        self.pqrfiles = pqrfiles + mutantpqrs
+        self.ids = [os.path.splitext(os.path.basename(x))[0] for x in self.pqrfiles]
 
     def genDX(self):
         """Summary
@@ -2673,7 +2710,7 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
             Generates DX files in dxdir
         """
         path_apbs = self.apbs
-        pdbfiles = self.pdbfiles
+        pdbfiles = self.pqrfiles
         pqrdir = self.pqrdir
         dxdir = self.dxdir
         grid = self.grid
@@ -2709,7 +2746,7 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
         TYPE
             Generates DX files in dxdir.
         """
-        pdbfiles = self.pdbfiles
+        pdbfiles = self.pqrfiles
         pqrdir = self.pqrdir
         dxdir = self.dxdir
         grid = self.grid
@@ -2780,7 +2817,7 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
             """
             return a + a.T - np.diag(a.diagonal())
 
-        pdbfiles = self.pdbfiles
+        pdbfiles = self.pqrfiles
         dxdir = self.dxdir
 
         self.dxfiles = [os.path.join(dxdir, os.path.splitext(os.path.basename(pdbfile))[0] + '.dx') for pdbfile in pdbfiles]
@@ -2834,7 +2871,7 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
         None
             Writes esi files to the esi_files directory within the job directory.
         """
-        pdbfiles = self.pdbfiles
+        pdbfiles = self.pqrfiles
         dxdir = self.dxdir
 
         esidir = os.path.join(self.jobdir, 'esi_files')
@@ -2902,9 +2939,6 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
             esi = np.vstack(esi)
             esi = np.ones(esi.shape) - esi
             esi = np.sum(esi, axis=0)/n #.reshape((dim, 3))
-            # RH 2016-10-6: since I don't know how to convert the grid space specifications for the OpenDX format
-            #   from vectors with 3 dims to vectors with 1 dim, for now I am cheating. Dimensionality will be the
-            #   same as the input file (3) but the true ESI is the norm (magnitude) at each grid point.
             # ref.pot[:,0] = esi*np.sqrt(float(1)/float(3))
             # ref.pot[:,1] = esi*np.sqrt(float(1)/float(3))
             # ref.pot[:,2] = esi*np.sqrt(float(1)/float(3))
@@ -2916,7 +2950,7 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
         self.esifiles = esifiles
         self.esi = esilist
 
-    def run(self, center=False, superpose=False, esi=False, esd=True, idx=0):
+    def run(self, center=False, superpose=False, esi=False, esd=True, selstr=None, idx=0):
         start = ti.default_timer()
         self.logs = []
         if center:
@@ -2925,6 +2959,10 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
             self.superposePDB()
         self.initializeGrid()
         self.genPQR()
+        if selstr is not None:
+            self.mutatePQR(selstr=selstr)
+        if len(self.pdbfiles) == 1 and selstr is None:
+            self.mutatePQR()
         self.genDX()
         if esd:
             self.calcESD()
@@ -2948,6 +2986,10 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
             self.superposePDB()
         self.initializeGrid()
         self.genPQR()
+        if selstr is not None:
+            self.mutatePQR(selstr=selstr)
+        if len(self.pdbfiles) == 1 and selstr is None:
+            self.mutatePQR()
         if n_workers is None:
             self.genDX_parallel()
         if n_workers is not None:
