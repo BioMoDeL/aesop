@@ -82,6 +82,12 @@ After initialization, you can run the analysis in series::
 
     mutscan.run_parallel(6)
 
+After the run is complete, AESOP will report if any Warnings or Errors were detected in APBS or PDB2PQR. 
+The full logs are stored in the mutscan.logs and can be viewed or written to file in the following manner::
+
+    mutscan.viewLogs()
+	mutscan.writeLogs(filename="mutscan_logs.txt")
+
 Once complete, you can view the results as a barplot::
 
     plotScan(mutscan, filename='directedmutagenesis.png')
@@ -109,6 +115,9 @@ specified for the summary, then the summary is simply printed to STDOUT::
 
     mutscan.summary(filename='mutscan_summary.txt')
 
+Finally, you may export a PDB file with ddGa values for each residue in the beta-factor column as follows::
+
+    writePDB(mutscan, filename='mutscan.ddGa.pdb')
 
 References
 """"""""""

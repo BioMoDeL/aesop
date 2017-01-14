@@ -21,7 +21,7 @@ Example case: Barnase-Barstar
 
 Open a new python session, import the Alascan class, and import the plotScan function:: 
 
-    from aesop import Alascan, plotScan
+    from aesop import Alascan, plotScan, writePDB
 
 Next, you must specify the full paths to your ``apbs``, ``coulomb``, and ``pdb2pqr`` executables, if 
 the paths for the directories containing the executables have not already been added to the environment. 
@@ -57,19 +57,33 @@ Finally, we may initialize the Alanine scan class::
 
     alascan = Alascan(pdb=pdbfile, pdb2pqr_exe=path_pdb2pqr,
                       apbs_exe=path_apbs, coulomb_exe=path_coulomb,
-                      jobname=jobname, selstr=selstr)
-    #If paths to apbs, coulomb and pdb2pqr are already added to environment then you may initialize as follows:
-    alascan = Alascan(pdb=pdbfile, jobname=jobname, selstr=selstr)
+                      jobname=jobname, selstr=selstr, minim=False)
 
+Note that by default the Alanine scan class will not minimize the structure of mutants. Since the Alascan 
+class seeks to quantify the electrostatic contribution of each amino acid, minimization is unnecessary for
+our purposes. No clashes should be introduced by the side-chain truncation mutation scheme. If you still 
+prefer to perform minimization, please set minim=True when the class is initialized. In either case, 
+results with or without minimization should be extremely similar.
+
+Alternatively, if paths to apbs, coulomb and pdb2pqr are already added to environment then you may initialize as follows::
+
+    alascan = Alascan(pdb=pdbfile, jobname=jobname, selstr=selstr)
+	
 After initialization, you can run the analysis in series::
 
     alascan.run()
 
 ... or you can run the analysis in parallel on a certain number of threads (don't pass a number 
-if you wish to use all available threads)::
+if you wish to use half of available threads)::
 
     alascan.run_parallel(6)
 
+After the run is complete, AESOP will report if any Warnings or Errors were detected in APBS or PDB2PQR. 
+The full logs are stored in the alascan.logs and can be viewed or written to file in the following manner::
+
+    alascan.viewLogs()
+	alascan.writeLogs(filename="alascan_logs.txt")
+	
 Once complete, you can view the results as a barplot::
 
     plotScan(alascan, filename='alascan.png')
@@ -96,7 +110,10 @@ If you wish, you can use build in function to summarize results. If the file nam
 specified for the summary, then the summary is simply printed to STDOUT::
 
     alascan.summary(filename='alascan_summary.txt')
+	
+Finally, you may export a PDB file with ddGa values for each residue in the beta-factor column as follows::
 
+    writePDB(alascan, filename='alascan.ddGa.pdb')
 
 References
 """"""""""
