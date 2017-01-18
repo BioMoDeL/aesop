@@ -86,7 +86,7 @@ After the run is complete, AESOP will report if any Warnings or Errors were dete
 The full logs are stored in the mutscan.logs and can be viewed or written to file in the following manner::
 
     mutscan.viewLogs()
-	mutscan.writeLogs(filename="mutscan_logs.txt")
+    mutscan.writeLogs(filename="mutscan_logs.txt")
 
 Once complete, you can view the results as a barplot::
 

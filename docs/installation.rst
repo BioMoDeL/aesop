@@ -36,6 +36,14 @@ Install other dependencies
 ProDy::
 
 	pip install prody
+	
+.. note::
+
+	If pip is unable to install prody (which is likely to happen if you are running a Windows operating system), 
+	then you may download installation materials appropriate for your OS directly from the 
+	`PyPI website <https://pypi.python.org/pypi/ProDy>`_. For Windows, it is typically easier to use the appropriate 
+	installation executable appropriate for your Python 2.7 installation (choose amd64 for 64-bit Python 2.7 and choose 
+	win32 for 32-bit Python 2.7). As a reminder, AESOP is only compatible with Python 2.7.
 
 Modeller::
 

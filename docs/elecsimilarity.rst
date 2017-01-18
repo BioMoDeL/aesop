@@ -41,8 +41,8 @@ them in the current working directory::
 .. note::
 
     If you only provide a single PDB file, AESOP will generate a library of mutants by side-chain truncation
-    as in the Alascan class. You can force the ElecSimilarity class to generate mutants for all structures
-	by specifying a list of selection strings that describe all regions of the PDB to mutate.
+    as in the Alascan class. You can force the ElecSimilarity class to generate mutants for all structures 
+    by specifying a list of selection strings that describe all regions of the PDB to mutate.
 
 When the method is run, intermediate files will be generated and stored in a folder of the current 
 working directory. The user has the option of naming this folder by specifying a job name::
@@ -114,7 +114,7 @@ then you need type the following to perform this calculation::
 If you prefer to calculate ESI instead of ESD, you may do so at the time you run the analysis::
 
     family.run(esi=True, esd=False, superpose=True)
-	family.run_parallel(esi=True, esd=False, superpose=True)
+    family.run_parallel(esi=True, esd=False, superpose=True)
 	
 After performing the ESI calculation, you may view the ESI values by loading the DX file that is located
 within the "esi_files" folder of the job directory.

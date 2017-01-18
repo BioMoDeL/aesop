@@ -44,8 +44,8 @@ angstroms of chain C, then you could specify region in the following manner::
 
     region = ['within 10 of chain C', 'within 10 of chain C', 'within 10 of chain C']
 
-Once again, for in depth discussion of more complicated selection strings, please refer to the ProDy 
-website at <http://prody.csb.pitt.edu/manual/reference/atomic/select.html>`_.
+Once again, for in depth discussion of more complicated selection strings, please refer to the `ProDy 
+website <http://prody.csb.pitt.edu/manual/reference/atomic/select.html>`_.
 
 DirectedMutagenesis scan example
 """"""""""""""""""""""""""""""""
@@ -60,9 +60,20 @@ In order to specify targeted residues to mutate, each element of the target list
 that will be mutated. Since residue numbers may overlap between chains of the protein structre, the user 
 may need to additionally specify a chain. For example::
 
-    target = ['resnum 50', 'resnum 50 in chain B', (resnum 50 or resnum 60) and chain B']
+    target = ['resnum 50', 'resnum 50 in chain B', '(resnum 50 or resnum 60) and chain B']
 	
 In the first element ('resnum 50), all residues with residue number 50 will be mutated. In the second element 
 ('resnum 50 in chain B'), only the residue with number 50 in chain B will be mutated. In the third element 
 ('(resnum 50 or resnum 60) and chain B'), only residues numbered 50 or 60 in chain B will be mutated. 
 
+Next, the user must specify how to mutate each element of the target by specifying a 3 letter amino acid code for 
+each element of the target. These codes should be stored in a list (here, we use the variable name mutation)::
+
+    mutation = ['ALA', 'ARG', 'ASP']
+	
+Since each element of target corresponds to each element, the mutations specified above will perform several different 
+mutations. Namely, residues selected by the first element of target will be mutated to alanine; residues selected by the 
+second element of target will be mutated to arginine; and residues selected by the third element of target will be mutated 
+to aspartatic acid. Currently AESOP does not support mutation of two amino acids to two different amino acids simultaneously, 
+though this may be added as a feature in the future. In general, we prefer to mutate one amino acid at a time to prevent 
+significantly changing the structure of the native protein throughout the analysis. 
