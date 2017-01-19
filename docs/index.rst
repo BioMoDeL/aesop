@@ -52,7 +52,7 @@ AESOP currently supports three computational methods:
 	- Mutations must be specified
 
 - **ElecSimilarity**
-	- Compare electrostatic potentials of multiple protein structures
+	- Compare electrostatic potentials of multiple protein structures, or compare electrostatic potentials of alanine scan mutants
 	- If structures are very dissimilar, the user should superpose coordinates for each protein structure according to their desired method
 
 General Utilities
@@ -68,6 +68,8 @@ any Python script:
  	- Show heatmap summary of results from methods exploring electrostatic similarity (ElecSimilarity)
 - aesop.plotDend()
  	- Show dendrogram summary of results from methods exploring electrostatic similarity (ElecSimilarity)
+- aesop.writePDB()
+	- Save PDB file with changes in free energy of association relative to the parent (by residue) in the beta-factor column
 
 Notes
 """""

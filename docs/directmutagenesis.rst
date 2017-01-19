@@ -22,7 +22,7 @@ Example case: Barnase-Barstar
 
 Open a new python session, import the DirectedMutagenesis class, and import the plotScan function:: 
 
-    from aesop import DirectedMutagenesis, plotScan
+    from aesop import DirectedMutagenesis, plotScan, writePDB
 
 Next, you must specify the full paths to your ``apbs``, ``coulomb``, and ``pdb2pqr`` executables, if 
 the paths for the directories containing the executables have not already been added to the environment. 
