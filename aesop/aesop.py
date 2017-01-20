@@ -425,12 +425,11 @@ class Alascan:
         self.pdie = pdie
         self.sdie = sdie
         if jobname is None:
-            self.jobname = '%4d%02d%02d_%02d%02d%02d' % (
+            jobname = '%4d%02d%02d_%02d%02d%02d' % (
                 dt.date.today().year, dt.date.today().month,
                 dt.date.today().day, dt.datetime.now().hour,
                 dt.datetime.now().minute, dt.datetime.now().second)
-        else:
-            self.jobname = jobname
+        self.jobname = jobname
         self.jobdir = jobname
         if not os.path.exists(os.path.join(self.jobdir)):
             os.makedirs(os.path.join(self.jobdir))
@@ -1587,11 +1586,10 @@ class DirectedMutagenesis:
         self.pdie = pdie
         self.sdie = sdie
         if jobname is None:
-            self.jobname = '%4d%02d%02d_%02d%02d%02d' % (
+            jobname = '%4d%02d%02d_%02d%02d%02d' % (
                 dt.date.today().year, dt.date.today().month, dt.date.today().day, dt.datetime.now().hour,
                 dt.datetime.now().minute, dt.datetime.now().second)
-        else:
-            self.jobname = jobname
+        self.jobname = jobname
         self.jobdir = jobname
         if not os.path.exists(os.path.join(self.jobdir)):
             os.makedirs(os.path.join(self.jobdir))
@@ -2489,11 +2487,10 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
         self.dx = True
 
         if jobname is None:
-            self.jobname = '%4d%02d%02d_%02d%02d%02d' % (dt.date.today().year, dt.date.today().month,
-                                                         dt.date.today().day, dt.datetime.now().hour,
-                                                         dt.datetime.now().minute, dt.datetime.now().second)
-        else:
-            self.jobname = jobname
+            jobname = '%4d%02d%02d_%02d%02d%02d' % (dt.date.today().year, dt.date.today().month,
+                                                    dt.date.today().day, dt.datetime.now().hour,
+                                                    dt.datetime.now().minute, dt.datetime.now().second)
+        self.jobname = jobname
         self.jobdir = jobname
         if not os.path.exists(os.path.join(self.jobdir)):
             os.makedirs(os.path.join(self.jobdir))
