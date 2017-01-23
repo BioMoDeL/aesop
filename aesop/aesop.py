@@ -3308,12 +3308,14 @@ def runProcess(command):
     tuple
         return tuple where first element is output that would have been sent to STDOUT and the second element captures errors.
     """
+    class runProcess_Exception(Exception):
+        pass
     proc = sp.Popen(command, stdout=sp.PIPE, stderr=sp.PIPE)
     # proc = sp.Popen(command, stdout=sp.PIPE, shell=True)
     try:
         (out, err) = proc.communicate()
     except:
-        print 'Unable to execute command - please verify syntax:\n\n\t%s' % (command)
+        raise runProcess_Exception('Unable to execute command - please verify syntax:\n\n\t%s' % (command))
         sys.exit(1)
     # print "program output:", out
     return (out, err)
