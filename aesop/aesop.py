@@ -3751,6 +3751,8 @@ def execAPBS(path_apbs_exe, pqr_chain, dime, glen, gcent, prefix=None, ion=0.150
     # ion           -   ionic strength for calculation
     # pdie          -   protein dielectric constant
     # sdie          -   solvent dielectric constant
+    class APBS_Exception(Exception):
+        pass
 
     if prefix is None:
         prefix = os.path.splitext(pqr_chain)[0]
@@ -3840,15 +3842,18 @@ def execAPBS(path_apbs_exe, pqr_chain, dime, glen, gcent, prefix=None, ion=0.150
     elec = np.asarray([x.split() for x in re.findall(pattern, log)]).astype(np.float)
     elec = elec.reshape((1, elec.size))
     if len(elec[0]) != 2:
-        print '\nAPBS failed for: %s' % (file_apbs_in)
+        #print '\nAPBS failed for: %s' % (file_apbs_in)
         perror = re.compile('[E][Rr][Rr][Oo][Rr]')
         status = 0
+        apbs_compiled_error_list = '\n'
         for l in log.split('\n'):
             m = re.findall(perror, l)
             if len(m) > 0:
                 status = 1
             if status == 1:
-                print l
+                apbs_compiled_error_list = apbs_compiled_error_list+l+'\n'
+
+        raise APBS_Exception('\nAPBS failed for: %s\n\nLogs printed below:\n\n%s' % (file_apbs_in, apbs_compiled_error_list))
         sys.exit(1)
 
     # return file_apbs_log
