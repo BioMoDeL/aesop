@@ -3677,6 +3677,9 @@ def execPDB2PQR(path_pdb2pqr_exe, pdbfile, outfile=None, ff='parse'):
     optargs : str, optional
         Description
     """
+    class PDB2PQR_Exception(Exception):
+        pass
+
     if outfile is None:
         outfile = os.path.splitext(pdbfile)[0] + '.pqr'
     # os.system('"{0}" {1} {2} {3}'.format(path_pdb2pqr_exe, optargs, pdbfile, outfile))
@@ -3686,8 +3689,7 @@ def execPDB2PQR(path_pdb2pqr_exe, pdbfile, outfile=None, ff='parse'):
         # pattern = re.compile('Error')
         # hits    = re.findall(pattern, log)
     except:
-        print '\nPDB2PQR failed for: %s' % (pdbfile)
-        print log
+        raise PDB2PQR_Exception('\nPDB2PQR failed for: %s\n\nLogs printed below:\n\n%s' % (pdbfile,log))
         sys.exit(1)
     return (log, err)
 
