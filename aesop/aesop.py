@@ -3455,6 +3455,9 @@ def minimize_cg(struct, dest=None, disu=True, min_atom_shift=0.1, max_iter=1000,
     from modeller.scripts import complete_pdb
     from modeller.optimizers import conjugate_gradients, actions
 
+    class Minimize_CG_Exception(Exception):
+        pass
+
     try:
         if log is not None:
             trcfil = open(log, 'w')
@@ -3488,7 +3491,7 @@ def minimize_cg(struct, dest=None, disu=True, min_atom_shift=0.1, max_iter=1000,
             # dest = basename+'_cgmin.pdb'
             return mdl
     except:
-        print 'CG Minimization failed for: %s' % (struct)
+        raise Minimize_CG_Exception('\nCG Minimization failed for: %s' % (struct))
         sys.exit(1)
 
 def mutatePDB(pdb, mutid, resnum, chain=None, resid='ALA'):
