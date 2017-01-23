@@ -22,7 +22,7 @@ AESOP: Analysis of Electrostatic Structure of Proteins
 Reed E. S. Harrison, Rohith R. Mohan, Dimitrios Morikis
 University of California, Riverside; Department of Bioengineering
 
-Correspondence should be directed to Prof. Dimitrios Morikis at dmorikis@ucr.edu  
+Correspondence should be directed to Prof. Dimitrios Morikis at dmorikis@ucgithur.edu  
 
 Copyright (C) 2016  Reed E. S. Harrison, Rohith R. Mohan, Ronald D. Gorham Jr., Chris A. Kieslich, Dimitrios Morikis
 
@@ -1911,12 +1911,6 @@ class DirectedMutagenesis:
             outfile = os.path.join(jobdir, pqr_complex_dir, mutid + '.pqr')
             (pqr_log, pqr_errs) =execPDB2PQR(path_pdb2pqr, infile, outfile=outfile, ff=ff)
             self.logs.append(pqr_log)
-            logfile = os.path.join(jobdir, pqr_complex_dir, mutid + '_pdb2pqr_log.txt')
-            f_log = open(logfile, 'w')
-            f_log.write(pqr_log)
-            f_log.close
-            if 'WARNING:' in open(outfile).read():
-                print "Warning detected in " + outfile + ", please check PDB2PQR logs and the PQR file for more information"
             complex_pqr = pd.parsePQR(outfile)
             for sel, seldir in zip(selstr, pqr_sel_dir):
                 selfile = os.path.join(jobdir, seldir, mutid + '.pqr')
