@@ -793,12 +793,6 @@ class Alascan:
         print '\n%s:\tgenerating PQR for parent: %s' % (self.jobname, list_mutids[0])
         (pqr_log, pqr_errs) =execPDB2PQR(path_pdb2pqr, infile, outfile=outfile, ff=ff)
         self.logs.append(pqr_log)
-        logfile = os.path.join(jobdir, 'pdb2pqr_log.txt')
-        f_log = open(logfile, 'w')
-        f_log.write(pqr_log)
-        f_log.close
-        if 'WARNING:' in open(outfile).read():
-            print "Warning detected in " + outfile + ", please check PDB2PQR logs and the PQR file for more information"
         if self.minim == True:
             minimize_pqr(self, outfile)
         complex_pqr = pd.parsePQR(outfile)
@@ -2651,12 +2645,6 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
             print 'Converting %s to PQR' % (pdbfile)
             (pqr_log, pqr_errs) =execPDB2PQR(path_pdb2pqr, infile, outfile=outfile, ff=ff)
             self.logs.append(pqr_log)
-            logfile = os.path.join(pqrdir, os.path.splitext(pdbfile)[0] + '_pdb2pqr_log.txt')
-            f_log = open(logfile, 'w')
-            f_log.write(pqr_log)
-            f_log.close
-            if 'WARNING:' in open(outfile).read():
-                print "Warning detected in " + outfile + ", please check PDB2PQR logs and the PQR file for more information"
             self.pqrfiles.append(pqrname)
 
     def mutatePQR(self, selstr=['protein']):
