@@ -40,6 +40,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """)
 
+
 class Grid:
     """Summary
 
@@ -60,6 +61,7 @@ class Grid:
         List of grid parameters from the OpenDX format subsequent to the vectors.
     """
     import re as re
+
     def __init__(self, filename=None):
         self.filename = filename
         if filename is not None:
@@ -93,7 +95,7 @@ class Grid:
                 f.close()
             except:
                 print '\nError: Can\'t open DX file\n'
-        
+
         # f       = open(fn, 'r')
         # lines   = f.readlines()
         p_vec = '[+\-]?(?:0|[1-9]\d*)(?:\.\d*)?(?:[eE][+\-]?\d+)?'
@@ -112,7 +114,7 @@ class Grid:
 
         header = []
         footer = []
-        pot    = []
+        pot = []
 
         found_pot = False
         for line in lines:
@@ -171,7 +173,7 @@ class Grid:
         # f.close()
         # return np.vstack(pot)
 
-        self.pot    = np.vstack(pot)
+        self.pot = np.vstack(pot)
         self.header = header
         self.footer = footer
 
@@ -187,17 +189,19 @@ class Grid:
             the file somewhere other than the current working directory.
         """
         if filename is None:
-            filename = os.path.splitext(os.path.basename(self.filename))[0] + '.modified.dx'
+            filename = os.path.splitext(os.path.basename(self.filename))[
+                0] + '.modified.dx'
 
         header = self.header
         try:
-            pot    = [' '.join([format(x, '7.6e') for x in v])+'\n' for v in self.pot.tolist()]
+            pot = [' '.join([format(x, '7.6e') for x in v]) +
+                   '\n' for v in self.pot.tolist()]
         except:
-            pot    = [format(v, '7.6e')+'\n' for v in self.pot.tolist()]
+            pot = [format(v, '7.6e') + '\n' for v in self.pot.tolist()]
         footer = self.footer
 
         f = open(filename, 'w')
-        f.writelines(header+pot+footer)
+        f.writelines(header + pot + footer)
         f.close()
 
 ##########################################################################
@@ -210,6 +214,8 @@ class Grid:
 #   pdie    -   Protein dielectric constant
 #   sdie    -   Solvent dielectric constant
 ##########################################################################
+
+
 class Alascan:
     """Summary
     Summary of internal varialbles in the Alascan class.
@@ -439,7 +445,7 @@ class Alascan:
         self.ff = ff
         self.cfac = cfac
         self.dx = dx
-        self.status = 0 # 0 = alascan not run, 1 = alascan previously ran
+        self.status = 0  # 0 = alascan not run, 1 = alascan previously ran
 
         self.genDirs()
         self.genMutid()
@@ -448,7 +454,7 @@ class Alascan:
 
         self.minim = minim
         self.disu = True
-        self.min_atom_shift=0.1
+        self.min_atom_shift = 0.1
         self.max_iter = 1000
         # self.report_iter = 10
         self.output = 'NO_REPORT'
@@ -590,7 +596,7 @@ class Alascan:
         for i, sel, reg in zip(index, selstr, region):
             # print ' and '.join([sel, reg, 'charged', 'calpha'])
             combined_selection = parent_pdb.select(
-                ' and '.join(['('+sel+')', '('+reg+')', 'charged', 'calpha']))
+                ' and '.join(['(' + sel + ')', '(' + reg + ')', 'charged', 'calpha']))
             # if sel is not reg:
             #     combined_selection = parent_pdb.select(''.join(['(', ') and ('.join((sel, reg, 'charged', 'calpha')), ')']))
             # elif sel is reg:
@@ -767,11 +773,13 @@ class Alascan:
         None
             Write library of mutant structures to disk for subsequent analysis.
         """
-        def minimize_pqr(self, pqrfile):
-            minimize_cg(pqrfile, dest=pqrfile, disu=self.disu, min_atom_shift=self.min_atom_shift, max_iter=self.max_iter, output=self.output)
-            (pqr_log, pqr_errs) =execPDB2PQR(self.pdb2pqr, pqrfile, outfile=pqrfile, ff=self.ff)
-            self.logs.append(pqr_log)
 
+        def minimize_pqr(self, pqrfile):
+            minimize_cg(pqrfile, dest=pqrfile, disu=self.disu,
+                        min_atom_shift=self.min_atom_shift, max_iter=self.max_iter, output=self.output)
+            (pqr_log, pqr_errs) = execPDB2PQR(
+                self.pdb2pqr, pqrfile, outfile=pqrfile, ff=self.ff)
+            self.logs.append(pqr_log)
 
         selstr = self.selstr
         jobdir = self.jobdir
@@ -791,7 +799,8 @@ class Alascan:
         outfile = os.path.join(jobdir, pqr_complex_dir,
                                list_mutids[0] + '.pqr')
         print '\n%s:\tgenerating PQR for parent: %s' % (self.jobname, list_mutids[0])
-        (pqr_log, pqr_errs) =execPDB2PQR(path_pdb2pqr, infile, outfile=outfile, ff=ff)
+        (pqr_log, pqr_errs) = execPDB2PQR(
+            path_pdb2pqr, infile, outfile=outfile, ff=ff)
         self.logs.append(pqr_log)
         if self.minim == True:
             minimize_pqr(self, outfile)
@@ -886,8 +895,8 @@ class Alascan:
                 if mask_by_sel[i, j]:
                     # path, pqr_chain, dime, glen, gcent, prefix, ion, pdie, sdie, dx, i, j = kernel
                     energies, log = execAPBS(path_apbs, subunit_pqr, self.dime, self.glen, self.gcent,
-                                        prefix=path_prefix_log, ion=self.ion, pdie=self.pdie, sdie=self.sdie,
-                                        dx=self.dx)
+                                             prefix=path_prefix_log, ion=self.ion, pdie=self.pdie, sdie=self.sdie,
+                                             dx=self.dx)
                     self.logs.append(log)
                     # print energies[0][0]
                     # print energies[0][1]
@@ -1192,24 +1201,25 @@ class Alascan:
             Writes esi files to the esi_files directory within the job directory.
         """
 
-
-        # If dx = true, use previously calculated DX files, else 
+        # If dx = true, use previously calculated DX files, else
 
         safe = True
         if self.dx == False:
             print('Error: please set the dx argument to true when initializing the alanine scan class, then re-run the analysis')
             safe = False
         if self.status == 0:
-            print('Error: please run the alanine scan before attempting to calculate ESIs')
+            print(
+                'Error: please run the alanine scan before attempting to calculate ESIs')
             safe = False
 
         if safe:
             n_seg = len(self.selstr)
-            ind_seg = [x+1 for x in range(n_seg)]
+            ind_seg = [x + 1 for x in range(n_seg)]
 
             file_by_ref = []
             for ind in ind_seg:
-                files = [x for x in self.dx_files if int(os.path.basename(x).split('_')[1]) == ind]
+                files = [x for x in self.dx_files if int(
+                    os.path.basename(x).split('_')[1]) == ind]
                 file_by_ref.append(files)
 
             ids = ['selection %d' % x for x in ind_seg]
@@ -1222,16 +1232,16 @@ class Alascan:
             esifiles = []
             esilist = []
             for i in ind_seg:
-                ref_name = ids[i-1]
-                ref = Grid(file_by_ref[i-1][0])
+                ref_name = ids[i - 1]
+                ref = Grid(file_by_ref[i - 1][0])
                 dim = ref.pot.size
-                n   = len(self.mutid[i])
+                n = len(self.mutid[i])
 
                 esi = []
-                filename = os.path.join(esidir, ref_name+'.dx')
+                filename = os.path.join(esidir, ref_name + '.dx')
                 for j in xrange(n):
                     # print file_by_ref[i-1][j+1]
-                    dat = Grid(file_by_ref[i-1][j+1])
+                    dat = Grid(file_by_ref[i - 1][j + 1])
                     a = ref.pot.astype(float).reshape((dim,))
                     b = dat.pot.astype(float).reshape((dim,))
 
@@ -1239,12 +1249,12 @@ class Alascan:
                     maxpot = np.abs(np.vstack((a, b))).max(axis=0)
                     val = np.divide(diff, maxpot)
 
-                    esi.append(val) 
+                    esi.append(val)
 
                 esi = np.vstack(esi)
                 # esi = np.ones(esi.shape) - esi
-                esi = np.sum(esi, axis=0)/n
-                ref.pot = esi.reshape((dim/3, 3))
+                esi = np.sum(esi, axis=0) / n
+                ref.pot = esi.reshape((dim / 3, 3))
                 ref.writeDX(filename)
                 esifiles.append(filename)
                 esilist.append(esi)
@@ -1270,7 +1280,7 @@ class Alascan:
         stop = ti.default_timer()
         print '%s:\tAESOP alanine scan completed in %.2f seconds' % (self.jobname, stop - start)
         warn = self.checkwarnings()
-        err  = self.checkerrors()
+        err = self.checkerrors()
         if warn != 0:
             print 'WARNINGS detected, please view log files!'
         if err != 0:
@@ -1299,7 +1309,7 @@ class Alascan:
         stop = ti.default_timer()
         print '%s:\tAESOP alanine scan completed in %.2f seconds' % (self.jobname, stop - start)
         warn = self.checkwarnings()
-        err  = self.checkerrors()
+        err = self.checkerrors()
         if warn != 0:
             print 'WARNINGS detected, please view log files!'
         if err != 0:
@@ -1330,11 +1340,11 @@ class Alascan:
         lines = ['%s, %f' % (lbl, val) for lbl, val in zip(mutids, energies)]
         lines.append('\nKey\n---\n')
         for i, seg in enumerate(selstr):
-            lines.append('sel%d = %s' % (int(i+1), str(seg)))
+            lines.append('sel%d = %s' % (int(i + 1), str(seg)))
         if filename is None:
             print(lines)
         if filename is not None:
-            np.savetxt(filename, lines, fmt='%s')    
+            np.savetxt(filename, lines, fmt='%s')
 
     def writeLogs(self, filename=None):
         if filename is None:
@@ -1356,6 +1366,7 @@ class Alascan:
             return 0
         else:
             return -1
+
     def checkerrors(self):
         lines = ''.join(self.logs)
         matches = re.findall('[E][Rr][Rr][Oo][Rr]', lines)
@@ -1601,7 +1612,7 @@ class DirectedMutagenesis:
 
         self.minim = minim
         self.disu = True
-        self.min_atom_shift=0.1
+        self.min_atom_shift = 0.1
         self.max_iter = 1000
         # self.report_iter = 10
         self.output = 'NO_REPORT'
@@ -1698,7 +1709,7 @@ class DirectedMutagenesis:
         for i, region in zip(xrange(len(selstr)), selstr):
             for j, sel, mut in zip(xrange(len(target)), target, mutation):
                 combined_selection = parent_pdb.select(
-                    '(' + ' and '.join(['('+sel+')', '('+region+')', 'calpha']) + ')')
+                    '(' + ' and '.join(['(' + sel + ')', '(' + region + ')', 'calpha']) + ')')
 
                 if combined_selection is not None:
                     chids = combined_selection.getChids().tolist()
@@ -1863,20 +1874,25 @@ class DirectedMutagenesis:
 
         list_mutids = [item for sublist in self.mutid for item in sublist]
         list_chids = [item for sublist in self.list_chids for item in sublist]
-        list_resnums = [item for sublist in self.list_resnums for item in sublist]
+        list_resnums = [
+            item for sublist in self.list_resnums for item in sublist]
 
-        infile = os.path.join(jobdir, pdb_complex_dir, parent_file_prefix + '.pdb')
+        infile = os.path.join(jobdir, pdb_complex_dir,
+                              parent_file_prefix + '.pdb')
         system = parent_pdb.select('(' + ') or ('.join(selstr) + ')')
         pd.writePDB(infile, system)
 
         if self.minim == True:
-            minimize_cg(infile, dest=infile, disu=self.disu, min_atom_shift=self.min_atom_shift, max_iter=self.max_iter, output=self.output)
+            minimize_cg(infile, dest=infile, disu=self.disu,
+                        min_atom_shift=self.min_atom_shift, max_iter=self.max_iter, output=self.output)
         for mutid, chain, resnum, mut in zip(list_mutids[1:], list_chids[1:], list_resnums[1:], mutation):
             outpath = os.path.join(jobdir, pdb_complex_dir, mutid)
             print '\n%s:\tgenerating PDB for mutant: %s' % (self.jobname, mutid)
-            mutatePDB(pdb=infile, mutid=outpath, resnum=resnum, chain=chain, resid=mut)
+            mutatePDB(pdb=infile, mutid=outpath,
+                      resnum=resnum, chain=chain, resid=mut)
             if self.minim == True:
-                minimize_cg(outpath+'.pdb', dest=outpath+'.pdb', disu=self.disu, min_atom_shift=self.min_atom_shift, max_iter=self.max_iter, output=self.output)
+                minimize_cg(outpath + '.pdb', dest=outpath + '.pdb', disu=self.disu,
+                            min_atom_shift=self.min_atom_shift, max_iter=self.max_iter, output=self.output)
 
     def genPQR(self):
         """Summary
@@ -1903,7 +1919,8 @@ class DirectedMutagenesis:
             print '\n%s:\tgenerating PQR for mutant: %s' % (self.jobname, mutid)
             infile = os.path.join(jobdir, pdb_complex_dir, mutid + '.pdb')
             outfile = os.path.join(jobdir, pqr_complex_dir, mutid + '.pqr')
-            (pqr_log, pqr_errs) =execPDB2PQR(path_pdb2pqr, infile, outfile=outfile, ff=ff)
+            (pqr_log, pqr_errs) = execPDB2PQR(
+                path_pdb2pqr, infile, outfile=outfile, ff=ff)
             self.logs.append(pqr_log)
             complex_pqr = pd.parsePQR(outfile)
             for sel, seldir in zip(selstr, pqr_sel_dir):
@@ -1950,8 +1967,8 @@ class DirectedMutagenesis:
                 subunit_pqr = os.path.join(jobdir, seldir, mutid + '.pqr')
                 path_prefix_log = os.path.join(jobdir, logs_apbs_dir, mutid)
                 energies, log = execAPBS(path_apbs, subunit_pqr, self.dime, self.glen, self.gcent,
-                                    prefix=path_prefix_log, ion=self.ion, pdie=self.pdie, sdie=self.sdie,
-                                    dx=self.dx)
+                                         prefix=path_prefix_log, ion=self.ion, pdie=self.pdie, sdie=self.sdie,
+                                         dx=self.dx)
                 self.logs.append(log)
                 Gsolv[i, j] = energies[0][0]
                 Gref[i, j] = energies[0][1]
@@ -2252,7 +2269,7 @@ class DirectedMutagenesis:
         stop = ti.default_timer()
         print '%s:\tAESOP directed mutagenesis scan completed in %.2f seconds' % (self.jobname, stop - start)
         warn = self.checkwarnings()
-        err  = self.checkerrors()
+        err = self.checkerrors()
         if warn != 0:
             print 'WARNINGS detected, please view log files!'
         if err != 0:
@@ -2287,7 +2304,7 @@ class DirectedMutagenesis:
         stop = ti.default_timer()
         print '%s:\tAESOP directed mutagenesis scan completed in %.2f seconds' % (self.jobname, stop - start)
         warn = self.checkwarnings()
-        err  = self.checkerrors()
+        err = self.checkerrors()
         if warn != 0:
             print 'WARNINGS detected, please view log files!'
         if err != 0:
@@ -2321,11 +2338,11 @@ class DirectedMutagenesis:
         lines = ['%s, %f' % (lbl, val) for lbl, val in zip(mutids, energies)]
         lines.append('\nKey\n---\n')
         for i, seg in enumerate(selstr):
-            lines.append('sel%d = %s' % (int(i+1), str(seg)))
+            lines.append('sel%d = %s' % (int(i + 1), str(seg)))
         if filename is None:
             print(lines)
         if filename is not None:
-            np.savetxt(filename, lines, fmt='%s')    
+            np.savetxt(filename, lines, fmt='%s')
 
     def writeLogs(self, filename=None):
         if filename is None:
@@ -2347,6 +2364,7 @@ class DirectedMutagenesis:
             return 0
         else:
             return -1
+
     def checkerrors(self):
         lines = ''.join(self.logs)
         matches = re.findall('[E][Rr][Rr][Oo][Rr]', lines)
@@ -2549,7 +2567,8 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
         # num_res = pd.parsePDB(os.path.join(pdbdir, pdbfiles[0])).numResidues()
         # for pdbfile in pdbfiles:
         #     num_res = min(num_res, pd.parsePDB(os.path.join(pdbdir, pdbfile)).numResidues())
-        # print 'Superposing %d PDB files on %d alpha carbons' % (len(pdbfiles), num_res)
+        # print 'Superposing %d PDB files on %d alpha carbons' %
+        # (len(pdbfiles), num_res)
 
         # # Superpose each structure, overwriting previous PDB file
         # ref = pd.parsePDB(os.path.join(pdbdir, pdbfiles[0]), subset='calpha').getCoords()
@@ -2643,7 +2662,8 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
             pqrname = os.path.splitext(pdbfile)[0] + '.pqr'
             outfile = os.path.join(pqrdir, pqrname)
             print 'Converting %s to PQR' % (pdbfile)
-            (pqr_log, pqr_errs) =execPDB2PQR(path_pdb2pqr, infile, outfile=outfile, ff=ff)
+            (pqr_log, pqr_errs) = execPDB2PQR(
+                path_pdb2pqr, infile, outfile=outfile, ff=ff)
             self.logs.append(pqr_log)
             self.pqrfiles.append(pqrname)
 
@@ -2656,28 +2676,31 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
         None
             Generates PQR files in the pqrdir
         """
-        pqrdir      = self.pqrdir
-        pqrfiles    = self.pqrfiles
-        sel         = ' or '.join(selstr)
-        sel         = ' and '.join(['('+sel+')', 'charged', 'calpha'])
+        pqrdir = self.pqrdir
+        pqrfiles = self.pqrfiles
+        sel = ' or '.join(selstr)
+        sel = ' and '.join(['(' + sel + ')', 'charged', 'calpha'])
 
         mutantpqrs = []
         for pqrfile in pqrfiles:
-            infile  = os.path.join(pqrdir, pqrfile)
-            pqr     = pd.parsePQR(infile)
-            pqrsel  = pqr.select(sel)
+            infile = os.path.join(pqrdir, pqrfile)
+            pqr = pd.parsePQR(infile)
+            pqrsel = pqr.select(sel)
 
-            resnums  = pqrsel.getResnums().tolist()
+            resnums = pqrsel.getResnums().tolist()
             resnames = [AA_dict[x] for x in pqrsel.getResnames().tolist()]
-            chains   = pqrsel.getChids().tolist()
+            chains = pqrsel.getChids().tolist()
 
             for resnum, chain, resname in zip(resnums, chains, resnames):
-                mutid = os.path.splitext(os.path.basename(infile))[0]+'_%s_%s%sA' % (str(chain), str(resname) ,str(resnum))
-                mutantpqrs.append(mutid+'.pqr')
+                mutid = os.path.splitext(os.path.basename(infile))[
+                    0] + '_%s_%s%sA' % (str(chain), str(resname), str(resnum))
+                mutantpqrs.append(mutid + '.pqr')
                 print 'Generating mutant: %s' % (mutid)
-                mutatePQR(pqrfile=infile, mutid=os.path.join(pqrdir, mutid), resnum=resnum, chain=chain)
+                mutatePQR(pqrfile=infile, mutid=os.path.join(
+                    pqrdir, mutid), resnum=resnum, chain=chain)
         self.pqrfiles = pqrfiles + mutantpqrs
-        self.ids = [os.path.splitext(os.path.basename(x))[0] for x in self.pqrfiles]
+        self.ids = [os.path.splitext(os.path.basename(x))[0]
+                    for x in self.pqrfiles]
 
     def genDX(self):
         """Summary
@@ -2701,11 +2724,13 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
         gcent = self.gcent
         dime = self.dime
 
-        pqrfiles = [os.path.join(pqrdir, os.path.splitext(pdbfile)[0] + '.pqr') for pdbfile in pdbfiles]
-        apbsfiles = [os.path.join(dxdir, os.path.splitext(pdbfile)[0]) for pdbfile in pdbfiles]
+        pqrfiles = [os.path.join(pqrdir, os.path.splitext(
+            pdbfile)[0] + '.pqr') for pdbfile in pdbfiles]
+        apbsfiles = [os.path.join(dxdir, os.path.splitext(pdbfile)[
+                                  0]) for pdbfile in pdbfiles]
         for pqrfile, apbsfile in zip(pqrfiles, apbsfiles):
             log = calcDX(path_apbs, pqrfile, prefix=apbsfile, grid=grid, ion=ion,
-                   pdie=pdie, sdie=sdie, cfac=cfac, glen=glen, gcent=gcent, dime=dime)
+                         pdie=pdie, sdie=sdie, cfac=cfac, glen=glen, gcent=gcent, dime=dime)
             self.logs.append(log)
 
     def genDX_parallel(self, n_workers=None):
@@ -2799,7 +2824,8 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
         pdbfiles = self.pqrfiles
         dxdir = self.dxdir
 
-        self.dxfiles = [os.path.join(dxdir, os.path.splitext(os.path.basename(pdbfile))[0] + '.dx') for pdbfile in pdbfiles]
+        self.dxfiles = [os.path.join(dxdir, os.path.splitext(
+            os.path.basename(pdbfile))[0] + '.dx') for pdbfile in pdbfiles]
         files = self.dxfiles
         ids = self.ids
 
@@ -2809,7 +2835,7 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
         self.dim_dx = grid.pot.size
 
         # dim = self.dim_dx[0] * self.dim_dx[1] * self.dim_dx[2] / 3
-        dim = self.dim_dx #self.dim_dx[0] * self.dim_dx[1] * self.dim_dx[2]
+        dim = self.dim_dx  # self.dim_dx[0] * self.dim_dx[1] * self.dim_dx[2]
         esd = np.zeros((len(ids), len(ids)))
 
         indices = it.combinations(range(len(ids)), 2)
@@ -2858,15 +2884,15 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
         if not os.path.exists(os.path.join(self.esidir)):
             os.makedirs(os.path.join(self.esidir))
 
-        self.dxfiles = [os.path.join(dxdir, os.path.splitext(os.path.basename(pdbfile))[0] 
-                        + '.dx') for pdbfile in pdbfiles]
+        self.dxfiles = [os.path.join(dxdir, os.path.splitext(os.path.basename(pdbfile))[0]
+                                     + '.dx') for pdbfile in pdbfiles]
         files = self.dxfiles
         ids = self.ids
 
-        n = len(files)-1
+        n = len(files) - 1
         if idx is None:
             idx = range(n)
-        elif isinstance( idx, ( int, long ) ):
+        elif isinstance(idx, (int, long)):
             idx = [idx]
 
         esifiles = []
@@ -2878,11 +2904,11 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
 
             # esi = np.zeros((dim, ref.pot.shape[1]))
             esi = []
-            filename = os.path.join(esidir, ref_name+'.dx')
+            filename = os.path.join(esidir, ref_name + '.dx')
             for j in xrange(n):
                 dat_name = ids[j]
 
-                if (method is 'AND') and (i!=j):
+                if (method is 'AND') and (i != j):
                     dat = Grid(files[j])
                     a = ref.pot.astype(float).reshape((dim,))
                     b = dat.pot.astype(float).reshape((dim,))
@@ -2897,7 +2923,7 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
                     # norm_ab = np.vstack([norm_a, norm_b]).max(axis=0)
                     # diff    = np.linalg.norm(ab, axis=1)
                     # val     = np.divide(diff, norm_ab)
-                    esi.append(val) 
+                    esi.append(val)
 
                     # def div(a, b):
                     #     return np.divide(a, b)
@@ -2917,11 +2943,11 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
                     # esi.append(c)
             esi = np.vstack(esi)
             esi = np.ones(esi.shape) - esi
-            esi = np.sum(esi, axis=0)/n #.reshape((dim, 3))
+            esi = np.sum(esi, axis=0) / n  # .reshape((dim, 3))
             # ref.pot[:,0] = esi*np.sqrt(float(1)/float(3))
             # ref.pot[:,1] = esi*np.sqrt(float(1)/float(3))
             # ref.pot[:,2] = esi*np.sqrt(float(1)/float(3))
-            ref.pot = esi.reshape((dim/3, 3))
+            ref.pot = esi.reshape((dim / 3, 3))
             ref.writeDX(filename)
             esifiles.append(filename)
             esilist.append(esi)
@@ -2950,7 +2976,7 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
         stop = ti.default_timer()
         print '%s:\tAESOP electrostatic similarity comparison completed in %.2f seconds' % (self.jobname, stop - start)
         warn = self.checkwarnings()
-        err  = self.checkerrors()
+        err = self.checkerrors()
         if warn != 0:
             print 'WARNINGS detected, please view log files!'
         if err != 0:
@@ -2980,7 +3006,7 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
         stop = ti.default_timer()
         print '%s:\tAESOP electrostatic similarity comparison completed in %.2f seconds' % (self.jobname, stop - start)
         warn = self.checkwarnings()
-        err  = self.checkerrors()
+        err = self.checkerrors()
         if warn != 0:
             print 'WARNINGS detected, please view log files!'
         if err != 0:
@@ -3006,6 +3032,7 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
             return 0
         else:
             return -1
+
     def checkerrors(self):
         lines = ''.join(self.logs)
         matches = re.findall('[E][Rr][Rr][Oo][Rr]', lines)
@@ -3297,7 +3324,8 @@ def runProcess(command):
     try:
         (out, err) = proc.communicate()
     except:
-        raise runProcess_Exception('Unable to execute command - please verify syntax:\n\n\t%s' % (command))
+        raise runProcess_Exception(
+            'Unable to execute command - please verify syntax:\n\n\t%s' % (command))
         sys.exit(1)
     # print "program output:", out
     return (out, err)
@@ -3328,7 +3356,7 @@ def mutatePQR(pqrfile, mutid, resnum, chain=None):
     None
         Writes mutated PQR to file specified by the prefix mutid.
     """
-    chain = chain.replace(' ','')
+    chain = chain.replace(' ', '')
     parent = pd.parsePQR(pqrfile)
     if (chain is None) or (chain is ''):
         residue = parent.select('resnum %d' % (int(resnum)))
@@ -3404,6 +3432,8 @@ def mutatePQR(pqrfile, mutid, resnum, chain=None):
 ##########################################################################
 # Function to mutate a single residue in a PDB structure, mutates with modeller by building internal coordinates of residue
 ##########################################################################
+
+
 def minimize_cg(struct, dest=None, disu=True, min_atom_shift=0.1, max_iter=1000, output='NO_REPORT', log=None, report_iter=10):
     """Summary
     Function to perform conjugate gradient descent minimization in Modeller on a user-provided structural file (PDB).
@@ -3459,24 +3489,29 @@ def minimize_cg(struct, dest=None, disu=True, min_atom_shift=0.1, max_iter=1000,
             mdl.patch_ss()
 
         atmsel = selection(mdl)
-        mdl.restraints.make(atmsel, restraint_type='STEREO', spline_on_site=False)
+        mdl.restraints.make(atmsel, restraint_type='STEREO',
+                            spline_on_site=False)
         mpdf = atmsel.energy()
 
         cg = conjugate_gradients(output=output)
         if log is not None:
-            cg.optimize(atmsel, max_iterations=max_iter, min_atom_shift=min_atom_shift, actions=actions.trace(report, trcfil))
+            cg.optimize(atmsel, max_iterations=max_iter,
+                        min_atom_shift=min_atom_shift, actions=actions.trace(report, trcfil))
             trcfil.close()
         else:
-            cg.optimize(atmsel, max_iterations=max_iter, min_atom_shift=min_atom_shift)
-        
+            cg.optimize(atmsel, max_iterations=max_iter,
+                        min_atom_shift=min_atom_shift)
+
         if dest is not None:
             mdl.write(file=dest)
         if dest is None:
             # dest = basename+'_cgmin.pdb'
             return mdl
     except:
-        raise Minimize_CG_Exception('\nCG Minimization failed for: %s' % (struct))
+        raise Minimize_CG_Exception(
+            '\nCG Minimization failed for: %s' % (struct))
         sys.exit(1)
+
 
 def mutatePDB(pdb, mutid, resnum, chain=None, resid='ALA'):
     """Summary
@@ -3509,7 +3544,8 @@ def mutatePDB(pdb, mutid, resnum, chain=None, resid='ALA'):
     try:
         from modeller import environ, model, alignment, selection
     except:
-        print('Failed to load modeller: please ensure module is installed and license key set')
+        print(
+            'Failed to load modeller: please ensure module is installed and license key set')
 
     env = environ()
     env.libs.topology.read(file='$(LIB)/top_heav.lib')
@@ -3583,6 +3619,7 @@ def mutatePDB(pdb, mutid, resnum, chain=None, resid='ALA'):
     # h.res_num_from(m, aln)  # Restore old residue numbering and chain indexing
     # h.write(file=mutid + '.pdb')
 
+
 def superpose(ref, pdb, atype='CA', output=None):
     """Summary
     Uses Modeller to superpose a PDB file (pdb) to a reference PDB (ref).
@@ -3605,7 +3642,8 @@ def superpose(ref, pdb, atype='CA', output=None):
         from modeller import environ, model, alignment, selection
         from modeller.scripts import complete_pdb
     except:
-        print('Failed to load modeller: please ensure module is installed and license key set')
+        print(
+            'Failed to load modeller: please ensure module is installed and license key set')
 
     env = environ()
     env.io.atom_files_directory = '../atom_files'
@@ -3615,15 +3653,16 @@ def superpose(ref, pdb, atype='CA', output=None):
     mdl1 = complete_pdb(env, ref, transfer_res_num=True)
     mdl2 = complete_pdb(env, pdb, transfer_res_num=True)
 
-    aln  = alignment(env)
+    aln = alignment(env)
     aln.append_model(mdl1, atom_files=ref, align_codes='ref')
     aln.append_model(mdl2, atom_files=pdb, align_codes='pdb')
 
     aln.malign(gap_penalties_1d=(-600, -400))
-    aln.malign3d(gap_penalties_3d=(0, 2.0), write_fit=False, write_whole_pdb=False)
+    aln.malign3d(gap_penalties_3d=(0, 2.0),
+                 write_fit=False, write_whole_pdb=False)
 
     atmsel = selection(mdl1).only_atom_types(atype)
-    r      = atmsel.superpose(mdl2, aln, superpose_refine=True)
+    r = atmsel.superpose(mdl2, aln, superpose_refine=True)
 
     if output is None:
         output = pdb
@@ -3670,13 +3709,15 @@ def execPDB2PQR(path_pdb2pqr_exe, pdbfile, outfile=None, ff='parse'):
     if outfile is None:
         outfile = os.path.splitext(pdbfile)[0] + '.pqr'
     # os.system('"{0}" {1} {2} {3}'.format(path_pdb2pqr_exe, optargs, pdbfile, outfile))
-    (log, err) = runProcess([path_pdb2pqr_exe, '-v', '--ff=%s' % (ff), '--chain', pdbfile, outfile])
+    (log, err) = runProcess([path_pdb2pqr_exe, '-v',
+                             '--ff=%s' % (ff), '--chain', pdbfile, outfile])
     try:
         pdb = pd.parsePQR(outfile)
         # pattern = re.compile('Error')
         # hits    = re.findall(pattern, log)
     except:
-        raise PDB2PQR_Exception('\nPDB2PQR failed for: %s\n\nLogs printed below:\n\n%s' % (pdbfile,log))
+        raise PDB2PQR_Exception(
+            '\nPDB2PQR failed for: %s\n\nLogs printed below:\n\n%s' % (pdbfile, log))
         sys.exit(1)
     return (log, err)
 
@@ -3824,12 +3865,15 @@ def execAPBS(path_apbs_exe, pqr_chain, dime, glen, gcent, prefix=None, ion=0.150
     # os.system('"{0}" {1} {2}'.format(path_apbs_exe, '--output-file=%s --output-format=flat'%(file_apbs_log), file_apbs_in))
     # os.system('{0} {1}'.format(path_apbs_exe, file_apbs_in))
     # (log, err) = runProcess([path_apbs_exe, file_apbs_in])
-    (log, err) = runProcess([path_apbs_exe, '--output-file=%s' % (file_apbs_log), '--output-format=flat', file_apbs_in])
-    pattern = re.compile('(?<=Global net ELEC energy =)\s+[+\-]?(?:0|[1-9]\d*)(?:\.\d*)?(?:[eE][+\-]?\d+)?')
-    elec = np.asarray([x.split() for x in re.findall(pattern, log)]).astype(np.float)
+    (log, err) = runProcess([path_apbs_exe, '--output-file=%s' %
+                             (file_apbs_log), '--output-format=flat', file_apbs_in])
+    pattern = re.compile(
+        '(?<=Global net ELEC energy =)\s+[+\-]?(?:0|[1-9]\d*)(?:\.\d*)?(?:[eE][+\-]?\d+)?')
+    elec = np.asarray([x.split()
+                       for x in re.findall(pattern, log)]).astype(np.float)
     elec = elec.reshape((1, elec.size))
     if len(elec[0]) != 2:
-        #print '\nAPBS failed for: %s' % (file_apbs_in)
+        # print '\nAPBS failed for: %s' % (file_apbs_in)
         perror = re.compile('[E][Rr][Rr][Oo][Rr]')
         status = 0
         apbs_compiled_error_list = '\n'
@@ -3838,9 +3882,10 @@ def execAPBS(path_apbs_exe, pqr_chain, dime, glen, gcent, prefix=None, ion=0.150
             if len(m) > 0:
                 status = 1
             if status == 1:
-                apbs_compiled_error_list = apbs_compiled_error_list+l+'\n'
+                apbs_compiled_error_list = apbs_compiled_error_list + l + '\n'
 
-        raise APBS_Exception('\nAPBS failed for: %s\n\nLogs printed below:\n\n%s' % (file_apbs_in, apbs_compiled_error_list))
+        raise APBS_Exception('\nAPBS failed for: %s\n\nLogs printed below:\n\n%s' % (
+            file_apbs_in, apbs_compiled_error_list))
         sys.exit(1)
 
     # return file_apbs_log
@@ -4007,7 +4052,7 @@ def batchAPBS(kernel):
     # print 'Calculating solvation and reference energies for: %s' %
     # (os.path.basename(pqr_chain).split('.')[0])
     energies, log = execAPBS(path, pqr_chain, dime, glen, gcent,
-                        prefix=prefix, ion=ion, pdie=pdie, sdie=sdie, dx=dx)
+                             prefix=prefix, ion=ion, pdie=pdie, sdie=sdie, dx=dx)
     return (np.array([i, j, energies[0][0], energies[0][1]]), log)
 
 ##########################################################################
@@ -4031,7 +4076,7 @@ def batchCalcDX(kernel):
     """
     path, pqrfile, prefix, grid, ion, pdie, sdie, cfac, glen, gcent, dime = kernel
     log = calcDX(path, pqrfile, prefix=prefix, grid=grid, ion=ion, pdie=pdie, sdie=sdie,
-           cfac=cfac, glen=glen, gcent=gcent, dime=dime)
+                 cfac=cfac, glen=glen, gcent=gcent, dime=dime)
     return log
 
 ##########################################################################
@@ -4112,6 +4157,8 @@ def execCoulomb(path_coulomb_exe, pqr):
 ##########################################################################
 # Function to plot results of Alascan
 ##########################################################################
+
+
 def writePDB(alascan, filename=None):
     """Summary
     Function to write free energies of association/solvation into B-factor column of PDB
@@ -4124,15 +4171,19 @@ def writePDB(alascan, filename=None):
     filename : str, optional
         Full path to file where PDB file will be written. Defaults to job directory.
     """
-    jobdir   = alascan.jobdir
-    pdbfile  = os.path.join(jobdir, alascan.pdb_complex_dir, 'wt.pdb')
-    resnums  = [item for sublist in alascan.list_resnums for item in sublist][1:]
-    chids    = [item for sublist in alascan.list_chids for item in sublist][1:]
+    jobdir = alascan.jobdir
+    pdbfile = os.path.join(jobdir, alascan.pdb_complex_dir, 'wt.pdb')
+    resnums = [item for sublist in alascan.list_resnums for item in sublist][1:]
+    chids = [item for sublist in alascan.list_chids for item in sublist][1:]
+    if isinstance(resnums[0], list):
+        resnums = [val for sublist in resnums for val in sublist]
+    if isinstance(chids[0], list):
+        chids = [val for sublist in chids for val in sublist]
     if len(alascan.selstr) > 1:
-        ddG  = alascan.ddGa_rel()[1:]
+        ddG = alascan.ddGa_rel()[1:]
     else:
-        ddG  = alascan. dGsolv_rel()[1:]
-    pdb      = pd.parsePDB(pdbfile)
+        ddG = alascan. dGsolv_rel()[1:]
+    pdb = pd.parsePDB(pdbfile)
     pdb.setBetas(np.zeros((pdb.numAtoms())))
     pdb.setOccupancies(np.zeros((pdb.numAtoms())))
     for chid, resnum, g in zip(chids, resnums, ddG):
@@ -4142,26 +4193,30 @@ def writePDB(alascan, filename=None):
         filename = os.path.join(jobdir, 'wt.ddG.pdb')
     pd.writePDB(filename, pdb)
 
+
 def plotScan(Alascan, filename=None):
     """Summary
-    Function to display results from the computational alanine or directed mutagenesis scan.
+    Function to display results from the computational alanine or directed 
+    mutagenesis scan.
 
     Parameters
     ----------
     Alascan : scan class
-        Alascan or DirectedMutagenesis class after running the complete analysis.
+        Alascan or DirectedMutagenesis class after running the complete 
+        analysis.
     filename : None, optional
-        If the resulting plot should be written to disk, specify a filename. Otherwise, the image will only be saved.
+        If the resulting plot should be written to disk, specify a filename. 
+        Otherwise, the image will only be saved.
 
     Returns
     -------
     tuple
         Handles to generated figure.
     """
-    #plt.style.use('seaborn-talk')
+    # plt.style.use('seaborn-talk')
     if filename is not None:
         plt.switch_backend('agg')
-    elif os.environ.get('DISPLAY','') == '':
+    elif os.environ.get('DISPLAY', '') == '':
         print('No display variable found. Supply a filename to generate plot using non-interactive Agg backend')
     figure, axarr = plt.subplots(len(Alascan.mutid) - 1, sharey=True)
     dpi_val = 300
@@ -4219,7 +4274,9 @@ def plotScan(Alascan, filename=None):
 
 def plotScan_interactive(Alascan, filename=None):
     """Summary
-    Function to display results from the computational alanine or directed mutagenesis scan. Figure is more interactive that the standard matplotlib figure.
+    Function to display results from the computational alanine or directed 
+    mutagenesis scan. Figure is more interactive that the standard matplotlib 
+    figure.
 
     Parameters
     ----------
@@ -4335,7 +4392,7 @@ def plotESD(esd, filename=None, cmap='hot'):
     None
         Writes image to disk, if desired.
     """
-    #plt.style.use('seaborn-talk')
+    # plt.style.use('seaborn-talk')
     fig, ax = plt.subplots(sharey=True)
     heatmap = ax.pcolor(esd.esd, cmap=cmap, vmin=0, vmax=2)
     ax.set_xlim(0, esd.esd.shape[0])
@@ -4371,7 +4428,7 @@ def plotDend(esd, filename=None):
     None
         Writes image to disk, if desired.
     """
-    #plt.style.use('seaborn-talk')
+    # plt.style.use('seaborn-talk')
     fig, ax = plt.subplots(sharey=True)
     # Z = cluster.linkage(esd.esd, 'ward')
     Z = cluster.linkage(esd.esd)
