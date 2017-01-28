@@ -13,8 +13,8 @@ members of a family of plant proteins. This example is based on a more comprehen
     
     ElecSimilarity
     
-Example case: LTP plant proteins
-""""""""""""""""""""""""""""""""
+Example case 1: LTP plant proteins
+""""""""""""""""""""""""""""""""""
 
 Open a new python session, import the ElecSimilarity class, and import the plotDend and plotESD functions:: 
 
@@ -47,7 +47,7 @@ them in the current working directory::
 When the method is run, intermediate files will be generated and stored in a folder of the current 
 working directory. The user has the option of naming this folder by specifying a job name::
 
-    jobname = 'LTP_test'
+    jobname = 'LTP_test1'
 
 Next, the method is initialized by::
 
@@ -118,6 +118,31 @@ If you prefer to calculate ESI instead of ESD, you may do so at the time you run
 	
 After performing the ESI calculation, you may view the ESI values by loading the DX file that is located
 within the "esi_files" folder of the job directory.
+
+Example case 2: Alascan of a LTP plant protein
+""""""""""""""""""""""""""""""""""""""""""""""
+
+AESOP is additionally capapable of comparing electrostatic potentials of alanine mutants for a protein structure. 
+The process follows many of the same steps from example case 1::
+
+    from aesop import ElecSimilarity, plotDend, plotESD
+    
+    path_apbs    = 'C:\\APBS\\apbs.exe'
+    path_pdb2pqr = 'C:\\PDB2PQR\\pdb2pqr.exe'
+    pdbfiles     = ['1MZL.pdb']
+    jobname      = 'LTP_test2'
+    
+    family = ElecSimilarity(pdbfiles=pdbfiles, pdb2pqr_exe=path_pdb2pqr, apbs_exe=path_apbs, jobname=jobname)
+
+The analysis can be run with the same ``run`` or ``run_parallel`` methods as before; however, AESOP will only know to 
+generate a family of alanine mutants if the length of the ``pdbfiles`` is 1 or if ``selstr`` is specified in the run statement. 
+``selstr`` will tell AESOP to mutate all ionizable amino acids selected by any of the elements of the list. Only one amino 
+acid will be mutated at a time. The following is an example run statement that will generate mutants for all ionizable amino acids 
+in the 1MZL pdb file::
+
+    family.run(superpose=False, esd=True, esi=True, selstr=['protein'])
+
+
 
 References
 """"""""""

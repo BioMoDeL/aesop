@@ -84,6 +84,7 @@ Contents
 
    about
    installation
+   pdbpreparation
    selections
    elecsimilarity
    alascan

@@ -26,19 +26,19 @@ Please download and install the appropriate version of `PDB2PQR <https://sourcef
 
 .. note::
 
-	Linux users: Add the directories containing the apbs, pdb2pqr, and coulomb executables to path in your ``~/.profile``. As an example::
+	**Linux users:** Add the directories containing the apbs, pdb2pqr, and coulomb executables to path in your ``~/.profile``. As an example::
 	
 		export PATH=/opt/pdb2pqr-linux-bin64-2.1.0:$PATH
 		export PATH=/opt/APBS-1.4.2.1-linux64/bin:$PATH
 		export PATH=/opt/APBS-1.4.2.1-linux64/share/apbs/tools/bin:$PATH
 	
-	Mac users: If you are using the APBS binary/executable to install (as opposed to compiling from source), you may need to add the following line to your path::
+	**Mac users:** If you are using the APBS binary/executable to install (as opposed to compiling from source), you may need to add the following line to your path::
 
 		export PATH=$PATH:`dirname '/Applications/APBS.app/Contents/MacOS/apbs_term'`
 		
 	Then you may add the pdb2pqr executable to path as in the Linux case
 		
-	Windows users: Navigate to system settings (Control panel > System and Security > System) and click advanced settings. Select the 
+	**Windows users:** Navigate to system settings (Control panel > System and Security > System) and click advanced settings. Select the 
 	``environment variables`` box and edit the ``Path`` variable for the system or for the user. Append the paths to the directories 
 	containing the apbs, pdb2pqr, and coulomb executables (each as a separate entry in the Path variable).
 
