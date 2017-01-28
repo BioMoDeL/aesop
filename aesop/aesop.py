@@ -665,12 +665,6 @@ class Alascan:
         parent_file_prefix = 'wt'
         parent_pdb = pd.parsePDB(self.pdb)
 
-        # list_mutids = [item for sublist in self.mutid for item in sublist]
-        # list_chids = [item for sublist in self.list_chids
-        #               for item in sublist]
-        # list_resnums = [item for sublist in self.list_resnums
-        #               for item in sublist]
-
         infile = os.path.join(jobdir, pdb_complex_dir,
                               parent_file_prefix + '.pdb')
         system = parent_pdb.select('((' + ') or ('.join(selstr) + '))')
@@ -733,8 +727,8 @@ class Alascan:
                                  dime_list[int(dime_ind[2]) + iz]))
             counter += 1
 
-        self.dime = dime  # .reshape((1, 3))
-        self.glen = glen  # .reshape((1, 3))
+        self.dime = dime
+        self.glen = glen
         self.gcent = pd.calcCenter(pdb).astype(int)
 
     def set_grid(self, dime, glen, gcent):
@@ -825,13 +819,10 @@ class Alascan:
             outpath = os.path.join(jobdir, pqr_complex_dir, mutid)
             print '\n%s:\tgenerating PQR for mutant: %s' % (self.jobname,
                                                             mutid)
-            # print 'mutid %s, chain %s, resnum %d'%(mutid, chain, resnum)
-            # print outpath+'.pqr'
             mutatePQR(outfile, mutid=outpath, resnum=resnum, chain=chain)
             complex_pqr = pd.parsePQR(outpath + '.pqr')
             for sel, seldir in zip(selstr, pqr_sel_dir):
                 selfile = os.path.join(jobdir, seldir, mutid + '.pqr')
-                # print selfile
                 pqr = complex_pqr.select(sel)
                 pd.writePQR(selfile, pqr)
                 if self.minim == True:
@@ -869,7 +860,6 @@ class Alascan:
         for i, mutid in zip(xrange(dim_mutid), list_mutids):
             print '\n%s:\tcalculating solvation and reference energies for ' \
                 'mutant: %s' % (self.jobname, mutid)
-            # complex_pqr = os.path.join(jobdir, pqr_complex_dir, mutid+'.pqr')
             for j, seldir in zip(
                     xrange(dim_sel), [pqr_complex_dir] + pqr_sel_dir):
                 subunit_pqr = os.path.join(jobdir, seldir, mutid + '.pqr')
@@ -887,8 +877,6 @@ class Alascan:
                         sdie=self.sdie,
                         dx=self.dx)
                     self.logs.append(log)
-                    # print energies[0][0]
-                    # print energies[0][1]
                     Gsolv[i, j] = energies[0][0]
                     Gref[i, j] = energies[0][1]
                 if not mask_by_sel[i, j]:
@@ -976,7 +964,6 @@ class Alascan:
                      gcent_list, prefix_list, ion_list, pdie_list, sdie_list,
                      dx_list, i_list, j_list)
 
-        # apbs_results = []
         p = Pool()
         print '%s:\trunning batchAPBS ....' % (self.jobname)
         counter = 0
@@ -991,12 +978,8 @@ class Alascan:
             solv = data[2]
             ref = data[3]
             self.logs.append(log)
-            # print '%d, %d, %f, %f'%(i, j, solv, ref)
-            # apbs_results.append([i, j, solv, ref])
             Gsolv[i, j] = solv
             Gref[i, j] = ref
-        # apbs_results = np.asarray(apbs_results)
-        # self.apbs_results = apbs_results
         if self.dx == True:
             self.dx_files = [x + '.dx' for x in prefix_list]
 
@@ -1262,7 +1245,6 @@ class Alascan:
                     esi.append(val)
 
                 esi = np.vstack(esi)
-                # esi = np.ones(esi.shape) - esi
                 esi = np.sum(esi, axis=0) / n
                 ref.pot = esi.reshape((dim / 3, 3))
                 ref.writeDX(filename)
@@ -1355,7 +1337,6 @@ class Alascan:
             energies = self.ddGa_rel()
         elif len(selstr) == 1:
             energies = self.dGsolv_rel()
-        # chids = [item for sublist in self.list_chids[1:] for item in sublist]
         lines = ['%s, %f' % (lbl, val) for lbl, val in zip(mutids, energies)]
         lines.append('\nKey\n---\n')
         for i, seg in enumerate(selstr):
@@ -1622,10 +1603,6 @@ class DirectedMutagenesis:
         self.selstr = selstr
         self.target = target
         self.mutation = mutation
-        # if region is None:
-        #     self.region = selstr
-        # else:
-        #     self.region = region
         self.grid = grid
         self.ion = ion
         self.pdie = pdie
@@ -1655,7 +1632,6 @@ class DirectedMutagenesis:
         self.disu = True
         self.min_atom_shift = 0.1
         self.max_iter = 1000
-        # self.report_iter = 10
         self.output = 'NO_REPORT'
         self.logs = []
 
@@ -1776,9 +1752,6 @@ class DirectedMutagenesis:
         self.list_resnums = list_resnums
         self.list_resnames = list_resnames
         self.mask_by_sel = mask_by_sel
-        # self.gcent = None
-        # self.dime = None
-        # self.glen = None
 
     def genParent(self):
         """Summary
@@ -1798,12 +1771,6 @@ class DirectedMutagenesis:
 
         parent_file_prefix = 'wt'
         parent_pdb = pd.parsePDB(self.pdb)
-
-        # list_mutids = [item for sublist in self.mutid for item in sublist]
-        # list_chids = [item for sublist in self.list_chids
-        #               for item in sublist]
-        # list_resnums = [item for sublist in self.list_resnums
-        #               for item in sublist]
 
         infile = os.path.join(jobdir, pdb_complex_dir,
                               parent_file_prefix + '.pdb')
@@ -1868,8 +1835,8 @@ class DirectedMutagenesis:
                                  dime_list[int(dime_ind[2]) + iz]))
             counter += 1
 
-        self.dime = dime  # .reshape((1, 3))
-        self.glen = glen  # .reshape((1, 3))
+        self.dime = dime
+        self.glen = glen
         self.gcent = pd.calcCenter(pdb).astype(int)
 
     def set_grid(self, dime, glen, gcent):
@@ -2104,8 +2071,6 @@ class DirectedMutagenesis:
             for j, seldir in zip(
                     xrange(dim_sel), [pqr_complex_dir] + pqr_sel_dir):
                 subunit_pqr = os.path.join(jobdir, seldir, mutid + '.pqr')
-                # if mask_by_sel[i, j]: # NOT NEEDED FOR DIRECTED MUTATIONS:
-                # modeller will rearrange structure slightly
                 path_list.append(path_apbs)
                 pqr_chain_list.append(subunit_pqr)
                 dime_list.append(self.dime)
@@ -2126,7 +2091,6 @@ class DirectedMutagenesis:
         kernel = zip(path_list, pqr_chain_list, dime_list, glen_list,
                      gcent_list, prefix_list, ion_list, pdie_list, sdie_list,
                      dx_list, i_list, j_list)
-        # apbs_results = []
         p = Pool(n_workers)
         print '%s:\trunning batchAPBS ....' % (self.jobname)
         counter = 0
@@ -2140,13 +2104,9 @@ class DirectedMutagenesis:
             j = int(data[1])
             solv = data[2]
             ref = data[3]
-            # print '%d, %d, %f, %f'%(i, j, solv, ref)
-            # apbs_results.append([i, j, solv, ref])
             Gsolv[i, j] = solv
             Gref[i, j] = ref
             self.logs.append(log)
-        # apbs_results = np.asarray(apbs_results)
-        # self.apbs_results = apbs_results
         if self.dx == True:
             self.dx_files = [x + '.dx' for x in prefix_list]
 
@@ -2234,8 +2194,6 @@ class DirectedMutagenesis:
             for j, seldir in zip(
                     xrange(dim_sel), [pqr_complex_dir] + pqr_sel_dir):
                 subunit_pqr = os.path.join(jobdir, seldir, mutid + '.pqr')
-                # if mask_by_sel[i, j]: # NOT NEEDED FOR DIRECTED MUTATIONS:
-                # modeller will rearrange structure slightly
                 path_list.append(path_coulomb)
                 pqr_chain_list.append(subunit_pqr)
                 pdie_list.append(self.pdie)
@@ -2315,9 +2273,6 @@ class DirectedMutagenesis:
         """
         start = ti.default_timer()
         self.logs = []
-        # self.genDirs()
-        # self.genMutid()
-        # self.genParent()
         self.genPDB()
         self.genPQR()
         self.calcAPBS()
@@ -2389,7 +2344,6 @@ class DirectedMutagenesis:
             energies = self.ddGa_rel()
         elif len(selstr) == 1:
             energies = self.dGsolv_rel()
-        # chids = [item for sublist in self.list_chids[1:] for item in sublist]
         lines = ['%s, %f' % (lbl, val) for lbl, val in zip(mutids, energies)]
         lines.append('\nKey\n---\n')
         for i, seg in enumerate(selstr):
@@ -2697,8 +2651,8 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
                                  dime_list[int(dime_ind[2]) + iz]))
             counter += 1
 
-        self.dime = dime  # .reshape((1, 3))
-        self.glen = glen  # .reshape((1, 3))
+        self.dime = dime
+        self.glen = glen
         self.gcent = pd.calcCenter(ref).astype(int)
 
     def genPQR(self):
@@ -3142,7 +3096,6 @@ def runProcess(command):
         pass
 
     proc = sp.Popen(command, stdout=sp.PIPE, stderr=sp.PIPE)
-    # proc = sp.Popen(command, stdout=sp.PIPE, shell=True)
     try:
         (out, err) = proc.communicate()
     except:
@@ -3150,7 +3103,6 @@ def runProcess(command):
             'Unable to execute command - please verify syntax:\n\n\t%s' %
             (command))
         sys.exit(1)
-    # print "program output:", out
     return (out, err)
 
 
@@ -3351,7 +3303,6 @@ def minimize_cg(struct,
         if dest is not None:
             mdl.write(file=dest)
         if dest is None:
-            # dest = basename+'_cgmin.pdb'
             return mdl
     except:
         raise Minimize_CG_Exception('\nCG Minimization failed for: %s' %
@@ -3539,8 +3490,6 @@ def execPDB2PQR(path_pdb2pqr_exe, pdbfile, outfile=None, ff='parse'):
     ])
     try:
         pdb = pd.parsePQR(outfile)
-        # pattern = re.compile('Error')
-        # hits    = re.findall(pattern, log)
     except:
         raise PDB2PQR_Exception(
             '\nPDB2PQR failed for: %s\n\nLogs printed below:\n\n%s' %
@@ -3627,19 +3576,10 @@ def execAPBS(path_apbs_exe,
     if prefix is None:
         prefix = os.path.splitext(pqr_chain)[0]
 
-    # cfac = 1.5 # hard-coded scaling factor for mesh dimension, for now
-
-    # pqr = pd.parsePQR(pqr_complex)
-    # coords = pqr.getCoords()
-    # x = coords[:, 0]
-    # y = coords[:, 1]
-    # z = coords[:, 2]
-
     # Format APBS input file
     cmd_read = [
         'read\n',
         '   mol pqr %s\n' % (pqr_chain),
-        # '   mol pqr %s\n' % (pqr_complex),
         'end\n'
     ]
     cmd_solv = [
@@ -3813,7 +3753,6 @@ def calcDX(path_apbs_exe,
                                  dime_list[int(dime_ind[1]) + iy],
                                  dime_list[int(dime_ind[2]) + iz]))
             counter += 1
-        # glen = fg
         dime = dime  # .reshape((1, 3))
         glen = glen  # .reshape((1, 3))
         gcent = pd.calcCenter(pqr).astype(int)
@@ -3873,8 +3812,6 @@ def batchAPBS(kernel):
         reference energies, respectively.
     """
     path, pqr_chain, dime, glen, gcent, prefix, ion, pdie, sdie, dx, i, j = kernel
-    # print 'Calculating solvation and reference energies for: %s' %
-    # (os.path.basename(pqr_chain).split('.')[0])
     energies, log = execAPBS(
         path,
         pqr_chain,
@@ -3948,8 +3885,6 @@ def batchCoulomb(kernel):
         energies correspond. The last element is the Coulombic energy.
     """
     path, pqr_chain, pdie, i, j = kernel
-    # print 'Calculating coulombic energies for: %s' %
-    # (os.path.basename(pqr_chain).split('.')[0])
     energies, log = execCoulomb(path, pqr_chain)
     energies = energies / pdie
     return (np.array([i, j, energies]), log)
@@ -4333,7 +4268,6 @@ def plotDend(esd, filename=None):
     """
     # plt.style.use('seaborn-talk')
     fig, ax = plt.subplots(sharey=True)
-    # Z = cluster.linkage(esd.esd, 'ward')
     Z = cluster.linkage(esd.esd)
     cluster.dendrogram(
         Z,
@@ -4343,8 +4277,6 @@ def plotDend(esd, filename=None):
         ax=ax)
     plt.xlabel('Variants')
     plt.ylabel('ESD')
-    # ax.set_xticklabels(esd.ids, rotation=90 )
-    # ax.set_ylim(0,1)
     plt.tight_layout()
     if filename is not None:
         fig.savefig(filename)
