@@ -2953,7 +2953,7 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
 
             esi = np.vstack(esi)
             esi = np.ones(esi.shape) - esi
-            esi = np.sum(esi, axis=0) / n 
+            esi = np.sum(esi, axis=0) / n
             ref.pot = esi.reshape((dim / 3, 3))
             ref.writeDX(filename)
             esifiles.append(filename)
@@ -3212,7 +3212,7 @@ def mutatePQR(pqrfile, mutid, resnum, chain=None):
 ##########################################################################
 def complete_structure(pdb, dest=None, disu=False):
     """Summary
-    Function to fill in residues with missing atoms. This method simply calls 
+    Function to fill in residues with missing atoms. This method simply calls
     complete_pdb from Modeller.
 
     Parameters
@@ -3220,10 +3220,10 @@ def complete_structure(pdb, dest=None, disu=False):
     pdb : str
         Full path to pdbfile that will be modified.
     dest : str (optional)
-        Full path to destination where completed pdb will be written. If not 
+        Full path to destination where completed pdb will be written. If not
         specified, the model object from Modeller will be returned.
     disu : bool (optional)
-        If True, complete_pdb will predict and patch all disulfide bridges. 
+        If True, complete_pdb will predict and patch all disulfide bridges.
         Default is False.
     """
     class Complete_PDB_Exception(Exception):
@@ -3246,8 +3246,10 @@ def complete_structure(pdb, dest=None, disu=False):
         if dest is None:
             return mdl
     except:
-        raise Complete_PDB_Exception('\nUnable to complete missing atoms in: %s' % (pdb))
+        raise Complete_PDB_Exception('\nUnable to complete missing atoms'
+                                     ' in: %s' % (pdb))
         sys.exit(1)
+
 
 def minimize_cg(struct,
                 dest=None,
