@@ -3210,7 +3210,44 @@ def mutatePQR(pqrfile, mutid, resnum, chain=None):
 # Function to mutate a single residue in a PDB structure, mutates with
 # modeller by building internal coordinates of residue
 ##########################################################################
+def complete_structure(pdb, dest=None, disu=False):
+    """Summary
+    Function to fill in residues with missing atoms. This method simply calls 
+    complete_pdb from Modeller.
 
+    Parameters
+    ----------
+    pdb : str
+        Full path to pdbfile that will be modified.
+    dest : str (optional)
+        Full path to destination where completed pdb will be written. If not 
+        specified, the model object from Modeller will be returned.
+    disu : bool (optional)
+        If True, complete_pdb will predict and patch all disulfide bridges. 
+        Default is False.
+    """
+    class Complete_PDB_Exception(Exception):
+        pass
+
+    try:
+        from modeller import environ, model, selection
+        from modeller.scripts import complete_pdb
+
+        env = environ()
+        env.libs.topology.read(file='$(LIB)/top_heav.lib')
+        env.libs.parameters.read(file='$(LIB)/par.lib')
+
+        mdl = complete_pdb(env, pdb, transfer_res_num=True)
+        if disu is True:
+            mdl.patch_ss()
+
+        if dest is not None:
+            mdl.write(file=dest)
+        if dest is None:
+            return mdl
+    except:
+        raise Complete_PDB_Exception('\nUnable to complete missing atoms in: %s' % (pdb))
+        sys.exit(1)
 
 def minimize_cg(struct,
                 dest=None,
