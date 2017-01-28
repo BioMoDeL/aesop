@@ -6,13 +6,9 @@ import timeit as ti
 import re as re
 import numpy as np
 import prody as pd
-# import scipy.spatial as spatial
-# import scipy.interpolate as interp
 import scipy.cluster.hierarchy as cluster
 import matplotlib.pyplot as plt
-# from modeller import environ, model, alignment, selection
 from multiprocessing import Pool, cpu_count  # , freeze_support
-# import gridData as gd
 import itertools as it
 
 # Print Licencse on startup
