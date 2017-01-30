@@ -9,7 +9,7 @@ may not be resolved in the deposited structure. Thus, residues may be missing fr
 even though the sequence may be known. To fix such issues, the user must perform homology 
 modelling to model and refine gaps. A number of computational tools exist to add these missing 
 residues including Modeller, PDBFixer, UCSF Chimera, Pymol, and `SWISS-MODEL <https://swissmodel.expasy.org/>`_. 
-If you are willing to install OpenMM and all other libraries within the `OMNIA <www.omnia.md>`_ channel, 
+If you are willing to install OpenMM and all other libraries within the `OMNIA <http://www.omnia.md>`_ channel, 
 then `PDBFixer <https://github.com/pandegroup/pdbfixer>`_ may be installed through anaconda quite easily 
 and offers a simple graphical user interface for PDB preparation.
 
