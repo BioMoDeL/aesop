@@ -13,7 +13,7 @@ If the PDB contains all residues but is missing a few atoms in one or more resid
 function that will call complete_pdb from Modeller to fill in missing atoms. You may use the function 
 as follows::
 
-	from aesop import complete_structre
+	from aesop import complete_structure
 	
 	pdbfile = 'input.pdb'
 	outfile = 'output.pdb'

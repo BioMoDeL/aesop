@@ -12,6 +12,15 @@ members of a family of plant proteins. This example is based on a more comprehen
     :toctree: api/generated/
     
     ElecSimilarity
+
+.. note::
+    
+    The ``ElecSimilarity`` method should only be used to compare structurally and functionally similar proteins. 
+	Additionally, all protein structure file should be superposed in a consistent grid space. While the method 
+	implements a superpositioning algorithm from Modeller, the user should verify that the final structures are 
+	suitably superposed. For some applications, users may aquire better results with a different superpositioning 
+	scheme. These structure files can be found in the ``pdb_files`` or ``pqr_files`` folder within 
+	the job directory.
     
 Example case 1: LTP plant proteins
 """"""""""""""""""""""""""""""""""
