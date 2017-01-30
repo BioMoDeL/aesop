@@ -15,7 +15,7 @@ members of a family of plant proteins. This example is based on a more comprehen
 
 .. note::
     
-    The ``ElecSimilarity`` method should only be used to compare structurally and functionally similar proteins. 
+	The ``ElecSimilarity`` method should only be used to compare structurally and functionally similar proteins. 
 	Additionally, all protein structure file should be superposed in a consistent grid space. While the method 
 	implements a superpositioning algorithm from Modeller, the user should verify that the final structures are 
 	suitably superposed. For some applications, users may aquire better results with a different superpositioning 
@@ -70,17 +70,16 @@ so please be patient::
 
     family.run(superpose=True, center=False)
 
-.. warning::
+If you are running your analysis on a workstation and want to parallelize the calculation, then you may do 
+so as follows:
 
-    Currently, superpositioning will fail for structures with an unequal number of alpha carbon atoms. For more complicated 
-    schemes, we suggest the user superposition all structures before running AESOP. For instance, the user may be want to 
-    superpose by domain.
+    family.run_parallel(superpose=True, center=False)
 
 After the run is complete, AESOP will report if any Warnings or Errors were detected in APBS or PDB2PQR. 
 The full logs are stored in the family.logs and can be viewed or written to file in the following manner::
 
     family.viewLogs()
-	family.writeLogs(filename="family_logs.txt")
+    family.writeLogs(filename="family_logs.txt")
     
 You can view results using built-in functions::
 
