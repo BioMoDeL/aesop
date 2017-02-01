@@ -4085,17 +4085,60 @@ def writePDB(alascan, filename=None):
 
 def plotNetwork(scan, 
                 filename=None,
-                title='Electrostatic Network',
+                title='',
                 dpi=300, 
-                cutoff=8,
+                cutoff=8.,
                 E=2.5,
                 node_size=1500, 
                 font_size=12, 
                 alpha=0.8,
                 edge_color='g',
-                width=3, 
+                edge_width=3., 
                 layout=None,
                 **kwargs):
+
+    """Summary
+    Function to visualize electrostatic interactions from a scan class 
+    (Alascan or Directed Mutagenesis). Requires networkx to be installed.
+
+    Parameters
+    ----------
+    scan : Alascan or DirectedMutagenesis class
+        Scan class where calculation of free energies is complete.
+    filename : str or None
+        Full path to file where figure will be saved. If None, no figure
+        is saved, but the plot is displayed and the graph is returned.
+    title : str
+        Matplotlib style title for plot.
+    dpi : int
+        Integer specifying the dots per inch, or image resolution.
+    cutoff : float
+        Distance cutoff in Angstroms for determining if a electrostatic 
+        interaction occurs. Default value is 8 Angstroms. 
+    E : float
+        Threshold for determing those nodes that should be included in 
+        the network based on the value of the free energy perturbation 
+        that results from mutating the amino acid. If the magnitude of 
+        the free energy of association relative to the parent structure 
+        is greater than E, then the node is included. Default is 
+        2.5 kJ/mol.
+    node_size : int
+        Parameter to scale size of nodes in network. Larger values 
+        result in nodes with larger diameter.
+    font_size : int
+        Font size for text within network. 12 pt font is default.
+    alpha : float
+        Set transparency of nodes. Default is 0.8. Accepted range 
+        is [0, 1].
+    edge_color : str
+        Matplotlib-style specification of line color. Default is 'g' 
+        (green).
+    edge_width : int
+        Set the line width for edges. Default is 3 pt font.
+    layout : Networkx layout kernel or None
+        Network layout from networkx. Extra arguments for this layout 
+        may be passed as key word arguments to plotNetwork.
+    """
 
     import networkx as nx
     from scipy.spatial.distance import pdist, squareform
@@ -4152,13 +4195,9 @@ def plotNetwork(scan,
         resids.append(AA_dict[currsel.getResnames()[0]])
 
     # Calc distance matrix
-    # (_, idx) = np.unique(atoms.getResnums(), return_index=True)
     resnums = np.asarray(numbers)
     chains  = np.asarray(chains)
     resids  = np.asarray(resids)
-    # chains  = atoms.calpha.getChids()
-    # resids  = [AA_dict[key]]
-    # resids  = [AA_dict[key] for key in atoms.getResnames()[idx]]
     lbls    = ['%s%d%s' % (rid, res, chid) for rid, res, chid in zip(resids, resnums, chains)]
     n = len(resnums)
 
@@ -4192,7 +4231,6 @@ def plotNetwork(scan,
     # Generate graph
     vmax = np.max(np.abs(ddGa))
     norm = mpl.colors.Normalize(vmin=-1*vmax, vmax=vmax)
-    # cmap = plt.cm.bwr_r
     cmap = plt.cm.coolwarm_r
 
     G   = nx.Graph()
@@ -4221,7 +4259,7 @@ def plotNetwork(scan,
                     vmin=-1.0*vmax,
                     vmax=vmax,
                     edge_color=edge_color,
-                    width=width,
+                    width=edge_width,
                     labels=labels,
                     font_size=font_size,
                     node_size=node_size) #[float(v) * float(node_size) for v in d.values()])
