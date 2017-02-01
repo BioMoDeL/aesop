@@ -4113,7 +4113,7 @@ def plotNetwork(scan,
         Integer specifying the dots per inch, or image resolution.
     cutoff : float
         Distance cutoff in Angstroms for determining if a electrostatic 
-        interaction occurs. Default value is 8 Angstroms. 
+        interaction occurs. Default value is 5 Angstroms. 
     E : float
         Threshold for determing those nodes that should be included in 
         the network based on the value of the free energy perturbation 
