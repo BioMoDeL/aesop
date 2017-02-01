@@ -4096,7 +4096,6 @@ def plotNetwork(scan,
                 edge_width=3., 
                 layout=None,
                 **kwargs):
-
     """Summary
     Function to visualize electrostatic interactions from a scan class 
     (Alascan or Directed Mutagenesis). Requires networkx to be installed.
@@ -4147,8 +4146,8 @@ def plotNetwork(scan,
     jobdir  = scan.jobdir
 
     pdbfile = os.path.join(scan.jobdir,
-                           scan.pdb_complex_dir,
-                           'wt.pdb')
+                           scan.pqr_complex_dir,
+                           'wt.pqr')
 
     # Match mutids to residues
     ddGa    = scan.ddGa_rel()[1:]
@@ -4166,15 +4165,15 @@ def plotNetwork(scan,
 
     regions = [seg2sel[x.split('_')[0]] for x in mutids]
     numbers = [int(x.split('_')[1][1:-1]) for x in mutids]
-    pdb     = pd.parsePDB(pdbfile)
+    pdb     = pd.parsePQR(pdbfile)
 
     atoms = pdb.select(
         ' and '.join([
             regions[0],
             'resnum %s' % (numbers[0]),
-            'charged',
-            'sidechain',
-            'heavy'
+            '(charge >= 0.3 or charge <= -0.3)',
+            'sidechain'#,
+            # 'heavy'
             ])
         )
     chains  = [atoms.getChids()[0]]
@@ -4185,9 +4184,9 @@ def plotNetwork(scan,
                     ' and '.join([
                         region,
                         'resnum %s' % (number),
-                        'charged',
-                        'sidechain',
-                        'heavy'
+                        '(charge >= 0.3 or charge <= -0.3)',
+                        'sidechain'#,
+                        # 'heavy'
                         ])
                     )
         atoms = atoms + currsel
