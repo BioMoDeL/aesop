@@ -21,7 +21,7 @@ Example case: Barnase-Barstar
 
 Open a new python session, import the Alascan class, and import the plotScan function:: 
 
-    from aesop import Alascan, plotScan, writePDB
+    from aesop import Alascan, plotScan, plotNetwork, writePDB
 
 Next, you must specify the full paths to your ``apbs``, ``coulomb``, and ``pdb2pqr`` executables, if 
 the paths for the directories containing the executables have not already been added to the environment. 
@@ -91,6 +91,17 @@ Once complete, you can view the results as a barplot::
 You should end up with a figure similar to the following image:	
 	
 .. image:: alascan.png
+   :scale: 100 %
+   :alt: alternate text
+   :align: center
+
+Alternatively, you can view the results as a network if you have installed the NetworkX library::
+
+    plotNetwork(alascan, filename='network.png')
+	
+The network should look similar to the following with standard parameters:
+
+.. image:: network.png
    :scale: 100 %
    :alt: alternate text
    :align: center

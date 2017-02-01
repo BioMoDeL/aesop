@@ -79,6 +79,14 @@ Multiprocessing (optional)::
 .. note::
 
 	Multiprocessing is only needed if you are planning to utilize multiple cores in your analysis.
+	
+NetworkX (optional)::
+
+    conda install networkx
+	
+.. note::
+
+    NetworkX is only required for the ``plotNetwork`` utility.
 
 Installing AESOP
 """"""""""""""""
