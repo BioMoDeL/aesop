@@ -8,6 +8,7 @@ import numpy as np
 import prody as pd
 import scipy.cluster.hierarchy as cluster
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 from multiprocessing import Pool, cpu_count  # , freeze_support
 import itertools as it
 
@@ -2402,6 +2403,10 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
     dime : list
         List of three integers. Parameter required for APBS.Please see
         description at: http://www.poissonboltzmann.org/docs/apbs-overview/
+    disu : bool, optional
+        If True, Modeller will guess the patches for disulfide bridges
+        within the provided protein structures. Only relevant if minim
+        is set to True.
     dx : bool
         Variable that specifies if potential files should be written to disk.
         Default is False.
@@ -2435,8 +2440,23 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
     logs : list
         List of strings that represent the log files from every executable
         called (namely, PDB2PQR and APBS)
+    max_iter : integer, optional
+        Maximum number of calls to the objective function. If this value
+        is reached, then minimization is terminated. Default value is
+        1000 iterations.
     midpoints : ndarray
         Midpoints of grid space
+    min_atom_shift : float, optional
+        If the maximimum atomic shift between minimization steps is less
+        thant this value, convergence is reached and minimization is
+        terminated. Default value is 0.1 angstroms.
+    minim : bool, optional
+        If true, structures will be minimzed with Modeller's conjugate
+        gradient descent algorithm.
+    output : string, optional
+        Modeller option specifying whether to print verbose output to
+        STDOUT ('REPORT'), or to print minimal output to STDOUT ('NO_
+        REPORT')
     pdb2pqr : str
         Full path to PDB2PQR executable.
     pdbdir : str
@@ -2464,7 +2484,8 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
                  pdie=20.0,
                  sdie=78.54,
                  ff='parse',
-                 cfac=1.5):
+                 cfac=1.5,
+                 minim=False):
         """Summary
         Constructor for ElecSimilarity class. Responsible for preliminary
         parameterization.
@@ -2501,6 +2522,11 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
         cfac : float, optional
             Scaling factor for grid dimensions.
             We suggest to leave this unchanged.
+        minim : bool, optional
+            If TRUE, energy minimization of protein structures will be
+            performed with Modeller's conjugate gradient descent
+            algorithm. Default is False for the Alanine Scan class as
+            mutations should not result in atomic clashes.
         """
         self.pdbfiles = [os.path.basename(pdbfile) for pdbfile in pdbfiles]
         self.ids = [
@@ -2549,6 +2575,12 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
         self.logs = []
         self.pqrfiles = []
 
+        self.minim = minim
+        self.disu = True
+        self.min_atom_shift = 0.1
+        self.max_iter = 1000
+        self.output = 'NO_REPORT'
+
     def centerPDB(self):
         """Summary
         Re-reads PDB file in pdbdir and centers coordinates at (0, 0, 0)
@@ -2564,6 +2596,27 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
             pdb = pd.parsePDB(os.path.join(pdbdir, pdbfile))
             pd.moveAtoms(pdb, to=np.zeros(3))
             pd.writePDB(os.path.join(pdbdir, pdbfile), pdb)
+
+    def minimPDB(self):
+        """Summary
+        Re-reads PDB files in pdbdir and performs energy minimization.
+
+        Returns
+        -------
+        TYPE
+            Overwrites previous PDB files in pdbdir
+        """
+        pdbdir = self.pdbdir
+        pdbfiles = self.pdbfiles
+        for pdbfile in pdbfiles:
+            fname = os.path.join(pdbdir, pdbfile)
+            minimize_cg(
+                fname,
+                dest=fname,
+                disu=self.disu,
+                min_atom_shift=self.min_atom_shift,
+                max_iter=self.max_iter,
+                output=self.output)
 
     def superposePDB(self):
         """Summary
@@ -2678,7 +2731,7 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
             self.logs.append(pqr_log)
             self.pqrfiles.append(pqrname)
 
-    def mutatePQR(self, selstr=['protein']):
+    def mutatePQR(self, selstr=['protein'], minim=False):
         """Summary
         Mutate all PQR files, optional method
 
@@ -2713,6 +2766,14 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
                     mutid=os.path.join(pqrdir, mutid),
                     resnum=resnum,
                     chain=chain)
+                if (self.minim == True) or (minim == True):
+                    minimize_cg(
+                        os.path.join(pqrdir, mutid+'.pqr'),
+                        dest=os.path.join(pqrdir, mutid+'.pqr'),
+                        disu=self.disu,
+                        min_atom_shift=self.min_atom_shift,
+                        max_iter=self.max_iter,
+                        output=self.output)
         self.pqrfiles = pqrfiles + mutantpqrs
         self.ids = [
             os.path.splitext(os.path.basename(x))[0] for x in self.pqrfiles
@@ -2973,6 +3034,8 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
         self.logs = []
         if center:
             self.centerPDB()
+        if minim:
+            self.minimPDB()
         if superpose:
             self.superposePDB()
         self.initializeGrid()
@@ -3007,6 +3070,8 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
         self.logs = []
         if center:
             self.centerPDB()
+        if minim:
+            self.minimPDB()
         if superpose:
             self.superposePDB()
         self.initializeGrid()
@@ -4018,6 +4083,161 @@ def writePDB(alascan, filename=None):
         filename = os.path.join(jobdir, 'wt.ddG.pdb')
     pd.writePDB(filename, pdb)
 
+def plotNetwork(scan, 
+                filename=None,
+                title='Electrostatic Network',
+                dpi=300, 
+                cutoff=8,
+                E=2.5,
+                node_size=1500, 
+                font_size=12, 
+                alpha=0.8,
+                edge_color='g',
+                width=3, 
+                layout=None,
+                **kwargs):
+
+    import networkx as nx
+    from scipy.spatial.distance import pdist, squareform
+
+    selstr  = scan.selstr
+    jobdir  = scan.jobdir
+
+    pdbfile = os.path.join(scan.jobdir,
+                           scan.pdb_complex_dir,
+                           'wt.pdb')
+
+    # Match mutids to residues
+    ddGa    = scan.ddGa_rel()[1:]
+    mutids  = scan.getMutids()[1:]
+
+    mutids  = np.asarray(mutids)
+    mutids  = mutids[np.where(np.abs(ddGa) >= E)[0]]
+    mutids  = mutids.tolist()
+    ddGa    = np.asarray(ddGa)
+    ddGa    = ddGa[np.where(np.abs(ddGa) >= E)[0]]
+    ddGa    = ddGa.tolist()
+
+    n       = len(mutids)
+    seg2sel = dict(('seg%d' % (key+1), val) for (key, val) in enumerate(selstr))
+
+    regions = [seg2sel[x.split('_')[0]] for x in mutids]
+    numbers = [int(x.split('_')[1][1:-1]) for x in mutids]
+    pdb     = pd.parsePDB(pdbfile)
+
+    atoms = pdb.select(
+        ' and '.join([
+            regions[0],
+            'resnum %s' % (numbers[0]),
+            'charged',
+            'sidechain',
+            'heavy'
+            ])
+        )
+    chains  = [atoms.getChids()[0]]
+    resids  = [AA_dict[atoms.getResnames()[0]]]
+
+    for region, number in zip(regions[1:], numbers[1:]):
+        currsel = pdb.select(
+                    ' and '.join([
+                        region,
+                        'resnum %s' % (number),
+                        'charged',
+                        'sidechain',
+                        'heavy'
+                        ])
+                    )
+        atoms = atoms + currsel
+        chains.append(currsel.getChids()[0])
+        resids.append(AA_dict[currsel.getResnames()[0]])
+
+    # Calc distance matrix
+    # (_, idx) = np.unique(atoms.getResnums(), return_index=True)
+    resnums = np.asarray(numbers)
+    chains  = np.asarray(chains)
+    resids  = np.asarray(resids)
+    # chains  = atoms.calpha.getChids()
+    # resids  = [AA_dict[key]]
+    # resids  = [AA_dict[key] for key in atoms.getResnames()[idx]]
+    lbls    = ['%s%d%s' % (rid, res, chid) for rid, res, chid in zip(resids, resnums, chains)]
+    n = len(resnums)
+
+    atom_dist = squareform(pdist(atoms.getCoords()))
+    res_dist  = -1.0 * np.ones((n, n))
+
+    for i, i_res, i_chid in zip(range(n), resnums, chains):
+
+        i_idx = np.where(np.logical_and(
+                        atoms.getResnums() == i_res,
+                        atoms.getChids() == i_chid
+                        )
+                    )[0]
+
+        for j, j_res, j_chid in zip(range(n), resnums, chains):
+            if i != j:
+                j_idx = np.where(np.logical_and(
+                                atoms.getResnums() == j_res,
+                                atoms.getChids() == j_chid
+                                )
+                            )[0]
+                res_dist[i, j] = np.min(atom_dist[np.ix_(i_idx, j_idx)])
+            else:
+                res_dist[i, j] = 0
+
+    # Find edges
+    res_dist *= np.tri(*res_dist.shape, k=-1)
+    mask = np.logical_and((res_dist > 0), (res_dist <= cutoff))
+    row, col = np.where(mask)
+
+    # Generate graph
+    vmax = np.max(np.abs(ddGa))
+    norm = mpl.colors.Normalize(vmin=-1*vmax, vmax=vmax)
+    # cmap = plt.cm.bwr_r
+    cmap = plt.cm.coolwarm_r
+
+    G   = nx.Graph()
+    for node, val, lbl in zip(range(n), ddGa, lbls):
+        G.add_node(node, ddGa=val, lbl=lbl, alpha=alpha)#, size=node_size)
+    for i, j in zip(row, col):
+        G.add_edge(i, j, weight=res_dist[i, j])
+
+    if layout is None:
+        pos = nx.shell_layout(G)
+    else:
+        pos = layout(G, **kwargs)
+
+    energy   = nx.get_node_attributes(G, 'ddGa')
+    labels   = nx.get_node_attributes(G, 'lbl')
+    # nodesize = nx.get_node_attributes(G, 'size')
+    # d      = nx.degree(G)
+
+    # Draw Network
+    nx.draw_networkx(G, 
+                    pos=pos,
+                    cmap=cmap, 
+                    norm=norm,
+                    alpha=alpha,
+                    node_color=ddGa,
+                    vmin=-1.0*vmax,
+                    vmax=vmax,
+                    edge_color=edge_color,
+                    width=width,
+                    labels=labels,
+                    font_size=font_size,
+                    node_size=node_size) #[float(v) * float(node_size) for v in d.values()])
+
+    plt.title(title)
+    plt.axis('off')
+    sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
+    sm._A = []
+    cb = plt.colorbar(sm)
+    cb.set_label('$\Delta\Delta G_a (kJ/mol)$', size=font_size)
+
+    if filename is None:
+        plt.show()
+        return G
+    else:
+        plt.savefig(filename, dpi=dpi)
 
 def plotScan(Alascan, filename=None):
     """Summary
