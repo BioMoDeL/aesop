@@ -60,8 +60,10 @@ working directory. The user has the option of naming this folder by specifying a
 
 Next, the method is initialized by::
 
-    family = ElecSimilarity(pdbfiles=pdbfiles, pdb2pqr_exe=path_pdb2pqr, apbs_exe=path_apbs, 
-                            jobname=jobname)
+    family = ElecSimilarity(pdbfiles=pdbfiles, 
+    						pdb2pqr_exe=path_pdb2pqr, 
+    						apbs_exe=path_apbs,
+    						jobname=jobname)
 
 Finally, we are ready to run the analysis. To superpose structures before running, set superpose 
 to True (please not that this superpositioning algorithm requires the Modeller library). 

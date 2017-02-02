@@ -69,10 +69,15 @@ the mutation. Remember respective elements in target and mutation are linked::
 
 Finally, we may initialize the DirectedMutagenesis scan class::
 
-    mutscan = DirectedMutagenesis(pdb=pdbfile, pdb2pqr_exe=path_pdb2pqr,
-                      apbs_exe=path_apbs, coulomb_exe=path_coulomb,
-                      jobname=jobname, selstr=selstr, target=target,
-                      mutation=mutation)
+    mutscan = DirectedMutagenesis(pdb=pdbfile, 
+    							  pdb2pqr_exe=path_pdb2pqr,
+    							  apbs_exe=path_apbs, 
+    							  coulomb_exe=path_coulomb,
+    							  jobname=jobname, 
+    							  selstr=selstr, 
+    							  target=target,
+    							  mutation=mutation,
+    							  minim=True)
 
 After initialization, you can run the analysis in series::
 
