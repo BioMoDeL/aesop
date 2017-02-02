@@ -4254,6 +4254,7 @@ def plotNetwork(scan,
     # d      = nx.degree(G)
 
     # Draw Network
+    plt.figure()
     nx.draw_networkx(G, 
                     pos=pos,
                     cmap=cmap, 
