@@ -3029,12 +3029,13 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
             esi=False,
             esd=True,
             selstr=None,
-            idx=0):
+            idx=0,
+            minim=False):
         start = ti.default_timer()
         self.logs = []
         if center:
             self.centerPDB()
-        if minim:
+        if self.minim or minim:
             self.minimPDB()
         if superpose:
             self.superposePDB()
@@ -3065,12 +3066,13 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
                      superpose=False,
                      esi=False,
                      esd=True,
-                     idx=0):
+                     idx=0,
+                     minim=False):
         start = ti.default_timer()
         self.logs = []
         if center:
             self.centerPDB()
-        if minim:
+        if self.minim or minim:
             self.minimPDB()
         if superpose:
             self.superposePDB()
