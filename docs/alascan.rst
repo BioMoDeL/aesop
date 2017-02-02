@@ -94,6 +94,11 @@ You should end up with a figure similar to the following image:
    :scale: 100 %
    :alt: alternate text
    :align: center
+In this figure, mutations that result in positive ddGa values relative to the parent structure suggest loss of binding mutations. 
+This outcome indicates the mutated amino acid was involved in an overall favorable network of electrostatic interactions in the 
+parent structure. Mutations that result in negative ddGa values relative to the parent structure suggest gain of binding mutations. 
+This outcome indicates the mutated amino acid was involved in an overall unfavorable network of electrostatic interactions in the 
+parent structure.
 
 Alternatively, you can view the results as a network if you have installed the NetworkX library::
 
@@ -106,11 +111,11 @@ The network should look similar to the following with standard parameters:
    :alt: alternate text
    :align: center
    
-In this figure, mutations that result in positive ddGa values relative to the parent structure suggest loss of binding mutations. 
-This outcome indicates the mutated amino acid was involved in an overall favorable network of electrostatic interactions in the 
-parent structure. Mutations that result in negative ddGa values relative to the parent structure suggest gain of binding mutations. 
-This outcome indicates the mutated amino acid was involved in an overall unfavorable network of electrostatic interactions in the 
-parent structure.	
+In this figure, nodes are amino acid with significant energy effects. That is, when the residue is mutated the change in free 
+energy of association relative to the parent structure is outside thermal effects (greater than 2.5 kJ/mol or less than -2.5 
+kJ/mol). Colors of each node are scaled according to the value of this energy, and edges are drawn between Coulombic interactions 
+that occur within some distance cutoff (5 angstroms by default). Node labels consist of the one-letter amino acid code, the 
+residue number, and the chain where the residue is located, in that order. For instance, ``R83A`` is arginine 83 on chain A.
 
 You may also extract the free energies of association and the associated mutation ids::
 
