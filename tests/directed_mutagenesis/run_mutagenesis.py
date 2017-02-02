@@ -3,7 +3,7 @@ DIRECTED MUTAGENESIS
 	Example case: Barnase-Barstar
 """
 
-from aesop import Alascan, plotScan, writePDB
+from aesop import DirectedMutagenesis, plotScan, writePDB
 
 path_apbs    = 'apbs'		# Make sure these
 path_coulomb = 'coulomb'	#	are correct 
