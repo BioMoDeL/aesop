@@ -4150,7 +4150,10 @@ def plotNetwork(scan,
                            'wt.pqr')
 
     # Match mutids to residues
-    ddGa    = scan.ddGa_rel()[1:]
+    if len(selstr) > 1:
+        ddGa    = scan.ddGa_rel()[1:]
+    else:
+        ddGa    = scan.dGsolv_rel()[1:]
     mutids  = scan.getMutids()[1:]
 
     mutids  = np.asarray(mutids)
@@ -4268,7 +4271,10 @@ def plotNetwork(scan,
     sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
     sm._A = []
     cb = plt.colorbar(sm)
-    cb.set_label('$\Delta\Delta G_a (kJ/mol)$', size=font_size)
+    if len(selstr) > 1:
+        cb.set_label('$\Delta\Delta G_A (kJ/mol)$', size=font_size)
+    else:
+        cb.set_label('$\Delta G_S (kJ/mol)$', size=font_size)
 
     if filename is None:
         plt.show()
