@@ -64,7 +64,8 @@ Next, the method is initialized by::
                             jobname=jobname)
 
 Finally, we are ready to run the analysis. To superpose structures before running, set superpose 
-to True. To center structures before running, set center to True. Ideally, the end user should 
+to True (please not that this superpositioning algorithm requires the Modeller library). 
+To center structures before running, set center to True. Ideally, the end user should 
 ensure that all PDB structures have consistent coordinates. This analysis will take several minutes, 
 so please be patient::
 

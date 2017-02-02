@@ -64,6 +64,8 @@ any Python script:
 
 - aesop.plotScan()
 	- Show bargraph summary of results from computational mutagenesis methods (Alascan, DirectedMutagenesis)
+- aesop.plotNetwork()
+ 	- Show network summary of results from computational mutagenesis methods (Alascan, DirectedMutagenesis)
 - aesop.plotESD()
  	- Show heatmap summary of results from methods exploring electrostatic similarity (ElecSimilarity)
 - aesop.plotDend()
