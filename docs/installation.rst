@@ -13,7 +13,9 @@ Anaconda can be downloaded from `here <https://www.continuum.io/downloads>`_. If
 
 .. caution::
 
-	The 64-bit version is recommended for Linux and Mac OS while 32-bit is recommended for Windows.
+	The 64-bit version is recommended for Linux, Mac OS, and Windows. To install ProDy in 64-bit windows, 
+	you can use an installer from PyPI. If you have issues with a 64-bit installation, AESOP should be 
+	compatible with a 32-bit Python installation, though it is not as well tested.
 
 Install PDB2PQR, APBS and Coulomb
 """""""""""""""""""""""""""""""""

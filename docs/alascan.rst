@@ -59,9 +59,13 @@ we specify the selection string in the following manner::
 
 Finally, we may initialize the Alanine scan class::
 
-    alascan = Alascan(pdb=pdbfile, pdb2pqr_exe=path_pdb2pqr,
-                      apbs_exe=path_apbs, coulomb_exe=path_coulomb,
-                      jobname=jobname, selstr=selstr, minim=False)
+    alascan = Alascan(pdb=pdbfile, 
+                      pdb2pqr_exe=path_pdb2pqr, 
+                      apbs_exe=path_apbs, 
+                      coulomb_exe=path_coulomb, 
+                      jobname=jobname, 
+                      selstr=selstr, 
+                      minim=False)
 
 Note that by default the Alanine scan class will not minimize the structure of mutants. Since the Alascan 
 class seeks to quantify the electrostatic contribution of each amino acid, minimization is unnecessary for

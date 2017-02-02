@@ -61,9 +61,9 @@ working directory. The user has the option of naming this folder by specifying a
 Next, the method is initialized by::
 
     family = ElecSimilarity(pdbfiles=pdbfiles, 
-    						pdb2pqr_exe=path_pdb2pqr, 
-    						apbs_exe=path_apbs,
-    						jobname=jobname)
+                            pdb2pqr_exe=path_pdb2pqr, 
+                            apbs_exe=path_apbs,
+                            jobname=jobname)
 
 Finally, we are ready to run the analysis. To superpose structures before running, set superpose 
 to True (please not that this superpositioning algorithm requires the Modeller library). 
@@ -74,7 +74,7 @@ so please be patient::
     family.run(superpose=True, center=False)
 
 If you are running your analysis on a workstation and want to parallelize the calculation, then you may do 
-so as follows:
+so as follows::
 
     family.run_parallel(superpose=True, center=False)
 
