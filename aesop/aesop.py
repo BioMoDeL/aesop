@@ -3872,7 +3872,7 @@ def calcDX(path_apbs_exe,
         '   ion 1 %.2f 2.0\n' % (ion), '   ion -1 %.2f 2.0\n' % (ion),
         '   pdie %.2f\n' % (pdie), '   sdie %.2f\n' % (sdie),
         '   sdens 10.0\n', '   srad 0.0\n', '   swin 0.3\n',
-        '   temp 298.15\n', '   write pot dx %s\n' % (prefix+'.dx'), 'end\n'
+        '   temp 298.15\n', '   write pot dx %s\n' % (prefix), 'end\n'
     ]
 
     cmd_write = ['quit\n']
