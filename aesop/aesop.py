@@ -2923,8 +2923,8 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
         dxdir = self.dxdir
 
         self.dxfiles = [
-            os.path.join(
-                dxdir, glob.glob(os.path.splitext(os.path.basename(pdbfile))[0] + '*.dx')[0])
+            glob.glob(os.path.join(
+                dxdir, os.path.splitext(os.path.basename(pdbfile))[0] + '*.dx'))[0]
             for pdbfile in pdbfiles
         ]
         files = self.dxfiles
