@@ -2923,7 +2923,7 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
 
         self.dxfiles = [
             os.path.join(
-                dxdir, os.path.splitext(os.path.basename(pdbfile))[0] + '.dx')
+                dxdir, glob.glob(os.path.splitext(os.path.basename(pdbfile))[0] + '*.dx'))
             for pdbfile in pdbfiles
         ]
         files = self.dxfiles
@@ -2978,7 +2978,7 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
 
         self.dxfiles = [
             os.path.join(
-                dxdir, os.path.splitext(os.path.basename(pdbfile))[0] + '.dx')
+                dxdir, glob.glob(os.path.splitext(os.path.basename(pdbfile))[0] + '*.dx'))
             for pdbfile in pdbfiles
         ]
         files = self.dxfiles
@@ -3066,6 +3066,7 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
                      superpose=False,
                      esi=False,
                      esd=True,
+                     selstr=None,
                      idx=0,
                      minim=False):
         start = ti.default_timer()
@@ -3860,46 +3861,18 @@ def calcDX(path_apbs_exe,
         gcent = pd.calcCenter(pqr).astype(int)
 
     # Format APBS input file
-    platform = sys.platform
-    if platform == 'linux2' or platform == 'linux':
-        cmd_read = ['read\n', '   mol pqr %s\n' % (pqrfile), 'end\n']
-        cmd_solv = [
-            'elec name solv\n', '   mg-manual\n',
-            '   dime %d %d %d\n' % (dime[0], dime[1], dime[2]),
-            '   glen %d %d %d\n' % (glen[0], glen[1], glen[2]),
-            '   gcent %d %d %d\n' % (gcent[0], gcent[1], gcent[2]), '   mol 1\n',
-            '   lpbe\n', '   bcfl sdh\n', '   srfm smol\n', '   chgm spl2\n',
-            '   ion 1 %.2f 2.0\n' % (ion), '   ion -1 %.2f 2.0\n' % (ion),
-            '   pdie %.2f\n' % (pdie), '   sdie %.2f\n' % (sdie),
-            '   sdens 10.0\n', '   srad 0.0\n', '   swin 0.3\n',
-            '   temp 298.15\n', '   write pot dx %s\n' % (prefix+'.dx'), 'end\n'
-        ]
-    elif platform == 'darwin':
-        cmd_read = ['read\n', '   mol pqr %s\n' % (pqrfile), 'end\n']
-        cmd_solv = [
-            'elec name solv\n', '   mg-manual\n',
-            '   dime %d %d %d\n' % (dime[0], dime[1], dime[2]),
-            '   glen %d %d %d\n' % (glen[0], glen[1], glen[2]),
-            '   gcent %d %d %d\n' % (gcent[0], gcent[1], gcent[2]), '   mol 1\n',
-            '   lpbe\n', '   bcfl sdh\n', '   srfm smol\n', '   chgm spl2\n',
-            '   ion 1 %.2f 2.0\n' % (ion), '   ion -1 %.2f 2.0\n' % (ion),
-            '   pdie %.2f\n' % (pdie), '   sdie %.2f\n' % (sdie),
-            '   sdens 10.0\n', '   srad 0.0\n', '   swin 0.3\n',
-            '   temp 298.15\n', '   write pot dx %s\n' % (prefix+'.dx'), 'end\n'
-        ]
-    elif platform == 'win32':
-        cmd_read = ['read\n', '   mol pqr %s\n' % (pqrfile), 'end\n']
-        cmd_solv = [
-            'elec name solv\n', '   mg-manual\n',
-            '   dime %d %d %d\n' % (dime[0], dime[1], dime[2]),
-            '   glen %d %d %d\n' % (glen[0], glen[1], glen[2]),
-            '   gcent %d %d %d\n' % (gcent[0], gcent[1], gcent[2]), '   mol 1\n',
-            '   lpbe\n', '   bcfl sdh\n', '   srfm smol\n', '   chgm spl2\n',
-            '   ion 1 %.2f 2.0\n' % (ion), '   ion -1 %.2f 2.0\n' % (ion),
-            '   pdie %.2f\n' % (pdie), '   sdie %.2f\n' % (sdie),
-            '   sdens 10.0\n', '   srad 0.0\n', '   swin 0.3\n',
-            '   temp 298.15\n', '   write pot dx %s\n' % (prefix), 'end\n'
-        ]
+    cmd_read = ['read\n', '   mol pqr %s\n' % (pqrfile), 'end\n']
+    cmd_solv = [
+        'elec name solv\n', '   mg-manual\n',
+        '   dime %d %d %d\n' % (dime[0], dime[1], dime[2]),
+        '   glen %d %d %d\n' % (glen[0], glen[1], glen[2]),
+        '   gcent %d %d %d\n' % (gcent[0], gcent[1], gcent[2]), '   mol 1\n',
+        '   lpbe\n', '   bcfl sdh\n', '   srfm smol\n', '   chgm spl2\n',
+        '   ion 1 %.2f 2.0\n' % (ion), '   ion -1 %.2f 2.0\n' % (ion),
+        '   pdie %.2f\n' % (pdie), '   sdie %.2f\n' % (sdie),
+        '   sdens 10.0\n', '   srad 0.0\n', '   swin 0.3\n',
+        '   temp 298.15\n', '   write pot dx %s\n' % (prefix+'.dx'), 'end\n'
+    ]
 
     cmd_write = ['quit\n']
     apbs_in = cmd_read + cmd_solv + cmd_write
