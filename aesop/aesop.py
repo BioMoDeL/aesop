@@ -2769,8 +2769,8 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
                     chain=chain)
                 if (self.minim == True) or (minim == True):
                     minimize_cg(
-                        os.path.join(pqrdir, mutid+'.pqr'),
-                        dest=os.path.join(pqrdir, mutid+'.pqr'),
+                        os.path.join(pqrdir, mutid + '.pqr'),
+                        dest=os.path.join(pqrdir, mutid + '.pqr'),
                         disu=self.disu,
                         min_atom_shift=self.min_atom_shift,
                         max_iter=self.max_iter,
@@ -4090,21 +4090,22 @@ def writePDB(alascan, filename=None):
         filename = os.path.join(jobdir, 'wt.ddG.pdb')
     pd.writePDB(filename, pdb)
 
-def plotNetwork(scan, 
+
+def plotNetwork(scan,
                 filename=None,
                 title='',
-                dpi=300, 
+                dpi=300,
                 cutoff=5.,
                 E=2.5,
-                node_size=1500, 
-                font_size=12, 
+                node_size=1500,
+                font_size=12,
                 alpha=0.8,
                 edge_color='g',
-                edge_width=3., 
+                edge_width=3.,
                 layout=None,
                 **kwargs):
     """Summary
-    Function to visualize electrostatic interactions from a scan class 
+    Function to visualize electrostatic interactions from a scan class
     (Alascan or Directed Mutagenesis). Requires networkx to be installed.
 
     Parameters
@@ -4119,38 +4120,38 @@ def plotNetwork(scan,
     dpi : int
         Integer specifying the dots per inch, or image resolution.
     cutoff : float
-        Distance cutoff in Angstroms for determining if a electrostatic 
-        interaction occurs. Default value is 5 Angstroms. 
+        Distance cutoff in Angstroms for determining if a electrostatic
+        interaction occurs. Default value is 5 Angstroms.
     E : float
-        Threshold for determing those nodes that should be included in 
-        the network based on the value of the free energy perturbation 
-        that results from mutating the amino acid. If the magnitude of 
-        the free energy of association relative to the parent structure 
-        is greater than E, then the node is included. Default is 
+        Threshold for determing those nodes that should be included in
+        the network based on the value of the free energy perturbation
+        that results from mutating the amino acid. If the magnitude of
+        the free energy of association relative to the parent structure
+        is greater than E, then the node is included. Default is
         2.5 kJ/mol.
     node_size : int
-        Parameter to scale size of nodes in network. Larger values 
+        Parameter to scale size of nodes in network. Larger values
         result in nodes with larger diameter.
     font_size : int
         Font size for text within network. 12 pt font is default.
     alpha : float
-        Set transparency of nodes. Default is 0.8. Accepted range 
+        Set transparency of nodes. Default is 0.8. Accepted range
         is [0, 1].
     edge_color : str
-        Matplotlib-style specification of line color. Default is 'g' 
+        Matplotlib-style specification of line color. Default is 'g'
         (green).
     edge_width : int
         Set the line width for edges. Default is 3 pt font.
     layout : Networkx layout kernel or None
-        Network layout from networkx. Extra arguments for this layout 
+        Network layout from networkx. Extra arguments for this layout
         may be passed as key word arguments to plotNetwork.
     """
 
     import networkx as nx
     from scipy.spatial.distance import pdist, squareform
 
-    selstr  = scan.selstr
-    jobdir  = scan.jobdir
+    selstr = scan.selstr
+    jobdir = scan.jobdir
 
     pdbfile = os.path.join(scan.jobdir,
                            scan.pqr_complex_dir,
@@ -4158,76 +4159,78 @@ def plotNetwork(scan,
 
     # Match mutids to residues
     if len(selstr) > 1:
-        ddGa    = scan.ddGa_rel()[1:]
+        ddGa = scan.ddGa_rel()[1:]
     else:
-        ddGa    = scan.dGsolv_rel()[1:]
-    mutids  = scan.getMutids()[1:]
+        ddGa = scan.dGsolv_rel()[1:]
+    mutids = scan.getMutids()[1:]
 
-    mutids  = np.asarray(mutids)
-    mutids  = mutids[np.where(np.abs(ddGa) >= E)[0]]
-    mutids  = mutids.tolist()
-    ddGa    = np.asarray(ddGa)
-    ddGa    = ddGa[np.where(np.abs(ddGa) >= E)[0]]
-    ddGa    = ddGa.tolist()
+    mutids = np.asarray(mutids)
+    mutids = mutids[np.where(np.abs(ddGa) >= E)[0]]
+    mutids = mutids.tolist()
+    ddGa = np.asarray(ddGa)
+    ddGa = ddGa[np.where(np.abs(ddGa) >= E)[0]]
+    ddGa = ddGa.tolist()
 
-    n       = len(mutids)
-    seg2sel = dict(('seg%d' % (key+1), val) for (key, val) in enumerate(selstr))
+    n = len(mutids)
+    seg2sel = dict(('seg%d' % (key + 1), val)
+                   for (key, val) in enumerate(selstr))
 
     regions = [seg2sel[x.split('_')[0]] for x in mutids]
     numbers = [int(x.split('_')[1][1:-1]) for x in mutids]
-    pdb     = pd.parsePQR(pdbfile)
+    pdb = pd.parsePQR(pdbfile)
 
     atoms = pdb.select(
         ' and '.join([
             regions[0],
             'resnum %s' % (numbers[0]),
             '(charge >= 0.3 or charge <= -0.3)',
-            'sidechain'#,
+            'sidechain'  # ,
             # 'heavy'
-            ])
-        )
-    chains  = [atoms.getChids()[0]]
-    resids  = [AA_dict[atoms.getResnames()[0]]]
+        ])
+    )
+    chains = [atoms.getChids()[0]]
+    resids = [AA_dict[atoms.getResnames()[0]]]
 
     for region, number in zip(regions[1:], numbers[1:]):
         currsel = pdb.select(
-                    ' and '.join([
-                        region,
-                        'resnum %s' % (number),
-                        '(charge >= 0.3 or charge <= -0.3)',
-                        'sidechain'#,
-                        # 'heavy'
-                        ])
-                    )
+            ' and '.join([
+                region,
+                'resnum %s' % (number),
+                '(charge >= 0.3 or charge <= -0.3)',
+                'sidechain'  # ,
+                # 'heavy'
+            ])
+        )
         atoms = atoms + currsel
         chains.append(currsel.getChids()[0])
         resids.append(AA_dict[currsel.getResnames()[0]])
 
     # Calc distance matrix
     resnums = np.asarray(numbers)
-    chains  = np.asarray(chains)
-    resids  = np.asarray(resids)
-    lbls    = ['%s%d%s' % (rid, res, chid) for rid, res, chid in zip(resids, resnums, chains)]
+    chains = np.asarray(chains)
+    resids = np.asarray(resids)
+    lbls = ['%s%d%s' % (rid, res, chid)
+            for rid, res, chid in zip(resids, resnums, chains)]
     n = len(resnums)
 
     atom_dist = squareform(pdist(atoms.getCoords()))
-    res_dist  = -1.0 * np.ones((n, n))
+    res_dist = -1.0 * np.ones((n, n))
 
     for i, i_res, i_chid in zip(range(n), resnums, chains):
 
         i_idx = np.where(np.logical_and(
-                        atoms.getResnums() == i_res,
-                        atoms.getChids() == i_chid
-                        )
-                    )[0]
+            atoms.getResnums() == i_res,
+            atoms.getChids() == i_chid
+        )
+        )[0]
 
         for j, j_res, j_chid in zip(range(n), resnums, chains):
             if i != j:
                 j_idx = np.where(np.logical_and(
-                                atoms.getResnums() == j_res,
-                                atoms.getChids() == j_chid
-                                )
-                            )[0]
+                    atoms.getResnums() == j_res,
+                    atoms.getChids() == j_chid
+                )
+                )[0]
                 res_dist[i, j] = np.min(atom_dist[np.ix_(i_idx, j_idx)])
             else:
                 res_dist[i, j] = 0
@@ -4239,12 +4242,12 @@ def plotNetwork(scan,
 
     # Generate graph
     vmax = np.max(np.abs(ddGa))
-    norm = mpl.colors.Normalize(vmin=-1*vmax, vmax=vmax)
+    norm = mpl.colors.Normalize(vmin=-1 * vmax, vmax=vmax)
     cmap = plt.cm.coolwarm_r
 
-    G   = nx.Graph()
+    G = nx.Graph()
     for node, val, lbl in zip(range(n), ddGa, lbls):
-        G.add_node(node, ddGa=val, lbl=lbl, alpha=alpha)#, size=node_size)
+        G.add_node(node, ddGa=val, lbl=lbl, alpha=alpha)  # , size=node_size)
     for i, j in zip(row, col):
         G.add_edge(i, j, weight=res_dist[i, j])
 
@@ -4253,26 +4256,26 @@ def plotNetwork(scan,
     else:
         pos = layout(G, **kwargs)
 
-    energy   = nx.get_node_attributes(G, 'ddGa')
-    labels   = nx.get_node_attributes(G, 'lbl')
+    energy = nx.get_node_attributes(G, 'ddGa')
+    labels = nx.get_node_attributes(G, 'lbl')
     # nodesize = nx.get_node_attributes(G, 'size')
     # d      = nx.degree(G)
 
     # Draw Network
     plt.figure()
-    nx.draw_networkx(G, 
-                    pos=pos,
-                    cmap=cmap, 
-                    norm=norm,
-                    alpha=alpha,
-                    node_color=ddGa,
-                    vmin=-1.0*vmax,
-                    vmax=vmax,
-                    edge_color=edge_color,
-                    width=edge_width,
-                    labels=labels,
-                    font_size=font_size,
-                    node_size=node_size) #[float(v) * float(node_size) for v in d.values()])
+    nx.draw_networkx(G,
+                     pos=pos,
+                     cmap=cmap,
+                     norm=norm,
+                     alpha=alpha,
+                     node_color=ddGa,
+                     vmin=-1.0 * vmax,
+                     vmax=vmax,
+                     edge_color=edge_color,
+                     width=edge_width,
+                     labels=labels,
+                     font_size=font_size,
+                     node_size=node_size)  # [float(v) * float(node_size) for v in d.values()])
 
     plt.title(title)
     plt.axis('off')
@@ -4289,6 +4292,253 @@ def plotNetwork(scan,
         return G
     else:
         plt.savefig(filename, dpi=dpi)
+
+
+def plotNetwork_interactive(scan,
+                            filename=None,
+                            title='',
+                            cutoff=5.,
+                            E=2.5,
+                            font_size=14,
+                            node_size=20,
+                            edge_color='#888',
+                            edge_width=0.5,
+                            layout=None,
+                            **kwargs):
+    """Summary
+    Function to visualize electrostatic interactions from a scan class
+    (Alascan or Directed Mutagenesis). Figure is more interactive than
+    the standard matplotlib figure. Requires networkx to be installed.
+
+    Parameters
+    ----------
+    scan : Alascan or DirectedMutagenesis class
+        Scan class where calculation of free energies is complete.
+    filename : str or None
+        Full path to file where figure will be saved. If None, no figure
+        is saved, but the plot is displayed and the graph is returned.
+    title : str
+        Matplotlib style title for plot.
+    cutoff : float
+        Distance cutoff in Angstroms for determining if a electrostatic
+        interaction occurs. Default value is 5 Angstroms.
+    E : float
+        Threshold for determing those nodes that should be included in
+        the network based on the value of the free energy perturbation
+        that results from mutating the amino acid. If the magnitude of
+        the free energy of association relative to the parent structure
+        is greater than E, then the node is included. Default is
+        2.5 kJ/mol.
+    node_size : int
+        Parameter to scale size of nodes in network. Larger values
+        result in nodes with larger diameter.
+    font_size : int
+        Font size for text within network. 12 pt font is default.
+    edge_color : str
+        Matplotlib-style specification of line color. Default is 'g'
+        (green).
+    edge_width : int
+        Set the line width for edges. Default is 3 pt font.
+    layout : Networkx layout kernel or None
+        Network layout from networkx. Extra arguments for this layout
+        may be passed as key word arguments to plotNetwork.
+    """
+    import networkx as nx
+    from scipy.spatial.distance import pdist, squareform
+    import plotly.plotly as py
+    import plotly
+    import plotly.graph_objs as go
+    from plotly.offline import download_plotlyjs, init_notebook_mode, iplot
+    from plotly import tools
+
+    selstr = scan.selstr
+    jobdir = scan.jobdir
+
+    pdbfile = os.path.join(scan.jobdir,
+                           scan.pqr_complex_dir,
+                           'wt.pqr')
+
+    # Match mutids to residues
+    if len(selstr) > 1:
+        ddGa = scan.ddGa_rel()[1:]
+        colorbartitle = 'ddG (kJ/mol)'
+    else:
+        ddGa = scan.dGsolv_rel()[1:]
+        colorbartitle = 'dG (kJ/mol)'
+    mutids = scan.getMutids()[1:]
+
+    mutids = np.asarray(mutids)
+    mutids = mutids[np.where(np.abs(ddGa) >= E)[0]]
+    mutids = mutids.tolist()
+    ddGa = np.asarray(ddGa)
+    ddGa = ddGa[np.where(np.abs(ddGa) >= E)[0]]
+    ddGa = ddGa.tolist()
+
+    n = len(mutids)
+    seg2sel = dict(('seg%d' % (key + 1), val)
+                   for (key, val) in enumerate(selstr))
+
+    regions = [seg2sel[x.split('_')[0]] for x in mutids]
+    numbers = [int(x.split('_')[1][1:-1]) for x in mutids]
+    pdb = pd.parsePQR(pdbfile)
+
+    atoms = pdb.select(
+        ' and '.join([
+            regions[0],
+            'resnum %s' % (numbers[0]),
+            '(charge >= 0.3 or charge <= -0.3)',
+            'sidechain'  # ,
+            # 'heavy'
+        ])
+    )
+    chains = [atoms.getChids()[0]]
+    resids = [AA_dict[atoms.getResnames()[0]]]
+
+    for region, number in zip(regions[1:], numbers[1:]):
+        currsel = pdb.select(
+            ' and '.join([
+                region,
+                'resnum %s' % (number),
+                '(charge >= 0.3 or charge <= -0.3)',
+                'sidechain'  # ,
+                # 'heavy'
+            ])
+        )
+        atoms = atoms + currsel
+        chains.append(currsel.getChids()[0])
+        resids.append(AA_dict[currsel.getResnames()[0]])
+
+    # Calc distance matrix
+    resnums = np.asarray(numbers)
+    chains = np.asarray(chains)
+    resids = np.asarray(resids)
+    lbls = ['%s%d%s' % (rid, res, chid)
+            for rid, res, chid in zip(resids, resnums, chains)]
+    n = len(resnums)
+
+    atom_dist = squareform(pdist(atoms.getCoords()))
+    res_dist = -1.0 * np.ones((n, n))
+
+    for i, i_res, i_chid in zip(range(n), resnums, chains):
+
+        i_idx = np.where(np.logical_and(
+            atoms.getResnums() == i_res,
+            atoms.getChids() == i_chid
+        )
+        )[0]
+
+        for j, j_res, j_chid in zip(range(n), resnums, chains):
+            if i != j:
+                j_idx = np.where(np.logical_and(
+                    atoms.getResnums() == j_res,
+                    atoms.getChids() == j_chid
+                )
+                )[0]
+                res_dist[i, j] = np.min(atom_dist[np.ix_(i_idx, j_idx)])
+            else:
+                res_dist[i, j] = 0
+
+    # Find edges
+    res_dist *= np.tri(*res_dist.shape, k=-1)
+    mask = np.logical_and((res_dist > 0), (res_dist <= cutoff))
+    row, col = np.where(mask)
+
+    # Generate graph
+    vmax = np.max(np.abs(ddGa))
+    G = nx.Graph()
+    for node, val, lbl in zip(range(n), ddGa, lbls):
+        G.add_node(node, ddGa=val, lbl=lbl)
+    for i, j in zip(row, col):
+        G.add_edge(i, j, weight=res_dist[i, j])
+    if layout is None:
+        pos = nx.spring_layout(G)
+    else:
+        pos = layout(G, **kwargs)
+    dmin = 1
+    ncenter = 0
+    for n in pos:
+        x, y = pos[n]
+        d = (x - 0.5)**2 + (y - 0.5)**2
+        if d < dmin:
+            ncenter = n
+            dmin = d
+
+    p = nx.single_source_shortest_path_length(G, ncenter)
+    edge_trace = go.Scatter(
+        x=[],
+        y=[],
+        line=go.Line(width=edge_width, color=edge_color),
+        hoverinfo='none',
+        mode='lines')
+
+    for edge in G.edges():
+        x0, y0 = pos[edge[0]]
+        x1, y1 = pos[edge[1]]
+        edge_trace['x'] += [x0, x1, None]
+        edge_trace['y'] += [y0, y1, None]
+
+    node_trace = go.Scatter(
+        x=[],
+        y=[],
+        text=[],
+        mode='markers',
+        hoverinfo='text',
+        marker=go.Marker(
+            showscale=True,
+            # colorscale options
+            # 'Greys' | 'Greens' | 'Bluered' | 'Hot' | 'Picnic' | 'Portland' |
+            # Jet' | 'RdBu' | 'Blackbody' | 'Earth' | 'Electric' | 'YIOrRd' |
+            # 'YIGnBu'
+            colorscale='RdBu',
+            cmin=-1 * vmax,
+            cmax=vmax,
+            reversescale=True,
+            color=[],
+            size=node_size,
+            colorbar=dict(
+                thickness=15,
+                title=colorbartitle,
+                xanchor='left',
+                titleside='right'
+            ),
+            line=dict(width=2)))
+
+    for node in G.nodes():
+        x, y = pos[node]
+        node_trace['x'].append(x)
+        node_trace['y'].append(y)
+
+    energy = nx.get_node_attributes(G, 'ddGa')
+    for node in G.nodes():
+        node_trace['marker']['color'].append(energy[node])
+        node_info = "{0:.2f}".format(G.node[node]['ddGa']) + ' kJ/mol'
+        node_trace['text'].append(node_info)
+
+    network_annotations = go.Annotations()
+    for k in range(len(lbls)):
+        network_annotations.append(
+            go.Annotation(
+                text=lbls[k],
+                x=pos[k][0], y=pos[k][1],
+                xref='x1', yref='y1',
+                font=dict(size=font_size),
+                arrowsize=.4,
+                showarrow=True)
+        )
+
+    network_fig = go.Figure(data=go.Data([edge_trace, node_trace]),
+                            layout=go.Layout(
+        title='<br>Network Plot',
+        titlefont=dict(size=16),
+        showlegend=False,
+        hovermode='closest',
+        margin=dict(b=20, l=5, r=5, t=40),
+        annotations=network_annotations,
+        xaxis=go.XAxis(showgrid=False, zeroline=False, showticklabels=False),
+        yaxis=go.YAxis(showgrid=False, zeroline=False, showticklabels=False)))
+    plotly.offline.plot(network_fig)
+    if filename is not None:
+        py.image.save_as(network_fig, filename=filename)
 
 def plotScan(Alascan, filename=None):
     """Summary
@@ -4414,7 +4664,7 @@ def plotScan(Alascan, filename=None):
 def plotScan_interactive(Alascan, filename=None):
     """Summary
     Function to display results from the computational alanine or directed
-    mutagenesis scan. Figure is more interactive that the standard matplotlib
+    mutagenesis scan. Figure is more interactive than the standard matplotlib
     figure.
 
     Parameters
