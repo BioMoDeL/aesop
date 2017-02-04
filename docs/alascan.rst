@@ -130,6 +130,9 @@ kJ/mol). Colors of each node are scaled according to the value of this energy, a
 that occur within some distance cutoff (5 angstroms by default). Node labels consist of the one-letter amino acid code, the 
 residue number, and the chain where the residue is located, in that order. For instance, ``R83A`` is arginine 83 on chain A.
 
+If you would like to utilize the interactive plotting functions ``plotScan_interactive`` and ``plotNetwork_interactive``, refer 
+to this `notebook demonstration <https://nbviewer.jupyter.org/github/BioMoDeL/aesop/blob/master/docs/barnase_barstar_alascan.ipynb>`_.
+
 You may also extract the free energies of association and the associated mutation ids::
 
     mut_ids  = alascan.getMutids()
