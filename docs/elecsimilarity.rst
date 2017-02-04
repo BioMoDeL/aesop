@@ -108,6 +108,9 @@ plotESD should produce a heatmap similar to the following figure.
    :align: center
    
 This heatmap compares all protein pairs in terms of ESD. Lower values once again indicate electrostatic similarity.
+
+If you would like to utilize the interactive plotting function ``plotESD_interactive`` which generates a heatmap and dendrogram, refer 
+to this `notebook demonstration <https://nbviewer.jupyter.org/github/BioMoDeL/aesop/blob/master/docs/LTP_family_1.ipynb>`_.
    
 If you prefer to export the raw data, you can access the ESD matrix::
 
