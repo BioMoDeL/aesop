@@ -93,6 +93,14 @@ NetworkX (optional)::
 
     NetworkX is only required for the ``plotNetwork`` utility.
 
+Plotly (optional)::
+
+    pip install plotly
+	
+.. note::
+
+    Plotly is only required for the interactive plotting functions such as ``plotScan_interactive``,``plotNetwork_interactive``, and ``plotESD_interactive``.
+
 Installing AESOP
 """"""""""""""""
 
