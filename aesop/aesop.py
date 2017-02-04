@@ -4303,6 +4303,7 @@ def plotNetwork_interactive(scan,
                             node_size=20,
                             edge_color='#888',
                             edge_width=0.5,
+                            display_output='external',
                             layout=None,
                             **kwargs):
     """Summary
@@ -4339,6 +4340,9 @@ def plotNetwork_interactive(scan,
         (green).
     edge_width : int
         Set the line width for edges. Default is 3 pt font.
+    display_output : str
+        Set output to either open local html file in browser or inline
+        plot in notebook.
     layout : Networkx layout kernel or None
         Network layout from networkx. Extra arguments for this layout
         may be passed as key word arguments to plotNetwork.
@@ -4536,7 +4540,11 @@ def plotNetwork_interactive(scan,
         annotations=network_annotations,
         xaxis=go.XAxis(showgrid=False, zeroline=False, showticklabels=False),
         yaxis=go.YAxis(showgrid=False, zeroline=False, showticklabels=False)))
-    plotly.offline.plot(network_fig)
+    if display_output == 'external':
+        plotly.offline.plot(network_fig)
+    elif display_output == 'notebook':
+        init_notebook_mode(connected=True)
+        plotly.offline.iplot(network_fig)
     if filename is not None:
         py.image.save_as(network_fig, filename=filename)
 
@@ -4661,7 +4669,7 @@ def plotScan(Alascan, filename=None):
     return (figure, axarr)
 
 
-def plotScan_interactive(Alascan, filename=None):
+def plotScan_interactive(Alascan, display_output = 'external', filename=None):
     """Summary
     Function to display results from the computational alanine or directed
     mutagenesis scan. Figure is more interactive than the standard matplotlib
@@ -4672,6 +4680,9 @@ def plotScan_interactive(Alascan, filename=None):
     Alascan : scan class
         Alascan or DirectedMutagenesis class after running the complete
         analysis.
+    display_output : str
+        Set output to either open local html file in browser or inline
+        plot in notebook.
     filename : None, optional
         If the resulting plot should be written to disk, specify a filename.
         Otherwise, the image will only be saved.
@@ -4754,7 +4765,11 @@ def plotScan_interactive(Alascan, filename=None):
 
     fig['layout'].update(barmode='stack', hovermode='closest')
     plotly_fig = go.Figure(fig)
-    plotly.offline.plot(plotly_fig)
+    if display_output == 'external':
+        plotly.offline.plot(plotly_fig)
+    elif display_output == 'notebook':
+        init_notebook_mode(connected=True)
+        plotly.offline.iplot(plotly_fig)
     if filename is not None:
         py.image.save_as(plotly_fig, filename=filename)
 
@@ -4838,7 +4853,7 @@ def plotDend(esd, filename=None):
         fig.savefig(filename)
 
 
-def plotESD_interactive(esd, filename=None, cmap='YIGnBu'):
+def plotESD_interactive(esd, filename=None, cmap='YIGnBu', display_output='external'):
     """Summary
     Function to display an electrostatic similarity heatmap from a previously
     run ElecSimilarity class. Figure is more interactive that the standard
@@ -4853,6 +4868,9 @@ def plotESD_interactive(esd, filename=None, cmap='YIGnBu'):
         Otherwise, the image will only be saved.
     cmap : str, optional
         Colormap from matplotlib to use.
+    display_output : str
+        Set output to either open local html file in browser or inline
+        plot in notebook.
 
     Returns
     -------
@@ -4953,7 +4971,11 @@ def plotESD_interactive(esd, filename=None, cmap='YIGnBu'):
     })
 
     # Plot!
-    plotly.offline.plot(figure)
+    if display_output == 'external':
+        plotly.offline.plot(figure)
+    elif display_output == 'notebook':
+        init_notebook_mode(connected=True)
+        plotly.offline.iplot(figure)
     if filename is not None:
         py.image.save_as(figure, filename=filename)
 
