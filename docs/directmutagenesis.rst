@@ -111,6 +111,9 @@ parent structure. Mutations that result in negative ddGa values relative to the 
 This outcome indicates the mutated amino acid was involved in an overall unfavorable network of electrostatic interactions in the 
 parent structure.
 
+If you would like to utilize the interactive plotting functions ``plotScan_interactive`` and ``plotNetwork_interactive``, refer 
+to this `notebook demonstration <https://nbviewer.jupyter.org/github/BioMoDeL/aesop/blob/master/docs/barnase_barstar_directedmutagenesis.ipynb>`_.
+
 You may also extract the free energies of association and the associated mutation ids::
 
     mut_ids  = mutscan.getMutids()
