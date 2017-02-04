@@ -4167,7 +4167,7 @@ def plotNetwork(scan,
     mutids = np.asarray(mutids)
     mutids = mutids[np.where(np.abs(ddGa) >= E)[0]]
     mutids = mutids.tolist()
-    mutids = [w.replace('sel1', 'seg1') for w in mutids]
+    mutids = [w.replace('sel', 'seg') for w in mutids]
     ddGa = np.asarray(ddGa)
     ddGa = ddGa[np.where(np.abs(ddGa) >= E)[0]]
     ddGa = ddGa.tolist()
@@ -4375,7 +4375,7 @@ def plotNetwork_interactive(scan,
     mutids = np.asarray(mutids)
     mutids = mutids[np.where(np.abs(ddGa) >= E)[0]]
     mutids = mutids.tolist()
-    mutids = [w.replace('sel1', 'seg1') for w in mutids]
+    mutids = [w.replace('sel', 'seg') for w in mutids]
     ddGa = np.asarray(ddGa)
     ddGa = ddGa[np.where(np.abs(ddGa) >= E)[0]]
     ddGa = ddGa.tolist()
