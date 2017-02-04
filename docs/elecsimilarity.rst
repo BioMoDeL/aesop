@@ -4,8 +4,10 @@ Electrostatic Similarity
 ========================
 
 The electrostatic similarity method generates grid potentials for a list of PDB files and compares 
-all potential files in a pairwise manner. Here we will provide a test case that compares several 
-members of a family of plant proteins. This example is based on a more comprehensive, published study [Chae2010]_.
+all potential files in a pairwise manner. Here we will provide test cases that compares several 
+members of a family of plant proteins. You may download all necessary files for these examples at this link: 
+:download:`download<../data/electrostatic_similarity.zip>`. These examples are based on a more comprehensive, 
+published study [Chae2010]_.
 
 .. currentmodule:: aesop
 .. autosummary::

@@ -33,6 +33,9 @@ Please download and install the appropriate version of `PDB2PQR <https://sourcef
 		export PATH=/opt/pdb2pqr-linux-bin64-2.1.0:$PATH
 		export PATH=/opt/APBS-1.4.2.1-linux64/bin:$PATH
 		export PATH=/opt/APBS-1.4.2.1-linux64/share/apbs/tools/bin:$PATH
+		
+	You may encounter issues with PDB2PQR if you are using an older version that uses the ``pdb2pqr.py`` script. In this case, 
+	either update to a newer binary PDB2PQR distribution, or specify the full path to ``pdb2pqr.py`` in AESOP.
 	
 	**Mac users:** If you are using the APBS binary/executable to install (as opposed to compiling from source), you may need to add the following line to your path::
 

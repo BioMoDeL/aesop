@@ -8,7 +8,8 @@ about what mutations to perform. Additionally, this method requires an external 
 Modeller. This dependency facilitates more complicated mutations; however, it also requires the method 
 to perform more calculations than for the side-chain truncation method of the alanine scan. For 
 reference, please refer to [Kieslich2011-2]_ and [Gorham2011-2]_ as they present published results 
-for the Barnase-Barstar test system.
+for the Barnase-Barstar test system. You may download all necessary files for this example at this 
+link: :download:`download<../data/directed_mutagenesis.zip>`.
 
 .. currentmodule:: aesop
 .. autosummary::

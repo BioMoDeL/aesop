@@ -1,7 +1,7 @@
 numpy
 scipy
 #prody
-gridDataFormats
+#gridDataFormats
 #modeller
 plotly
 matplotlib

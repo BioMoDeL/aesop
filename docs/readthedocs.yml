@@ -1,0 +1,13 @@
+formats:
+	- htmlzip
+	- pdf
+	
+requirements_file: ./docs/requirements.txt
+
+conda:
+	file: environment.yml
+	
+python:
+	version: 2
+	setup_py_install: false
+	pip_install: false
