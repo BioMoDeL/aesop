@@ -70,6 +70,12 @@ any Python script:
  	- Show heatmap summary of results from methods exploring electrostatic similarity (ElecSimilarity)
 - aesop.plotDend()
  	- Show dendrogram summary of results from methods exploring electrostatic similarity (ElecSimilarity)
+- aesop.plotScan_interactive()
+   - Show bargraph summary of results from computational mutagenesis methods in a more interactive format (Alascan, DirectedMutagenesis)
+- aesop.plotNetwork_interactive()
+   - Show network summary of results from computational mutagenesis methods in a more interactive format (Alascan, DirectedMutagenesis)
+- aesop.plotESD_interactive()
+   - Show heatmap summary of results from methods exploring electrostatic similarity in a more interactive format (ElecSimilarity)
 - aesop.writePDB()
 	- Save PDB file with changes in free energy of association relative to the parent (by residue) in the beta-factor column
 
