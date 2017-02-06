@@ -2943,8 +2943,7 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
             if method is 'AND':
                 diff = np.abs(a - b)
                 maxpot = np.abs(np.vstack((a, b))).max(axis=0)
-                val = np.divide(diff, maxpot).sum() / dim
-                val = np.nan_to_num(val)
+                val = np.nan_to_num(np.divide(diff, maxpot)).sum() / dim
                 esd[i, j] = val
         esd = symmetrize(esd)
         self.esd = esd
