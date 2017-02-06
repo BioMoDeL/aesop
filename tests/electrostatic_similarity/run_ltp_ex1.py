@@ -6,30 +6,32 @@ ELECTROSTATIC SIMILARITY
 import numpy as np
 from aesop import ElecSimilarity, plotDend, plotESD
 
-path_apbs    = 'apbs'			# Make sure these are correct
-path_pdb2pqr = 'pdb2pqr'   		# 	for your system
+if __name__ == '__main__': # Protect entry point of Windows application for parallel processes
 
-pdbfiles = ['1MZL.pdb', 'SCA1.pdb', 'SCA3.pdb']
-jobname = 'LTP_test1'
+	path_apbs    = 'apbs'			# Make sure these are correct
+	path_pdb2pqr = 'pdb2pqr'   		# 	for your system
 
-family = ElecSimilarity(pdbfiles=pdbfiles, 
-						pdb2pqr_exe=path_pdb2pqr, 
-						apbs_exe=path_apbs,
-						jobname=jobname)
+	pdbfiles = ['1MZL.pdb', 'SCA1.pdb', 'SCA3.pdb']
+	jobname = 'LTP_test1'
 
-family.run(superpose=True, center=False)
-# family.run_parallel(superpose=True, center=False) # Uncomment for parallel run
+	family = ElecSimilarity(pdbfiles=pdbfiles, 
+							pdb2pqr_exe=path_pdb2pqr, 
+							apbs_exe=path_apbs,
+							jobname=jobname)
 
-family.viewLogs()
-family.writeLogs(filename="family_logs.txt")
+	family.run(superpose=True, center=False)
+	# family.run_parallel(superpose=True, center=False, n_workers=4) # Uncomment for parallel run
 
-plotDend(family, filename='dend.png')
-plotESD(family, filename='esd.png')
+	family.viewLogs()
+	family.writeLogs(filename="family_logs.txt")
 
-data = family.esd
-np.savetxt('esd_matrix.txt', data, fmt='%.4f')
+	plotDend(family, filename='dend.png')
+	plotESD(family, filename='esd.png')
 
-family.calcESI()
+	data = family.esd
+	np.savetxt('esd_matrix.txt', data, fmt='%.4f')
 
-# family.run(esi=True, esd=False, superpose=True) 			# Commented out to 
-# family.run_parallel(esi=True, esd=False, superpose=True)	# 	prevent extra runs
+	family.calcESI()
+
+	# family.run(esi=True, esd=False, superpose=True) 			# Commented out to 
+	# family.run_parallel(esi=True, esd=False, superpose=True)	# 	prevent extra runs

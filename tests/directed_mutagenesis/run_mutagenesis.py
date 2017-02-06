@@ -5,42 +5,44 @@ DIRECTED MUTAGENESIS
 
 from aesop import DirectedMutagenesis, plotScan, writePDB
 
-path_apbs    = 'apbs'		# Make sure these
-path_coulomb = 'coulomb'	#	are correct 
-path_pdb2pqr = 'pdb2pqr'	#	for your sytem
+if __name__ == '__main__': # Protect entry point of Windows application for parallel processes
 
-jobname = 'directedscan'
-pdbfile = 'barnase_barstar.pdb'
+	path_apbs    = 'apbs'		# Make sure these
+	path_coulomb = 'coulomb'	#	are correct 
+	path_pdb2pqr = 'pdb2pqr'	#	for your sytem
 
-selstr = ['chain A', 'chain B']
+	jobname = 'directedscan'
+	pdbfile = 'barnase_barstar.pdb'
 
-target = ['resnum 27',  'resnum 73',  'resnum 83',  'resnum 87',  # mutations in chain A
-          'resnum 145', 'resnum 149', 'resnum 164', 'resnum 186'] # mutations in chain B
-mutation = ['ASP', 'LYS', 'GLU', 'GLU', # mutations in chain A
-            'ARG', 'ARG', 'ASP', 'LYS'] # mutations in chain B
+	selstr = ['chain A', 'chain B']
 
-mutscan = DirectedMutagenesis(pdb=pdbfile, 
-							  pdb2pqr_exe=path_pdb2pqr,
-							  apbs_exe=path_apbs, 
-							  coulomb_exe=path_coulomb,
-							  jobname=jobname, 
-							  selstr=selstr, 
-							  target=target,
-							  mutation=mutation,
-							  minim=True)
+	target = ['resnum 27',  'resnum 73',  'resnum 83',  'resnum 87',  # mutations in chain A
+	          'resnum 145', 'resnum 149', 'resnum 164', 'resnum 186'] # mutations in chain B
+	mutation = ['ASP', 'LYS', 'GLU', 'GLU', # mutations in chain A
+	            'ARG', 'ARG', 'ASP', 'LYS'] # mutations in chain B
 
-mutscan.run()
-# mutscan.run_parallel(6) # Uncomment to run in parallel on 6 threads
-# mutscan.run_parallel()  # Uncomment to run on half of available threads
+	mutscan = DirectedMutagenesis(pdb=pdbfile, 
+								  pdb2pqr_exe=path_pdb2pqr,
+								  apbs_exe=path_apbs, 
+								  coulomb_exe=path_coulomb,
+								  jobname=jobname, 
+								  selstr=selstr, 
+								  target=target,
+								  mutation=mutation,
+								  minim=True)
 
-mutscan.viewLogs()
-mutscan.writeLogs(filename="mutscan_logs.txt")
+	mutscan.run()
+	# mutscan.run_parallel(6) # Uncomment to run in parallel on 6 threads
+	# mutscan.run_parallel()  # Uncomment to run on half of available threads
 
-plotScan(mutscan, filename='directedmutagenesis.png')
+	mutscan.viewLogs()
+	mutscan.writeLogs(filename="mutscan_logs.txt")
 
-mut_ids  = mutscan.getMutids()
-energies = mutscan.ddGa_rel()
+	plotScan(mutscan, filename='directedmutagenesis.png')
 
-mutscan.summary(filename='mutscan_summary.txt')
+	mut_ids  = mutscan.getMutids()
+	energies = mutscan.ddGa_rel()
 
-writePDB(mutscan, filename='mutscan.ddGa.pdb')
+	mutscan.summary(filename='mutscan_summary.txt')
+
+	writePDB(mutscan, filename='mutscan.ddGa.pdb')
