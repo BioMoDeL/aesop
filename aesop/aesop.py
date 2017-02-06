@@ -10,7 +10,7 @@ import prody as pd
 import scipy.cluster.hierarchy as cluster
 import matplotlib.pyplot as plt
 import matplotlib as mpl
-from multiprocessing import Pool, cpu_count  # , freeze_support
+from multiprocessing import Pool, cpu_count, freeze_support
 import itertools as it
 
 # Print Licencse on startup
@@ -33,7 +33,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-ERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
@@ -907,7 +907,7 @@ class Alascan:
         path_apbs = self.apbs
 
         if n_workers is None:
-            n_workers = cpu_count()
+            n_workers = cpu_count()/2
 
         list_mutids = self.getMutids()
 
@@ -1064,7 +1064,7 @@ class Alascan:
         path_coulomb = self.coulomb
 
         if n_workers is None:
-            n_workers = cpu_count()
+            n_workers = cpu_count()/2
 
         list_mutids = self.getMutids()
 
@@ -2855,7 +2855,7 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
         dime = self.dime
 
         if n_workers is None:
-            n_workers = cpu_count()
+            n_workers = cpu_count()/2
 
         path_apbs = [self.apbs for pdbfile in pdbfiles]
         pqrfiles = [
@@ -2883,7 +2883,7 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
         max_count = len(kernel)
         for result in p.imap_unordered(batchCalcDX, kernel):
             counter += 1
-            print '.... %s:\tbatch coulomb %d percent complete ....' % (
+            print '.... %s:\tbatch APBS %d percent complete ....' % (
                 self.jobname, int(counter * 100 / max_count))
             self.logs.append(result)
 
