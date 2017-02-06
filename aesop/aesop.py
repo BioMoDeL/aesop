@@ -10,7 +10,7 @@ import prody as pd
 import scipy.cluster.hierarchy as cluster
 import matplotlib.pyplot as plt
 import matplotlib as mpl
-from multiprocessing import Pool, cpu_count, freeze_support
+from multiprocessing import Pool, cpu_count #, freeze_support
 import itertools as it
 
 # Print Licencse on startup
