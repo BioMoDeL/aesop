@@ -31,7 +31,7 @@ Open a new python session, import the ElecSimilarity class, and import the plotD
 
     from aesop import ElecSimilarity, plotDend, plotESD
 
-:: warning::
+.. warning::
 	
 	If you are planning to leverage multiple CPU threads for a faster analysis, please know 
 	that extra steps may be required. Specifically, you must protect the entry point of the 

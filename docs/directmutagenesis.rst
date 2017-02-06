@@ -25,7 +25,7 @@ Open a new python session, import the DirectedMutagenesis class, and import the 
 
     from aesop import DirectedMutagenesis, plotScan, writePDB
 
-:: warning::
+.. warning::
 	
 	If you are planning to leverage multiple CPU threads for a faster analysis, please know 
 	that extra steps may be required. Specifically, you must protect the entry point of the 

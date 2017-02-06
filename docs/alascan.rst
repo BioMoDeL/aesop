@@ -28,7 +28,7 @@ Open a new python session, import the Alascan class, and import the plotScan fun
     except:
         print 'Unable to import plotNetwork, is the NetworkX library installed?'
 
-:: warning::
+.. warning::
 	
 	If you are planning to leverage multiple CPU threads for a faster analysis, please know 
 	that extra steps may be required. Specifically, you must protect the entry point of the 
