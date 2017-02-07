@@ -9,41 +9,43 @@ try:
 except:
 	print 'Unable to import plotNetwork, is the NetworkX library installed?'
 
-path_apbs    = 'apbs'		# Make sure these
-path_coulomb = 'coulomb'	#	are correct 
-path_pdb2pqr = 'pdb2pqr'	#	for your sytem
+if __name__ == '__main__': # Protect entry point of Windows application for parallel processes
 
-jobname = 'alascan'
-pdbfile = 'barnase_barstar.pdb'
+	path_apbs    = 'apbs'		# Make sure these
+	path_coulomb = 'coulomb'	#	are correct 
+	path_pdb2pqr = 'pdb2pqr'	#	for your sytem
 
-selstr = ['chain A', 'chain B']
+	jobname = 'alascan'
+	pdbfile = 'barnase_barstar.pdb'
 
-alascan = Alascan(pdb=pdbfile, 
-				  pdb2pqr_exe=path_pdb2pqr,
-				  apbs_exe=path_apbs,
-				  coulomb_exe=path_coulomb,
-				  jobname=jobname, 
-				  selstr=selstr, 
-				  minim=False)
-# alascan = Alascan(pdb=pdbfile, jobname=jobname, selstr=selstr)
+	selstr = ['chain A', 'chain B']
 
-alascan.run()
-# alascan.run_parallel(6) # Uncomment to run in parallel on 6 threads
-# alascan.run_parallel()  # Uncomment to run on half of available threads
+	alascan = Alascan(pdb=pdbfile, 
+					  pdb2pqr_exe=path_pdb2pqr,
+					  apbs_exe=path_apbs,
+					  coulomb_exe=path_coulomb,
+					  jobname=jobname, 
+					  selstr=selstr, 
+					  minim=False)
+	# alascan = Alascan(pdb=pdbfile, jobname=jobname, selstr=selstr)
 
-alascan.viewLogs()
-alascan.writeLogs(filename="alascan_logs.txt")
+	alascan.run()
+	# alascan.run_parallel(6) # Uncomment to run in parallel on 6 threads
+	# alascan.run_parallel()  # Uncomment to run on half of available threads
 
-plotScan(alascan, filename='alascan.png')
+	alascan.viewLogs()
+	alascan.writeLogs(filename="alascan_logs.txt")
 
-try:
-	plotNetwork(alascan, filename='network.png')
-except:
-	print 'Skipping plotNetwork example!'
+	plotScan(alascan, filename='alascan.png')
 
-mut_ids  = alascan.getMutids()
-energies = alascan.ddGa_rel()
+	try:
+		plotNetwork(alascan, filename='network.png')
+	except:
+		print 'Skipping plotNetwork example!'
 
-alascan.summary(filename='alascan_summary.txt')
+	mut_ids  = alascan.getMutids()
+	energies = alascan.ddGa_rel()
 
-writePDB(alascan, filename='alascan.ddGa.pdb')
+	alascan.summary(filename='alascan_summary.txt')
+
+	writePDB(alascan, filename='alascan.ddGa.pdb')

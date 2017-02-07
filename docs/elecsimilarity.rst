@@ -31,6 +31,24 @@ Open a new python session, import the ElecSimilarity class, and import the plotD
 
     from aesop import ElecSimilarity, plotDend, plotESD
 
+.. warning::
+	
+	If you are planning to leverage multiple CPU threads for a faster analysis, please know 
+	that extra steps may be required. Specifically, you must protect the entry point of the 
+	program according to multiprocessing documentation. You may do this by putting the following 
+	code at the beginning of your Python script::
+	
+		if __name__ == '__main__':
+		    # place remaining code here and maintain level of indentation
+			
+	This precaution becomes unnecessary if you are running the analysis inside an interactive 
+	Python session. In the downloadable zip files, we have already placed this protection in 
+	the run script, so that you may run the analysis as follows in your platform's terminal::
+	
+		python run_ltp_ex1.py
+		
+	Failure to protect the entry point may result in an infinite loop of process spawning.
+	
 Next, you must specify the full paths to your ``apbs`` and ``pdb2pqr`` executables, if 
 the paths for the directories containing the executables have not already been added to the environment. 
 Here is an example for a Windows system::

@@ -11,7 +11,7 @@ with open('LICENSE') as f:
 
 setup(
     name='aesop',
-    version='0.0.11',
+    version='1.1.0',
     description='Module for analyzing electrostatics with protein structures',
     long_description=readme,
     author='Reed Harrison, Rohith Mohan',
