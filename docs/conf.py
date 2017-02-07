@@ -23,7 +23,7 @@ class Mock(MagicMock):
     @classmethod
     def __getattr__(cls, name):
         return Mock()
-MOCK_MODULES = ['prody', 'modeller']
+MOCK_MODULES = ['prody', 'modeller', 'networkx']
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
             
 # class Mock(object):
