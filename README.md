@@ -2,6 +2,7 @@
 **AESOP**: Analysis of Electrostatic Structures of Proteins
 
 Authors: Reed Harrison, Rohith Mohan, and Dimitrios Morikis
+
 [![DOI](https://zenodo.org/badge/49102669.svg)](https://zenodo.org/badge/latestdoi/49102669)
 
 ## Framework
