@@ -34,7 +34,7 @@ protein families as well as within indivdiual proteins in terms of individual am
 AESOP is implemented in Python 2.7 and depends on a number of computational tools including: APBS, 
 PDB2PQR, ProDy, and Modeller. Documentation can be found at `aesop.readthedocs.io 
 <aesop.rtfd.io>`_. We welcome questions and collaboration on the GitHub page for AESOP at 
-`https://github.com/rohithmohan/aesop <https://github.com/rohithmohan/aesop>`_.
+`https://github.com/rohithmohan/aesop <https://github.com/biomodel/aesop>`_.
 
 Methods
 """""""
