@@ -2,6 +2,7 @@
 **AESOP**: Analysis of Electrostatic Structures of Proteins
 
 Authors: Reed Harrison, Rohith Mohan, and Dimitrios Morikis
+[![DOI](https://zenodo.org/badge/49102669.svg)](https://zenodo.org/badge/latestdoi/49102669)
 
 ## Framework
 - AESOP is a computational framework to explore electrostatic structures within proteins. The library depends on external tools including: APBS, PDB2PQR, Modeller, and ProDy
@@ -41,3 +42,4 @@ Authors: Reed Harrison, Rohith Mohan, and Dimitrios Morikis
 
 ## Notes
 - Please visit [aesop.readthedocs.io](https://aesop.readthedocs.io) for documentation and instructions on installation.
+- The webserver implementation (with only Alascan functionality for now) can be found [here](https://aeolus.engr.ucr.edu/aesop).
