@@ -3135,6 +3135,24 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
         else:
             return -1
 
+##########################################################################
+# Classes for passing exceptions/errors for specific programs
+##########################################################################
+
+class APBS_Exception(Exception):
+    pass
+
+class runProcess_Exception(Exception):
+    pass
+
+class Complete_PDB_Exception(Exception):
+    pass
+
+class Minimize_CG_Exception(Exception):
+    pass
+
+class PDB2PQR_Exception(Exception):
+    pass
 
 ##########################################################################
 # Function to run commands, recording output
@@ -3158,9 +3176,6 @@ def runProcess(command):
         return tuple where first element is output that would have been sent
         to STDOUT and the second element captures errors.
     """
-
-    class runProcess_Exception(Exception):
-        pass
 
     proc = sp.Popen(command, stdout=sp.PIPE, stderr=sp.PIPE)
     try:
@@ -3297,8 +3312,6 @@ def complete_structure(pdb, dest=None, disu=False):
         If True, complete_pdb will predict and patch all disulfide bridges.
         Default is False.
     """
-    class Complete_PDB_Exception(Exception):
-        pass
 
     try:
         from modeller import environ, model, selection
@@ -3370,8 +3383,6 @@ def minimize_cg(struct,
     from modeller.scripts import complete_pdb
     from modeller.optimizers import conjugate_gradients, actions
 
-    class Minimize_CG_Exception(Exception):
-        pass
 
     try:
         if log is not None:
@@ -3586,8 +3597,6 @@ def execPDB2PQR(path_pdb2pqr_exe, pdbfile, outfile=None, ff='parse'):
         Description
     """
 
-    class PDB2PQR_Exception(Exception):
-        pass
 
     if outfile is None:
         outfile = os.path.splitext(pdbfile)[0] + '.pqr'
@@ -3676,8 +3685,7 @@ def execAPBS(path_apbs_exe,
     # ion           -   ionic strength for calculation
     # pdie          -   protein dielectric constant
     # sdie          -   solvent dielectric constant
-    class APBS_Exception(Exception):
-        pass
+    
 
     if prefix is None:
         prefix = os.path.splitext(pqr_chain)[0]
