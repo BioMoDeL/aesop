@@ -4858,6 +4858,11 @@ def plotDend(esd, filename=None):
         Writes image to disk, if desired.
     """
     # plt.style.use('seaborn-talk')
+    if filename is not None:
+        plt.switch_backend('agg')
+    elif os.environ.get('DISPLAY', '') == '':
+        print('No display variable found. Supply a filename to generate plot '
+              'using non-interactive Agg backend')
     fig, ax = plt.subplots(sharey=True)
     Z = cluster.linkage(esd.esd)
     cluster.dendrogram(
