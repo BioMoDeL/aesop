@@ -817,7 +817,7 @@ class Alascan:
             outpath = os.path.join(jobdir, pqr_complex_dir, mutid)
             print '\n%s:\tgenerating PQR for mutant: %s' % (self.jobname,
                                                             mutid)
-            mutatePQR(outfile, mutid=outpath, resnum=resnum, chain=chain)
+            mutatePQR(outfile, mutid=outpath, resnum=resnum, chain=chain, ff=ff)
             complex_pqr = pd.parsePQR(outpath + '.pqr')
             for sel, seldir in zip(selstr, pqr_sel_dir):
                 selfile = os.path.join(jobdir, seldir, mutid + '.pqr')
@@ -2732,7 +2732,7 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
             self.logs.append(pqr_log)
             self.pqrfiles.append(pqrname)
 
-    def mutatePQR(self, selstr=['protein'], minim=False):
+    def mutatePQR(self, selstr=['protein'], minim=False, ff='parse'):
         """Summary
         Mutate all PQR files, optional method
 
@@ -2766,7 +2766,8 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
                     pqrfile=infile,
                     mutid=os.path.join(pqrdir, mutid),
                     resnum=resnum,
-                    chain=chain)
+                    chain=chain,
+                    ff=ff)
                 if (self.minim == True) or (minim == True):
                     minimize_cg(
                         os.path.join(pqrdir, mutid + '.pqr'),
@@ -3045,9 +3046,9 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
         self.initializeGrid()
         self.genPQR()
         if selstr is not None:
-            self.mutatePQR(selstr=selstr)
+            self.mutatePQR(selstr=selstr, ff=ff)
         if len(self.pdbfiles) == 1 and selstr is None:
-            self.mutatePQR()
+            self.mutatePQR(ff=ff)
         self.genDX()
         if esd:
             self.calcESD()
@@ -3083,9 +3084,9 @@ class ElecSimilarity:  # PLEASE SUPERPOSE SYSTEM BEFORE USING THIS METHOD!
         self.initializeGrid()
         self.genPQR()
         if selstr is not None:
-            self.mutatePQR(selstr=selstr)
+            self.mutatePQR(selstr=selstr, ff=ff)
         if len(self.pdbfiles) == 1 and selstr is None:
-            self.mutatePQR()
+            self.mutatePQR(ff=ff)
         if n_workers is None:
             self.genDX_parallel()
         if n_workers is not None:
@@ -3195,7 +3196,7 @@ def runProcess(command):
 
 
 # Only use this function with PARSE for now ...
-def mutatePQR(pqrfile, mutid, resnum, chain=None):
+def mutatePQR(pqrfile, mutid, resnum, chain=None, ff='parse'):
     """Summary
     Mutate PQR file via side-chain truncation scheme (mutate to Alanine)
 
@@ -3234,13 +3235,23 @@ def mutatePQR(pqrfile, mutid, resnum, chain=None):
     sc = residue.sidechain
     cg = residue.select('name CG')
     cb = residue.select('name CB')
+    if (ff=='charmm'):
+        hb2 = residue.select('name HB2')
+        hb3 = residue.select('name HB3')
 
     # Set charge and radii of side chain to 0, change CG atom to HB1
     residue.setResnames('ALA')
-    sc.setCharges(0)
-    sc.setRadii(0)
-    cb.setRadii(2)
+    if (ff=='parse'):
+        sc.setCharges(0)
+        sc.setRadii(0)
+        cb.setRadii(2)
     cg.setNames('HB1')
+    if (ff=='charmm'):
+        cb.setRadii(2.06)
+        cb.setCharges(-0.27)
+        cg.setCharges(0.09)
+        hb2.setCharges(0.09)
+        hb3.setCharges(0.09)
 
     # Shorten the HB1-CB bond
     pos_hb1 = (0.7105 * (cg.getCoords() - cb.getCoords())) + cb.getCoords()
@@ -4847,6 +4858,11 @@ def plotDend(esd, filename=None):
         Writes image to disk, if desired.
     """
     # plt.style.use('seaborn-talk')
+    if filename is not None:
+        plt.switch_backend('agg')
+    elif os.environ.get('DISPLAY', '') == '':
+        print('No display variable found. Supply a filename to generate plot '
+              'using non-interactive Agg backend')
     fig, ax = plt.subplots(sharey=True)
     Z = cluster.linkage(esd.esd)
     cluster.dendrogram(
