@@ -1245,7 +1245,7 @@ class Alascan:
                 filename = os.path.join(esidir, ref_name + '.dx')
                 for j in xrange(n):
                     # print file_by_ref[i-1][j+1]
-                    dat = Grid(file_by_ref[i - 1][j + 1])
+                    dat = Grid(file_by_ref[i - 1][j]) # don't add 1 to j if first element is not WT...
                     a = ref.pot.astype(float).reshape((dim, ))
                     b = dat.pot.astype(float).reshape((dim, ))
 
