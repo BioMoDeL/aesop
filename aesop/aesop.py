@@ -1205,13 +1205,26 @@ class Alascan:
             n_seg = len(self.selstr)
             ind_seg = [x + 1 for x in range(n_seg)]
 
-            file_by_ref = []
+            dx_files = glob.glob(os.path.join(self.jobdir, self.logs_apbs_dir, '*.dx')) # 2019/02/01 RH - added to find DX files.
+            self.dx_files = dx_files                                                    # this should really be added when DX files are made...
+            
+            file_by_ref = [] # 2019/02/01 RH - added to group dx files by segment where mutation occurs
             for ind in ind_seg:
-                files = [
-                    x for x in self.dx_files
-                    if int(os.path.basename(x).split('_')[1]) == ind
-                ]
-                file_by_ref.append(files)
+                files = []
+                for x in alascan.dx_files:
+                    if os.path.basename(x) != 'wt.dx':
+                        loc = int(os.path.basename(x).split('_')[0][3:])
+                        if loc == ind:
+                            files.append(x)
+                        file_by_ref.append(files)
+            
+#             file_by_ref = []
+#             for ind in ind_seg:
+#                 files = [
+#                     x for x in self.dx_files
+#                     if int(os.path.basename(x).split('_')[1]) == ind
+#                 ]
+#                 file_by_ref.append(files)
 
             ids = ['selection %d' % x for x in ind_seg]
 
