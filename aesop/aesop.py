@@ -4877,7 +4877,7 @@ def plotDend(esd, filename=None):
         print('No display variable found. Supply a filename to generate plot '
               'using non-interactive Agg backend')
     fig, ax = plt.subplots(sharey=True)
-    Z = cluster.linkage(esd.esd)
+    Z = cluster.linkage(squareform(esd.esd))
     cluster.dendrogram(
         Z,
         labels=esd.ids,
