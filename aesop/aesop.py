@@ -962,7 +962,7 @@ class Alascan:
                      gcent_list, prefix_list, ion_list, pdie_list, sdie_list,
                      dx_list, i_list, j_list)
 
-        p = Pool()
+        p = Pool(n_workers)
         print '%s:\trunning batchAPBS ....' % (self.jobname)
         counter = 0
         max_count = len(kernel)
